@@ -1,7 +1,7 @@
 # v3 架构书自检
 
 > 日期：2026-10-31
-> 对象：[00-architecture.md](00-architecture.md)
+> 对象：[architecture.md](../../architecture.md)
 > 方法：结构检查 + 关键词覆盖 + 人工通读 + 一致性检查。**未写代码、未跑模型。**
 
 ## 1. 自检结论
@@ -47,7 +47,7 @@
 
 ## 3. 结构检查
 
-- 文件：`docs/v3/00-architecture.md`，917 行、约 26k 字符。
+- 文件：`architecture.md`，917 行、约 26k 字符。
 - 20 个 H2 章节：文档定位、产品定义、成功标准、设计原则、总体架构、视频证据编译器、写作 Skill、Writer、Verifier、确定性校验与渲染、质量门、多文体、关键帧、JD/小号 Harness、复用开源、最小数据契约、失败/观测、Roadmap、非目标/开放问题、术语/总结。
 - 没有把 v2 的 R1–A5/P1 链路写成 v3 默认；v2 仅作为冻结素材/可选复用。
 - 没有新增 per-form body/validator/gate；多文体由 Skill/View 表达。

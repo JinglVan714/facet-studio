@@ -79,4 +79,4 @@
 - [pack](examples/BV1AC_pack.json)
 - [claims](examples/BV1AC_claims.json)
 - [transcript passages](examples/BV1AC_passages.json)
-- [substrate audit](02-substrate-audit.md)
+- [substrate audit](substrate-audit.md)

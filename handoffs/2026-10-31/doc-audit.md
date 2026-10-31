@@ -1,7 +1,7 @@
 # v3 文档审计：有没有走偏 / 会不会带偏后续
 
 > 日期：2026-10-31
-> 范围：docs/v3/00–03、README、self-check、skill reuse map；agent/CLAUDE/README 入口。
+> 范围：当时的 docs/v3/00–03（现 handoffs/2026-10-31/）、README、self-check、skill reuse map；入口文档。
 > 结论：v3 架构方向没有走偏，但原文有 7 处会误导后续实现/验收的点，已修；剩余风险见 §3。
 
 ## 1. 已修（会直接带偏）
@@ -44,7 +44,7 @@
 
 - 不要读、不要引用、不要按它的对象/四操作/流程实现。
 - 旧分支 `rebuild-v2`/`main` 仍保留历史代码；不要从它们恢复写作链。
-- v3 的 `Claim / Plan header / EvidencePack / Skill / Writer / Verifier` 术语以 [00-architecture.md](00-architecture.md) 为准。
+- v3 的 `Claim / Plan header / EvidencePack / Skill / Writer / Verifier` 术语以 [architecture.md](../../architecture.md) 为准。
 - v2 只保留为 `docs/_frozen/v2-2026-10-31/` 素材；`data/` 和 `参考素材/skills/` 是有效只读输入。
 
 ## 3. 仍会带偏后续的风险

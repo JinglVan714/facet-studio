@@ -32,7 +32,7 @@ PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m lunograph.writing_v3.pac
   --snapshot runs/<substrate_run>/evidence_snapshot.json \
   --outline runs/<substrate_run>/temporal_outline.json \
   --knowledge runs/<substrate_run>/knowledge_snapshot.json \
-  --request docs/v3/examples/<video>_request.json \
+  --request handoffs/2026-10-31/examples/<video>_request.json \
   --contract data/<video>/substrate/contract.json \
   --video-id <video> \
   --out runs/v3_poc/<video>_pack.json
@@ -41,8 +41,8 @@ PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m lunograph.writing_v3.pac
 PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m lunograph.writing_v3.one_call_writer \
   --pack runs/v3_poc/<video>_pack.json \
   --skill-dir skills/writing/reader_first_explainer \
-  --request docs/v3/examples/<video>_request.json \
+  --request handoffs/2026-10-31/examples/<video>_request.json \
   --out-dir runs/v3_poc/<video>_one_call
 ```
 
-P0 evidence: `docs/v3/03-p0-one-call.md`; samples `docs/v3/examples/`.
+P0 evidence: `handoffs/2026-10-31/p0-one-call.md`; samples `handoffs/2026-10-31/examples/`.

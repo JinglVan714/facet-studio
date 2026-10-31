@@ -122,7 +122,7 @@ units.jsonl (385)
 当前已实现：
 
 - `src/lunograph/writing_v3/trace.py`：TraceRecorder。
-- `docs/v3/examples/BV1AC_transcript_receipt.json`：385→116→32 的完整 receipt（input/output hashes、counts、boundary reasons、samples）。
+- `examples/BV1AC_transcript_receipt.json`：385→116→32 的完整 receipt（input/output hashes、counts、boundary reasons、samples）。
 
 下一步要补：
 
@@ -201,4 +201,4 @@ units.jsonl (385)
 - **不要继续在 145 条微 claim 上做 pack 过滤**；那是下游补丁。
 - 385 units → 116 sentences → 32 passages → 43 claims 已经跑通；coverage-aware pack 选 40 条，pack 从 130k chars 降到 47.8k chars（compact 38.2k）。
 - 每次 stage 留 receipt，后续调参看 trace，而不是靠猜 token 为什么高。
-- P0 Writer 已用这份 40-claim pack 跑通：reader 1,865 字、38k tokens、校验 complete；见 [03-p0-one-call.md](03-p0-one-call.md)。下一步是 BV17 第二视频 + reader test/轻量 A-B；不按 BV1AC 调参。
+- P0 Writer 已用这份 40-claim pack 跑通：reader 1,865 字、38k tokens、校验 complete；见 [p0-one-call.md](p0-one-call.md)。下一步是 BV17 第二视频 + reader test/轻量 A-B；不按 BV1AC 调参。

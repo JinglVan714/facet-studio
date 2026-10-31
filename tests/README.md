@@ -1,10 +1,10 @@
-# tests（v3）
+# tests
 
 v3 的测试还没有正式建立。当前 P0 的验证是运行记录 + trace，不是测试套件：
 
-- [P0 one-call 报告](../docs/v3/03-p0-one-call.md)
-- [substrate 审计](../docs/v3/02-substrate-audit.md)
-- 样例 reader/claims/pack：[docs/v3/examples/](../docs/v3/examples/)
+- [P0 one-call 报告](../handoffs/2026-10-31/p0-one-call.md)
+- [substrate 审计](../handoffs/2026-10-31/substrate-audit.md)
+- 样例 reader/claims/pack：[handoffs/2026-10-31/examples/](../handoffs/2026-10-31/examples/)
 
 v2 测试（`tests/writing_v2/`）是冻结素材，不在 v3 分支；不要从它恢复 R1–A5/P1 链路。
 

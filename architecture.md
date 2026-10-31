@@ -1,9 +1,7 @@
 # LunoGraph v3 架构书：证据编译器 + 写作 Skill
 
-> 日期：2026-10-31
-> 状态：v3 设计基线（仅架构；尚未写代码）
-> v2 材料：`docs/_frozen/v2-2026-10-31/`，只作素材，不是基线
-> 自检：见 [00-architecture-self-check.md](00-architecture-self-check.md)
+> 状态：v3 架构事实来源（只读为主）
+> 本文件只定义 v3 的设计；当前状态/任务/历史分别见 `STATE.md`、`HANDOFF.md`、`handoffs/`。
 
 ---
 
@@ -18,7 +16,7 @@
 - 多文体（深度解析、讲义、社媒、企业知识、视频脚本、二创、生图提示词）如何共用一套底座；
 - JD 能力在新架构中的落点，以及哪些只做“小号”、哪些后置。
 
-v2 已冻结为素材。v2 的 R1–A5/P1 链路、body/validator/gate、具体 prompt 不作为 v3 默认；只有在明确服务于 v3 原则时才选择性采纳。
+本文件只定义 v3；旧架构/旧实现不在本文件范围，也不作为 v3 默认。
 
 ---
 
@@ -51,9 +49,9 @@ v2 已冻结为素材。v2 的 R1–A5/P1 链路、body/validator/gate、具体 
 4. **多文体不复制管线**：文体差异放 Skill/View/输出 schema，不放 per-form pipeline/validator/gate。
 5. **质量与速度并重**：默认 1 次模型调用；高风险才加 1 次独立 Verifier；其余靠确定性校验 + 真人/A-B。
 
-**操作范围**：v3 P0/P1 先做 `generate`；`reconstruct / redesign / review` 是后续操作入口，不在当前 P0 承诺内。`review` 的一部分由可选 Verifier + P1 人工门承担，但不要据此认为 v3 已覆盖四操作。
+**操作范围**：本架构只承诺 `generate`；`reconstruct / redesign / review` 是后续操作入口，不在当前范围。`review` 的一部分由可选 Verifier + 人工门承担，但不等于四操作都已覆盖。
 
-非目标（当前阶段）：
+非目标（本架构范围）：
 
 - 不做全量 Scheduler/MCP/四类 Memory/RAG 全栈/LangGraph 深度；
 - 不做每个文体一套 body/validator/gate；
@@ -76,7 +74,7 @@ v2 已冻结为素材。v2 的 R1–A5/P1 链路、body/validator/gate、具体 
 
 - 短文章默认 **1 次 Writer 调用**；结构/绑定失败最多 1 次 repair。
 - 高风险内容才加 **1 次 Verifier**；发现问题最多 1 次 revise，不 loop。
-- P0 实测：BV1AC 11 分钟视频，claim extraction 31k + writer 38k = **69k tokens**、约 226s、reader 1,865 字（一首样本，尚未 reader test/A-B）。目标仍以实际模型/样本测量为准。
+- claim extraction 一次/视频；实际成本以模型/样本测量为准，不写死。
 - 每个 stage 的 calls/tokens/latency 可查；失败/partial 不静默。
 
 ### 2.3 可复用
@@ -175,11 +173,11 @@ Reader test / A-B / 专家 review / 人工 publish
 | `writer_output` | Writer | 校验/渲染/Verifier | plan header + 文章 + spans/bindings + self_review |
 | `bindings/citations/audit` | 确定性校验/渲染 | Publish/人工 | 引用/时间码/帧/审核指针 |
 | `verifier_report` | 可选 Verifier | revise/人工 | 只读 findings |
-| `reader_test`/`ab_test` | 真人采集 | Publish | P1 输入 |
+| `reader_test`/`ab_test` | 真人采集 | Publish | 发布前质量输入 |
 | `publish_review` | 发布门（确定性） | 人工 | 记录签章/风险 |
 | `run/usage/trace/decisions` | Harness | 观测/回放 | 小号但真实 |
 
-v3 不保留 v2 的 reader_plan/answerability/selection/context/review/editor/recheck 等默认 artifact；它们是 v2 素材，只有明确需要时才以 v3 的 View/Skill/Verifier 形式重建。
+v3 不保留旧写作链的默认中间 artifact；只有明确需要时才以 v3 的 View/Skill/Verifier 形式重建。
 
 ---
 
@@ -206,7 +204,7 @@ Source → Temporal → Evidence → Knowledge（可选）
 - 对 passages 做一次 claim extraction：每个 passage 1–3 条写作级 claim；合并碎片；跳过问候/预告/闲聊/赞助/频道 logistics；每条 claim 带 passage 内精确 quote、sentence_ids、time range。
 - 目标是一段 10–20 分钟视频约 30–50 条 claim，而不是逐句 100+ 条微 claim；claim 是证据编译产物，不是新事实源。
 - claim extraction 只跑一次/视频，结果缓存；不同文体复用同一 claim 集，不重新总结。
-- **命名注意**：v3 pack 里的 `claims` 是“写作级聚合 claim”（1–3 句），不是 substrate 的 atomic Claim。substrate 的 atomic Claim + EvidenceClaimLink 仍是底层对象；聚合 claim 必须回指这些原子 claim/evidence，不能成为第二套事实源。未来如重命名，优先用 `claim_groups`/`writing_claims`，但 P0 兼容字段名 `claims`。
+- **命名注意**：v3 pack 里的 `claims` 是“写作级聚合 claim”（1–3 句），不是 substrate 的 atomic Claim。substrate 的 atomic Claim + EvidenceClaimLink 仍是底层对象；聚合 claim 必须回指这些原子 claim/evidence，不能成为第二套事实源。未来如重命名，优先用 `claim_groups`/`writing_claims`，但兼容字段名先保留 `claims`。
 
 **Evidence**
 - 从 assertions/claims 规范化出 claim + evidence + link：
@@ -224,7 +222,7 @@ Source → Temporal → Evidence → Knowledge（可选）
 
 ### 5.2 现有数据结构能不能复用
 
-可以。v2 的 substrate 已经提供了 v3 需要的基础：
+可以。现有 substrate 已经提供了 v3 需要的基础：
 
 - `Unit`：ASR 单元（时间码/原文/channel）。
 - `Assertion`：时间码断言（unit_ids/anchors/quote/kind/status/frame_refs/frame_offsets_ms）。
@@ -235,7 +233,7 @@ Source → Temporal → Evidence → Knowledge（可选）
 - `FramesIndex`：关键帧 + 时间码 + VLM 文本 + strategy。
 - `KnowledgeSnapshot`：entities/clusters/relations/conflicts/gaps（可选）。
 
-v3 不需要重建 substrate；需要的是**在写作层保留上下文、按 View 复用**，不要压平成 cluster 列表或 plan 摘要。需要注意：v2 的 L1 assertion 可能是句级/片段级微 claim（BV1AC：656 秒视频 145 条，中位 28 字）；v3 把它们当原始素材，先合并 sentences/passages，再做一次 claim aggregation（目标 30–50 条），而不是直接拿 145 条微 claim 写文章。
+v3 不需要重建 substrate；需要的是**在写作层保留上下文、按 View 复用**，不要压平成 cluster 列表或 plan 摘要。需要注意：现有 L1 assertion 可能是句级/片段级微 claim；v3 把它们当原始素材，先合并 sentences/passages，再做一次写作级 claim aggregation，而不是直接拿微 claim 写文章。
 
 ### 5.3 证据组织：不要平铺，也不要过度离散
 
@@ -533,9 +531,9 @@ Writer 看不到：
 - assets：固定 snapshot 的帧；sha/rights；缺失 → partial，不伪造。
 - 同输入同 hash；可 replay。
 
-### 9.3 复用 v2 代码
+### 9.3 复用现有代码
 
-v2 的 binding/render/audit/citation 代码可以作为素材选择性复用；但 v3 的输入是 EvidencePack + WriterOutput，不是 v2 的 plan/context/draft 链。复用时加适配层，不把 v2 的 pipeline 类型带进 v3。
+现有 binding/render/audit/citation 代码可以作为素材选择性复用；但 v3 的输入是 EvidencePack + WriterOutput，不是旧写作链的中间产物。复用时加适配层，不把旧 pipeline 类型带进 v3。
 
 ---
 
@@ -657,16 +655,16 @@ v2 的 binding/render/audit/citation 代码可以作为素材选择性复用；�
 
 | JD 能力 | v3 落点 | 最小证据 | 优先级 |
 |---|---|---|---|
-| 多 Agent 协作 | Writer + optional Verifier/Editor Skill；共享 EvidencePack | 两个角色、同一证据包、run/attempt；不是聊天式多 Agent | P0 |
-| 任务规划/调度 | Writer plan_header + verifier 触发；小 DAG | plan_header artifact + stage 记录；不做全量 Scheduler | P0 |
-| 工具调用/MCP | ASR/帧/OCR/VLM/EvidencePack/生图/render | ToolSpec/Registry/receipt 最小实现；白名单/超时/失败不静默 | P0/P1 |
-| 记忆 | EvidenceSnapshot/KnowledgeSnapshot = 语义记忆；Skill 库 = 程序性记忆 | 证据不进聊天记忆；同一快照多文体复用 | P0 |
-| 决策/Trace/Budget | skill 选择、verifier 触发、模型/用量 | DecisionRecord + usage + trace + replay | P0 |
-| 评测/质量 | per-skill 回归 + reader test/A-B + binding | 固定案例/回放/回归；judge advisory | P0 |
-| Prompt/Context Engineering | Skill + EvidencePack + Request | skill/pack hash、输出 schema；核心能力 | P0 |
-| Agent 框架/RAG | View 检索；可选 LangGraph adapter | 先做视图/检索 hook；领域对象不依赖框架 | P2 |
-| 工程/成本/观测 | 1 Writer 默认；usage/latency | 成本可见；失败/partial 一等 | P0 |
-| 作品/开源 | 多文体 + reader artifact + A/B | ≥2 文体、真实 reader artifact、trace replay | P1 |
+| 多 Agent 协作 | Writer + optional Verifier/Editor Skill；共享 EvidencePack | 两个角色、同一证据包、run/attempt；不是聊天式多 Agent | 核心 |
+| 任务规划/调度 | Writer plan_header + verifier 触发；小 DAG | plan_header artifact + stage 记录；不做全量 Scheduler | 核心 |
+| 工具调用/MCP | ASR/帧/OCR/VLM/EvidencePack/生图/render | ToolSpec/Registry/receipt 最小实现；白名单/超时/失败不静默 | 核心/后续 |
+| 记忆 | EvidenceSnapshot/KnowledgeSnapshot = 语义记忆；Skill 库 = 程序性记忆 | 证据不进聊天记忆；同一快照多文体复用 | 核心 |
+| 决策/Trace/Budget | skill 选择、verifier 触发、模型/用量 | DecisionRecord + usage + trace + replay | 核心 |
+| 评测/质量 | per-skill 回归 + reader test/A-B + binding | 固定案例/回放/回归；judge advisory | 核心 |
+| Prompt/Context Engineering | Skill + EvidencePack + Request | skill/pack hash、输出 schema；核心能力 | 核心 |
+| Agent 框架/RAG | View 检索；可选 LangGraph adapter | 先做视图/检索 hook；领域对象不依赖框架 | 后续 |
+| 工程/成本/观测 | 1 Writer 默认；usage/latency | 成本可见；失败/partial 一等 | 核心 |
+| 作品/开源 | 多文体 + reader artifact + A/B | ≥2 文体、真实 reader artifact、trace replay | 后续 |
 
 ### 13.2 小号 Harness
 
@@ -703,20 +701,20 @@ v2 的 binding/render/audit/citation 代码可以作为素材选择性复用；�
 
 | 方向 | 候选 | 复用方式 | 阶段 |
 |---|---|---|---|
-| Skill 格式 | Anthropic Agent Skills / `anthropics/skills` | SKILL.md + progressive disclosure + scripts；写自己的写作 skill | P0 |
-| 长文规划 | WriteHERE | 递归/图规划思想；长文再借，不做短文章默认 | P2 |
-| 研究/长文 | STORM | research→outline→write→polish；多源/长文再借 | P3 |
-| 长文/多 Agent | InkOS / OmniWriter | 记忆/角色/长文编排；后置 | P3 |
-| 视频 | ffmpeg / faster-whisper / PaddleOCR / Qwen2.5-VL / InternVL | 现有 substrate 工具链；按需替换 | P0 |
-| 渲染 | 现有 Markdown/asset render | 选择性复用；v3 适配 WriterOutput | P0 |
-| 评测 | reader test/A-B 模板；开源 eval harness 可选 | 固定案例/回放/回归 | P1 |
+| Skill 格式 | Anthropic Agent Skills / `anthropics/skills` | SKILL.md + progressive disclosure + scripts；写自己的写作 skill | 初期 |
+| 长文规划 | WriteHERE | 递归/图规划思想；长文再借，不做短文章默认 | 后期 |
+| 研究/长文 | STORM | research→outline→write→polish；多源/长文再借 | 后期 |
+| 长文/多 Agent | InkOS / OmniWriter | 记忆/角色/长文编排；后置 | 后期 |
+| 视频 | ffmpeg / faster-whisper / PaddleOCR / Qwen2.5-VL / InternVL | 现有 substrate 工具链；按需替换 | 初期 |
+| 渲染 | 现有 Markdown/asset render | 选择性复用；v3 适配 WriterOutput | 初期 |
+| 评测 | reader test/A-B 模板；开源 eval harness 可选 | 固定案例/回放/回归 | 后续 |
 
 ### 14.3 集成边界
 
 - Skill：只通过 `SkillManifest` + `SKILL.md` 进入 Writer；不直接改 core。
 - 视频工具：只通过证据编译器 adapter；输出 Unit/Assertion/Evidence/Frames。
 - 长文引擎：只通过 View/Writer adapter；不替换 EvidencePack/校验/渲染。
-- Render/Eval：只通过输入/输出 schema；不引入 v2 pipeline 类型。
+- Render/Eval：只通过输入/输出 schema；不引入旧 pipeline 类型。
 
 ---
 
@@ -804,7 +802,7 @@ v3 只保留必要 schema；详细字段在实现时定，不先写 18 个合同
 
 - VerifierReport：findings（axis/target/severity/observation/impact/action）+ provenance。
 - PublishReview：reader/audit/citations hash、reader test/A-B/human review、checklist、known risks、status。
-- 不把 v2 的 14 gates/10 risk kinds 直接搬来；v3 按文体定义最小 gate。
+- 不把旧架构的 gate/risk 清单直接搬来；v3 按文体定义最小 gate。
 
 ---
 
@@ -832,79 +830,36 @@ v3 只保留必要 schema；详细字段在实现时定，不先写 18 个合同
 
 ---
 
-## 17. Roadmap
+## 17. 非目标与开放问题
 
-### P0：设计与 PoC（已完成一次）
-
-- 本架构书 + 自检；
-- `reader_first_explainer` SKILL.md；
-- transcript merge / claim extraction / EvidencePack / one-call Writer 原型；
-- BV1AC 实测：385 units → 116 sentences → 32 passages → 43 claims → 40-claim pack → 1 Writer；total **69k tokens**（claim extraction 31k + writer 38k），reader **1,865 字**，binding/quote/hygiene 校验 complete；
-- **未做 reader test/A-B，未跑第二视频**；不能把这次当质量验收。
-- 下一步：BV17 第二视频同链路验证 + reader test/轻量 A-B；不按 BV1AC 调参。详见 [03-p0-one-call.md](03-p0-one-call.md)。
-
-### P1：短文体默认
-
-- reader-first/社媒两个 skill；
-- 1 Writer + 确定性校验/render；
-- 可选 Verifier（高风险）；
-- reader test/A-B；
-- 2 个视频/2 种知识形态验证。
-
-### P2：多文体
-
-- 讲义/notes、企业知识、视频脚本、二创、生图提示词；
-- 每文体 1 skill + 1 rubric + 2 案例；
-- 不新增 per-form validator/gate；
-- 质量门按文体。
-
-### P3：长文/多源
-
-- 长文分节 Writer；
-- 多源 Evidence/Knowledge；
-- 可选检索 View；
-- WriteHERE/STORM/InkOS 等按需借鉴/二开。
-
-### P4：Harness/接入
-
-- 小号 Scheduler/Tools/Memory/Decision/Trace/Budget；
-- CLI/API；
-- Eval regression；
-- LangGraph adapter 可选；
-- Portfolio/开源。
-
-### 停止条件
-
-- 如果 one-call Writer 质量明显低于 v2 approved reader，先加 1 次 Verifier，再考虑分节/分阶段；**不要先恢复 7 次链**。
-- 如果某文体需要新 View/新 Skill 才能成立，先做 2 案例；不直接加 pipeline。
-- 如果开源项目与证据优先冲突，只借组件/skill，不搬整条链。
-
----
-
-## 18. 非目标与开放问题
-
-### 18.1 非目标
+### 17.1 非目标
 
 - 不做全量 Scheduler/MCP/Memory/RAG/LangGraph；
 - 不做 per-form body/validator/gate；
 - 不自动发布；不判断作者主张现实真伪；
 - 不伪造画面/生成图当证据；
 - 不为 JD 关键词造假；
-- 不把 v2 的 18 合同全部搬进 v3。
+- 不把旧架构合同全部搬进 v3。
 
-### 18.2 开放问题
+### 17.2 开放问题
 
-- Skill prompt 的质量/长度/示例数量：需要 PoC 测量。
+- Skill prompt 的质量/长度/示例数量：需要真实案例测量。
 - EvidencePack 的上下文窗口/预算：按视频类型/文体调，不写死。
 - Verifier 触发阈值：高风险分类/抽样/self_review；先人工判断。
 - 长文分节：按 section/beat 分 Writer，还是单 Writer + 更长上下文；后置。
 - 多源/多视频：View/Knowledge 的合并与冲突；后置。
-- 开源 license/安全/维护：P0 先调研，不直接依赖。
+- 开源 license/安全/维护：先审再依赖。
 - 质量门：不同文体的 reader/A-B/专家比例；先按文体定义，不套一把尺。
+
+### 17.3 停止条件
+
+- 如果 one-call Writer 质量明显低于完整链基线，先加 1 次 Verifier，再考虑分节/分阶段；**不要先恢复多阶段链**。
+- 如果某文体需要新 View/新 Skill 才能成立，先做 2 案例；不直接加 pipeline。
+- 如果开源项目与证据优先冲突，只借组件/skill，不搬整条链。
 
 ---
 
-## 19. 术语
+## 18. 术语
 
 - **EvidenceSnapshot**：不可变事实底座；units/assertions/claims/evidence/links/frames。
 - **TemporalOutline**：时间分段/关键节点。
@@ -919,6 +874,6 @@ v3 只保留必要 schema；详细字段在实现时定，不先写 18 个合同
 
 ---
 
-## 20. 一句话总结
+## 19. 一句话总结
 
 v3 把视频编译成**可复用、带上下文的证据**，把写作交给**一次 Skill 驱动的 Writer**，把引用/审计交给**确定性代码**，把多文体交给**View + Skill**，把 JD 交给**小号 Harness**。默认一次调用；高风险才加一次独立 Verifier；不为每个文体、每条 finding、每个视频加规则。
