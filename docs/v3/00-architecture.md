@@ -51,7 +51,7 @@ v2 已冻结为素材。v2 的 R1–A5/P1 链路、body/validator/gate、具体 
 4. **多文体不复制管线**：文体差异放 Skill/View/输出 schema，不放 per-form pipeline/validator/gate。
 5. **质量与速度并重**：默认 1 次模型调用；高风险才加 1 次独立 Verifier；其余靠确定性校验 + 真人/A-B。
 
-**操作范围**：v3 P0/P1 先做 `generate`；产品架构里的 `reconstruct / redesign / review` 是后续操作入口，不在当前 P0 承诺内。`review` 的一部分由可选 Verifier + P1 人工门承担，但不要据此认为 v3 已覆盖四操作。
+**操作范围**：v3 P0/P1 先做 `generate`；`reconstruct / redesign / review` 是后续操作入口，不在当前 P0 承诺内。`review` 的一部分由可选 Verifier + P1 人工门承担，但不要据此认为 v3 已覆盖四操作。
 
 非目标（当前阶段）：
 

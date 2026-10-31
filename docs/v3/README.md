@@ -10,6 +10,9 @@ v3 唯一架构基线。
 6. [04-doc-audit.md](04-doc-audit.md)：v3 文档漂移审计、已修问题、仍会带偏后续的风险。
 
 v2 已冻结为素材：本地磁盘 `docs/_frozen/v2-2026-10-31/`（不入 v3 git 分支），只作参考，不是基线。
-产品/领域架构参考：本地磁盘 `video-writing-product-architecture/`（v0.5 领域参考，不入 v3 git 分支；不是当前实现规格；四操作/长期对象看它，当前 pipeline 看 v3）。
+
+有效输入（只读、不在 git）：`data/`（视频数据）、`参考素材/skills/`（skill 参考）。
+
+已屏蔽（旧/错误架构，不要读）：`_archive/_blocked/video-writing-product-architecture/`、`_archive/_blocked/AB/`。
 
 当前阶段：v3 架构 + P0 原型（Skill / EvidencePack / one-call Writer）已跑通一次；尚未做真实 reader test/A-B，未跑第二视频。下一步：第二视频验证 + reader test/轻量 A-B；不按单篇调参。

@@ -3,6 +3,8 @@
 > 日期：2026-10-31
 > 目的：P0 Skill 原型优先复用已有 skill/开源项目，不自己从零搓。
 > 状态：设计/素材评估；对外发布前必须再过一遍 license。
+> 有效输入（只读、不在 git）：`data/`（视频数据）、`参考素材/skills/`（skill 参考）。
+> 已屏蔽：`_archive/_blocked/video-writing-product-architecture/`、`_archive/_blocked/AB/`；不要读/引用。
 
 ## 1. 已提供的素材
 

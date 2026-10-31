@@ -3,11 +3,10 @@
 .env.*
 !.env.example
 
-# 参考数据：体积大且包含 cookies / 原始媒体，只读使用，不进入版本库
+# 有效只读输入：视频数据。体积大且包含 cookies / 原始媒体，不进入版本库，但新 session 要读
 data/
 
-# 用户提供的第三方 skills 参考：体积大、许可证各异，默认不入库
-# 许可见 video-writing-product-architecture/14_... §9
+# 有效只读输入：用户提供的第三方 skills 参考。体积大、许可证各异，默认不入库，但新 session 要读
 参考素材/
 
 # 用户生成的原始写作模板：仅作规划输入；归一后的 runtime 模板放 skills/templates/

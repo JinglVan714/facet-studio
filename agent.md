@@ -13,10 +13,17 @@
 5. [docs/v3/02-substrate-audit.md](docs/v3/02-substrate-audit.md)：BV1AC 145 微 claim 审计、385→116→32→43 的前序重做、trace/receipt。
 6. [docs/v3/01-skill-reuse-map.md](docs/v3/01-skill-reuse-map.md)：已有 skill/开源素材的复用与 license 注意。
 
-参考但**不是当前规格**：
+**有效输入（只读、不在 git）**：
 
-- 本地磁盘的 `video-writing-product-architecture/`：v0.5 领域/产品架构参考（四操作、长期对象、语义模式、质量/版本/安全）。当前 pipeline 以 v3 为准；它不入 v3 git 分支。
-- 本地磁盘的 `docs/_frozen/v2-2026-10-31/`：v2 冻结素材，不入 v3 git 分支。不要恢复 v2 的 R1–A5/P1 链路、body/validator/gate。
+- `data/`：视频数据/字幕/关键帧。要读，但只读；不要改写。
+- `参考素材/skills/`：可复用的 skill 参考（含 rednote/great-writer/humanizer/seedance 等）。要读；复用前查 license。
+- `docs/_frozen/v2-2026-10-31/`：v2 冻结素材，可作历史参考；不要恢复 v2 的 R1–A5/P1 链路、body/validator/gate。
+
+**已屏蔽（旧/错误架构，不要读）**：
+
+- `_archive/_blocked/video-writing-product-architecture/`：旧领域架构，已判定错误；不要引用它的对象/四操作/流程。
+- `_archive/_blocked/AB/`：旧 A/B 结果；不要作为质量依据。
+- 旧分支 `rebuild-v2`/`main` 仍有旧代码；不要从它们恢复写作链。
 
 ## 3. 当前快照（2026-10-31）
 
@@ -68,7 +75,7 @@ P0 命令/文件：
 5. **EvidencePack 是否过重**：40 claims/47.8k chars 对 2k 文章是否仍偏多；能否更少但更准？
 6. **skill 质量**：reader-first skill 只跑过一次；来源归属/结论/boundary 是否稳定，未验证。
 7. **帧**：20 个时间窗候选，claim-level 匹配未保证；后续图表/生成图方案可能改变需求。
-8. **产品架构 vs v3**：四操作、WritingFeasibility、VideoContentProfile、KnowledgeRelation 等长期对象未进 v3；是否在 P1/P2 需要，还是确实可省？
+8. **四操作/长期对象**：generate/reconstruct/redesign/review、Feasibility、VideoContentProfile、KnowledgeRelation 等是产品方向，但旧架构文档已屏蔽；是否在 P1/P2 加，是新决策，不从旧文档继承。
 9. **license**：bilibili-render-pdf 本地 skill 未见 LICENSE；tomoai 是 CC BY-NC，只作参考；对外发布前要审。
 
 ## 6. 不要做
