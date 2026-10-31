@@ -1,5 +1,7 @@
 # Sources and reuse
 
+> Status: provisional v0.1. This skill may be replaced or rebuilt after a fresh survey of `参考素材/skills/` and the local `bilibili-render-pdf` skill. Do not treat it as the final skill.
+
 This skill is a v3 composition. It borrows ideas/structure from the following sources; it does not copy long verbatim passages from sources whose license is unclear or non-commercial.
 
 | Source | License | What was reused |

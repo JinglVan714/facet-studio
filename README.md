@@ -14,8 +14,9 @@
 
 - `src/lunograph/writing_v3/`：transcript / claim_extract / pack_from_claims / one_call_writer / trace。
 - `src/lunograph/{core,evidence,knowledge,providers,runtime}/`：substrate。
-- `skills/writing/reader_first_explainer/`：当前写作 Skill。
-- `data/`、`参考素材/skills/`：有效只读输入，不在 git。
+- `skills/writing/reader_first_explainer/`：当前写作 Skill（v0.1 provisional）。
+- [REFERENCES.md](REFERENCES.md)：参考 skill 与 data 的 git 可见索引。
+- `data/`、`参考素材/skills/`：有效只读输入；完整素材本地只读、不在 git。
 - `_archive/_blocked/`：旧架构/旧 AB，已屏蔽。
 
 ## 运行

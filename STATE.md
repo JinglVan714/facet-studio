@@ -44,12 +44,13 @@
 
 ## 5. 能力边界
 
-已具备：单视频 → 证据 → reader-first 文章的端到端原型；失败/partial 状态可见；quote/span/ID 可审计。
+已具备：单视频 → 证据 → reader-first 文章的端到端原型；失败/partial 状态可见；quote/span/ID 可审计。`reader_first_explainer` 仅为 v0.1 provisional。
 
 未具备：真实读者测试/A-B；第二文体 skill；Verifier；v3 自动化测试；多视频/多源；publish 工作流；图表/生成图方案。
 
 ## 6. 输入与屏蔽
 
-- 有效只读：`data/`（视频/字幕/关键帧）、`参考素材/skills/`（参考 skill）。
+- 有效只读：`data/`（9 个视频，约 283MB；结构待用户提供；`data/cookies/` 不读）、`参考素材/skills/`（17 个参考仓库，约 73MB）、`C:/Users/30279/.claude/skills/bilibili-render-pdf`（约 33KB）。
+- git 可见索引：[REFERENCES.md](REFERENCES.md)；完整 `data/`、`参考素材/skills/` 本地只读、不入库。
 - 不读：`_archive/`、旧 run、旧 audit/reader.md，除非用户明确要求。
 - 环境：Python `D:/anaconda/envs/myagent/python.exe`（3.11.14）；`PYTHONPATH=src`。
