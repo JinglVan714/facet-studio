@@ -1,0 +1,24 @@
+{
+ "status": "complete",
+ "issues": [],
+ "calls": [
+  {
+   "stage": "v3_writer",
+   "model": "deepseek-flash",
+   "latency_ms": 110011,
+   "usage": {
+    "prompt_tokens": 17508,
+    "completion_tokens": 20563,
+    "total_tokens": 38071,
+    "reasoning_tokens": 15444,
+    "cached_tokens": 2048
+   },
+   "finish_reason": "stop"
+  }
+ ],
+ "reader_chars": 1865,
+ "pack_chars": 47850,
+ "pack_id": "ep3_28b6d6ce4fec",
+ "skill": "skills\\writing\\reader_first_explainer",
+ "created_at": "2026-10-31T08:20:28.026873+00:00"
+}

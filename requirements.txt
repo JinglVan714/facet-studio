@@ -1,0 +1,34 @@
+# 取自**实测可跑**的环境：conda `myagent` / Python 3.11.14（版本为实际安装值，非推测）
+#
+# 安装（用项目解释器，别用 PATH 上的 python）：
+#   "D:/anaconda/envs/myagent/python.exe" -m pip install -r requirements.txt
+#
+# ⚠️ pip 用官方源；清华镜像对本机返回 403（不要加 -i 参数）
+# ⚠️ 不要用 Python 3.13：av / dashscope / scenedetect 在其上装不上
+
+# ---- 取流 / 抽帧 / 转录 / 读图 ----
+av==17.0.1
+imageio-ffmpeg==0.6.0
+scenedetect==0.6.7.1
+pillow==12.0.0
+imagehash==4.3.2
+dashscope==1.25.5
+certifi==2025.11.12
+requests==2.32.5
+
+# ---- 写作可能会用到 ----
+openai==1.109.1
+langgraph==1.0.5
+langgraph-checkpoint-sqlite==3.0.3
+tiktoken==0.12.0
+pydantic==2.12.5
+
+# ---- 测试 ----
+pytest==9.0.2
+
+# ---- 数值 ----
+numpy==2.4.4
+
+# ---- 可选：观测后端（默认不装，本机带不动 Langfuse 自托管）----
+# arize-phoenix          # 一条命令起 + SQLite；许可证 ELv2（非 OSI 开源）
+# langfuse               # 上云用；自托管需 Docker + ≥16 GiB

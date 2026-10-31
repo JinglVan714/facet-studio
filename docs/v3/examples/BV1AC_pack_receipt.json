@@ -1,0 +1,189 @@
+{
+ "stage": "evidence_pack",
+ "status": "complete",
+ "ts": "2026-10-31T08:15:22.327746+00:00",
+ "inputs": {
+  "claims": {
+   "path": "runs\\v3_poc\\BV1AC_claims\\claims.json",
+   "sha256": "2d2cccb9a59c48cbfbe67c3fe11882871556725635719f26613cc8b92c141396",
+   "bytes": 27357
+  },
+  "passages": {
+   "path": "runs\\v3_poc\\BV1AC_transcript\\passages.json",
+   "sha256": "ac49ba4b52a2216069fe43c5536edbfa171bae171ab7b999c0a5e75d3de89679",
+   "bytes": 21032
+  },
+  "sentences": {
+   "path": "runs\\v3_poc\\BV1AC_transcript\\sentences.json",
+   "sha256": "26bff26147f4c48208d9bac97d5f764b2008e54bd84669d24d9bf0e6af1a632b",
+   "bytes": 45315
+  },
+  "frames_index": null,
+  "snapshot": {
+   "path": "runs\\run_20261029T081656Z_BV1ACbi6DEvC_09f7\\evidence_snapshot.json",
+   "sha256": "6376d8d07d7df8a17f78134c034efb43f5125b86c1cb7bb7a133228275728e29",
+   "bytes": 799710
+  },
+  "request": {
+   "path": "runs\\_scripts\\requests\\BV1ACbi6DEvC.json",
+   "sha256": "3852eab267af0cd3cc676625823d8c4997c27aad91b31bb281bb0ebb597e7206",
+   "bytes": 1740
+  }
+ },
+ "outputs": {
+  "pack": {
+   "path": "runs\\v3_poc\\BV1AC_pack_v3.json",
+   "sha256": "6d33ebe17fbdf6f83c48d955afb07cd3020b1f722d4cd11564f387827aaa69a3",
+   "bytes": 62647
+  }
+ },
+ "counts": {
+  "claims_in": 43,
+  "claims_selected": 40,
+  "sentences_selected": 53,
+  "frames_selected": 20,
+  "segments": 10,
+  "pack_chars": 47850,
+  "pack_compact_chars": 38200,
+  "truncated": false,
+  "truncation": {
+   "sentences_dropped": 0,
+   "frames_dropped": 0,
+   "notes": []
+  }
+ },
+ "params": {
+  "max_chars": 60000,
+  "max_frames": 24,
+  "frame_window_ms": 12000,
+  "max_frame_caption_chars": 160
+ },
+ "decisions": {
+  "selection": {
+   "max_claims_per_segment": 6,
+   "claims_considered": 43,
+   "claims_selected": 40,
+   "passage_coverage": {
+    "seg2": [
+     "seg2-p01",
+     "seg2-p02",
+     "seg2-p03",
+     "seg2-p04"
+    ],
+    "seg3": [
+     "seg3-p01",
+     "seg3-p02"
+    ],
+    "seg4": [
+     "seg4-p01",
+     "seg4-p02",
+     "seg4-p03"
+    ],
+    "seg5": [
+     "seg5-p01",
+     "seg5-p02"
+    ],
+    "seg6": [
+     "seg6-p01",
+     "seg6-p02",
+     "seg6-p03",
+     "seg6-p04",
+     "seg6-p05"
+    ],
+    "seg7": [
+     "seg7-p01",
+     "seg7-p03",
+     "seg7-p05",
+     "seg7-p06"
+    ],
+    "seg8": [
+     "seg8-p01",
+     "seg8-p02"
+    ],
+    "seg9": [
+     "seg9-p01"
+    ],
+    "seg10": [
+     "seg10-p01",
+     "seg10-p02",
+     "seg10-p03"
+    ]
+   },
+   "max_sentences_per_segment": 6,
+   "max_frames_per_segment": 2
+  }
+ },
+ "samples": [
+  {
+   "segments": [
+    {
+     "segment_id": "seg1",
+     "label": "开场：DeepSeek Harness被骂与内容预告",
+     "t_start_ms": 200,
+     "t_end_ms": 25320,
+     "prev_segment_id": null,
+     "next_segment_id": "seg2",
+     "claim_ids": [],
+     "sentence_ids": [],
+     "frame_ids": [
+      "00000_000004750",
+      "00000_000015000"
+     ]
+    },
+    {
+     "segment_id": "seg2",
+     "label": "科普大模型工具调用、Agent与Harness",
+     "t_start_ms": 25790,
+     "t_end_ms": 109530,
+     "prev_segment_id": "seg1",
+     "next_segment_id": "seg3",
+     "claim_ids": [
+      "c_5e3d0a61954c",
+      "c_15c6f9ca9a19",
+      "c_14c3c585854d",
+      "c_0d2a2c5940c5",
+      "c_e5880dd96db6"
+     ],
+     "sentence_ids": [
+      "seg2-s001",
+      "seg2-s002",
+      "seg2-s003",
+      "seg2-s004",
+      "seg2-s005",
+      "seg2-s006"
+     ],
+     "frame_ids": [
+      "00001_000017516",
+      "00002_000029716"
+     ]
+    },
+    {
+     "segment_id": "seg3",
+     "label": "DeepSeek Harness定位：开发者框架",
+     "t_start_ms": 110100,
+     "t_end_ms": 146470,
+     "prev_segment_id": "seg2",
+     "next_segment_id": "seg4",
+     "claim_ids": [
+      "c_d31bce05aa83",
+      "c_115ab1c5c431",
+      "c_baf253ac7375",
+      "c_b041bfb2b77e"
+     ],
+     "sentence_ids": [
+      "seg3-s001",
+      "seg3-s002",
+      "seg3-s003",
+      "seg3-s004",
+      "seg3-s005",
+      "seg3-s006"
+     ],
+     "frame_ids": [
+      "00007_000099534",
+      "00003_000105000"
+     ]
+    }
+   ]
+  }
+ ]
+}

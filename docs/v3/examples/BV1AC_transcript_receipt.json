@@ -1,0 +1,147 @@
+{
+ "stage": "transcript_merge",
+ "status": "complete",
+ "ts": "2026-10-31T05:09:55.562425+00:00",
+ "inputs": {
+  "units": {
+   "path": "data\\BV1ACbi6DEvC\\substrate\\units.jsonl",
+   "sha256": "02f7a51826db0c3d3bdf0e6e37ca11bcd01c60c809ea48b5d38ed621d005a980",
+   "bytes": 130180
+  },
+  "contract": {
+   "path": "data\\BV1ACbi6DEvC\\substrate\\contract.json",
+   "sha256": "60a5f5707fc9d17df5527407abb53cb61573e109d763a2786c834600e3467d32",
+   "bytes": 20690
+  }
+ },
+ "outputs": {
+  "sentences": {
+   "path": "runs\\v3_poc\\BV1AC_transcript\\sentences.json",
+   "sha256": "26bff26147f4c48208d9bac97d5f764b2008e54bd84669d24d9bf0e6af1a632b",
+   "bytes": 45315
+  },
+  "passages": {
+   "path": "runs\\v3_poc\\BV1AC_transcript\\passages.json",
+   "sha256": "ac49ba4b52a2216069fe43c5536edbfa171bae171ab7b999c0a5e75d3de89679",
+   "bytes": 21032
+  }
+ },
+ "counts": {
+  "units_in": 385,
+  "sentences_out": 116,
+  "passages_out": 32,
+  "sentence_chars_median": 38,
+  "passage_chars_median": 147,
+  "filler_only_sentences": 0
+ },
+ "params": {
+  "max_gap_ms": 2000,
+  "max_sentence_chars": 180,
+  "max_sentences_per_passage": 4,
+  "max_passage_chars": 450
+ },
+ "decisions": {
+  "sentence_boundary_reasons": {
+   "sentence_end": 105,
+   "segment_change": 9,
+   "max_chars": 1,
+   "end": 1
+  },
+  "passage_boundary_reasons": {
+   "max_sentences": 22,
+   "segment_change": 9,
+   "end": 1
+  }
+ },
+ "samples": [
+  {
+   "sentences": [
+    {
+     "sentence_id": "seg1-s001",
+     "segment_id": "seg1",
+     "unit_ids": [
+      "s0000-u00",
+      "s0000-u01",
+      "s0000-u02",
+      "s0000-u03"
+     ],
+     "t_start_ms": 200,
+     "t_end_ms": 6360,
+     "text": "Deepseek终于把harmonyos给端上来了，没想到的是啊，却被骂成了技术人自嗨、技术人主导的产品灾难。",
+     "boundary_reason": "sentence_end",
+     "filler_only": false
+    },
+    {
+     "sentence_id": "seg1-s002",
+     "segment_id": "seg1",
+     "unit_ids": [
+      "s0000-u04"
+     ],
+     "t_start_ms": 6480,
+     "t_end_ms": 7840,
+     "text": "为什么会出现这种情况呢？",
+     "boundary_reason": "sentence_end",
+     "filler_only": false
+    },
+    {
+     "sentence_id": "seg1-s003",
+     "segment_id": "seg1",
+     "unit_ids": [
+      "s0000-u05",
+      "s0000-u06",
+      "s0000-u07"
+     ],
+     "t_start_ms": 8200,
+     "t_end_ms": 11800,
+     "text": "大家好，我是轩辕，今天咱们就来把deepseekharmonyos给拆明白。",
+     "boundary_reason": "sentence_end",
+     "filler_only": false
+    }
+   ],
+   "passages": [
+    {
+     "passage_id": "seg1-p01",
+     "segment_id": "seg1",
+     "sentence_ids": [
+      "seg1-s001",
+      "seg1-s002",
+      "seg1-s003",
+      "seg1-s004"
+     ],
+     "t_start_ms": 200,
+     "t_end_ms": 13200,
+     "text": "Deepseek终于把harmonyos给端上来了，没想到的是啊，却被骂成了技术人自嗨、技术人主导的产品灾难。为什么会出现这种情况呢？大家好，我是轩辕，今天咱们就来把deepseekharmonyos给拆明白。harmonyos到底是什么？",
+     "boundary_reason": "max_sentences"
+    },
+    {
+     "passage_id": "seg1-p02",
+     "segment_id": "seg1",
+     "sentence_ids": [
+      "seg1-s005",
+      "seg1-s006",
+      "seg1-s007",
+      "seg1-s008"
+     ],
+     "t_start_ms": 13360,
+     "t_end_ms": 25320,
+     "text": "核心的cortis插件系统又是个什么东西？四种模式又该怎么选？我这里为什么又会多出一个新的模式呢？最后我把deepseekharmonyos做成了点击即用的桌面版，还增加了一些功能，一定要看到最后哦！",
+     "boundary_reason": "segment_change"
+    },
+    {
+     "passage_id": "seg2-p01",
+     "segment_id": "seg2",
+     "sentence_ids": [
+      "seg2-s001",
+      "seg2-s002",
+      "seg2-s003",
+      "seg2-s004"
+     ],
+     "t_start_ms": 25790,
+     "t_end_ms": 52150,
+     "text": "这是一个AI大模型，它只会吐文字。如果你让它查询一下“玄玄的编程宇宙”这个UP主有多少粉丝，大模型啊本身它是办不到的。但假设我开发了一个网络搜索工具，传入一个搜索关键词，这个工具啊就会去访问我的主页，获取粉丝的数量。然后我写个程序通过API去调用大模型，并且告诉AI啊，我这里有这么一个工具，然后再通过这个程序来向大模型提问：“轩辕的编程宇宙”这个UP主有多少粉丝？",
+     "boundary_reason": "max_sentences"
+    }
+   ]
+  }
+ ]
+}

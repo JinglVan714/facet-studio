@@ -1,0 +1,11 @@
+{
+  "schema_version": "writing-skill-v3",
+  "skill_id": "reader_first_explainer",
+  "version": "0.1.0",
+  "forms": ["deep_analysis", "article"],
+  "required_views": ["mechanism", "highlight", "frame"],
+  "output_schema": "writer-output-v3",
+  "quality_rubric": "reader-first-v1",
+  "examples": ["examples.md"],
+  "scripts": []
+}
