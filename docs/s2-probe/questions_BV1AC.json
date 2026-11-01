@@ -1,0 +1,38 @@
+{
+  "schema": "s2-probe-questions-v1",
+  "case_id": "BV1AC",
+  "video_id": "BV1ACbi6DEvC",
+  "source_request": "runs/_scripts/requests/BV1ACbi6DEvC.json",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "central",
+      "question": "为什么说 DeepSeek Harness 能用同一套插件框架组装出四种不同的 Agent 工作模式？"
+    },
+    {
+      "id": "q2",
+      "type": "mechanism",
+      "question": "PTC 模式改变了什么？它为什么可能减少模型调用和 token，又在什么情况下可能反而增加调用？"
+    },
+    {
+      "id": "q3",
+      "type": "procedure",
+      "question": "标准、极简、创造三种模式在系统提示词、工具列表和能力上分别有什么差异？"
+    },
+    {
+      "id": "q4",
+      "type": "mechanism",
+      "question": "视频中标准模式和 PTC 模式在工作流/工具列表上有什么可见差异？"
+    },
+    {
+      "id": "q5",
+      "type": "boundary",
+      "question": "视频有没有给出四种模式在真实任务上的性能、成功率或 token 节省的量化对比？如果没有，它明确说了哪些限制或未验证项？"
+    },
+    {
+      "id": "q6",
+      "type": "quote",
+      "question": "请逐字引用视频中给 Harness 下定义、说明它负责哪些工程问题的那段原文，不要改写。"
+    }
+  ]
+}

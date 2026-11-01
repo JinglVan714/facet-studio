@@ -1,0 +1,24 @@
+{
+  "schema": "s2-probe-questions-v1",
+  "case_id": "BV1yb_narrow",
+  "video_id": "BV1ybHXzfEEu",
+  "source_request": "runs/s2_probe/BV1yb/request.json",
+  "notes": "Narrow index+parts test: q2/q4/q6 only; targets parts 04/06/07/08. Reference: reference_BV1yb.md q2/q4/q6.",
+  "questions": [
+    {
+      "id": "n1",
+      "type": "mechanism",
+      "question": "菜菜子的新衣服/魔法杖设计与她对粉丝的祝福有什么关系？"
+    },
+    {
+      "id": "n2",
+      "type": "procedure",
+      "question": "她如何处理粉丝的心理/家庭问题？请举至少两个具体做法。"
+    },
+    {
+      "id": "n3",
+      "type": "quote",
+      "question": "请逐字引用菜菜子解释“以真诚换真诚”的那段原文，不要改写。"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "schema": "s2-probe-questions-v1",
+  "case_id": "BV1yb",
+  "video_id": "BV1ybHXzfEEu",
+  "source_request": "runs/s2_probe/BV1yb/request.json",
+  "notes": "Long-video case (~28 min, interview/vlog). No frame-only question: selected frames have mostly empty captions.",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "central",
+      "question": "菜菜子为什么认为虚拟主播能成为粉丝的情感陪伴？请把她的虚拟形象、直播间定位、互动方式和“以真诚换真诚”连起来解释。"
+    },
+    {
+      "id": "q2",
+      "type": "mechanism",
+      "question": "菜菜子的新衣服/魔法杖设计与她对粉丝的祝福有什么关系？"
+    },
+    {
+      "id": "q3",
+      "type": "mechanism",
+      "question": "她为什么把直播间定位成“幼儿园园长”？这个定位解决了什么问题？"
+    },
+    {
+      "id": "q4",
+      "type": "procedure",
+      "question": "她如何处理粉丝的心理/家庭问题？请举至少两个具体做法。"
+    },
+    {
+      "id": "q5",
+      "type": "boundary",
+      "question": "视频有没有给出虚拟主播陪伴效果的量化数据？它明确说了哪些限制或未验证项？"
+    },
+    {
+      "id": "q6",
+      "type": "quote",
+      "question": "请逐字引用菜菜子解释“以真诚换真诚”的那段原文，不要改写。"
+    },
+    {
+      "id": "q7",
+      "type": "synthesis",
+      "question": "把菜菜子的形象、直播定位、粉丝互动、家长沟通连起来，说明她认为虚拟主播的陪伴与现实中的人际关系是什么关系；视频没有验证什么？"
+    }
+  ]
+}

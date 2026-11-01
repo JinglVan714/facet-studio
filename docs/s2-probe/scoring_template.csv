@@ -1,0 +1,7 @@
+case,variant,q1_central,q2_mechanism,q3_procedure,q4_mechanism,q5_boundary,q6_quote,total,notes
+BV1AC,raw_asr,,,,,,,,,
+BV1AC,merged_text,,,,,,,,,
+BV1AC,lean_view,,,,,,,,,
+BV17,raw_asr,,,,,,,,,
+BV17,merged_text,,,,,,,,,
+BV17,lean_view,,,,,,,,,

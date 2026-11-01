@@ -26,7 +26,7 @@
 ## 3. 输入与安全
 
 - `data/`：9 个视频证据，有效只读输入；不改写。结构以用户后续提供为准；`data/cookies/` 不读、不入库、不外传。
-- `参考素材/skills/`：17 个参考仓库，有效只读输入；复用前查 license。当前 `reader_first_explainer` 是 v0.1 provisional；下一轮 skill 先重新调研/二开这些参考 + 本地 `bilibili-render-pdf`。
+- `参考素材/skills/`：17 个参考仓库，有效只读输入；复用前查 license。当前 `reader_first_explainer` 是前序 session 自动生成的 v0.1 provisional **占位**；它不是已验收 skill，不作为基线；writing 层从零设计，不继承它。skill 从零一个个做，开始前先重新调研/二开这些参考 + 本地 `bilibili-render-pdf`。
 - `REFERENCES.md`：本地参考/证据的 git 可见索引；完整 `data/`、`参考素材/skills/` 保持本地只读，不入库。
 - `_archive/`、旧 run、旧 audit/reader：不读，除非用户明确要求。
 - 不自动 commit/push/publish；不伪造 reader test/A-B；不编造画面/生成图当证据。
@@ -43,9 +43,31 @@
 ## 5. 开发纪律（不变）
 
 - 开发时，将每一个步骤做扎实，不要动不动就端到端，动手前思考这个环节的所有输入（接收到的所有输入是否极致高效合理、逻辑清晰且符合该阶段及整体工作流。同样适用于输出）、输出（是否是满足现阶段、是否结构清晰流畅能被后续高效消费快速成本低）。（尤其是涉及到模型调用）。
-- 思考数据的trace是否合理；不要设什么最小门槛/硬指标/现阶段开发（容易越走越深，越走越错）给后续挖坑。
+- 客观分析写作层怎么样才能最高效率利用写作、最快理解（注意力不涣散）、成本最低？（以上同样适用于substrate以及其他部分）
+- 思考数据的trace是否合理，最好保存下来便于迭代；不要设什么最小门槛/硬指标/现阶段开发（容易越走越深，越走越错）给后续挖坑。
+- 思考清楚每一个开发环节的边界，不要死磕，从整体业务出发思考开发到哪里就收益不高。
 - 只修整体的通用工作流，不手改单篇出现的问题；不按单条 finding 调参；不要硬编码硬适配个例。
 - 不为单个文体/单条 finding /单个视频加 validator/gate/词表等硬编码；≥2 视频/知识形态/文体结构复现才进通用层。
 - 不恢复 v2 多阶段链；不把 v2 body/validator/gate 搬回来。
 - 不伪造 reader test/A-B（要让开发者自己测）；不自动发布。
 - 不把 P0 样本或者其他任何历史样本的 1,865 字/38k tokens 当最终质量、成本或长度承诺。
+
+## 6. 阶段门（2026-11-01 修正：进入 writing 层）
+
+- 当前阶段是 **writing 层设计/落地**。substrate v1 已冻结并作为可信底座；默认 light path，claim 可选 audit/reuse。参考 [docs/substrate-v1-freeze.md](docs/substrate-v1-freeze.md)。
+- **非必要不再优化/改动 substrate**；除非发现真实阻塞（错误、不可用、审计不可信）。发现 substrate 问题先报告，不静默改。
+- writing 层**从零设计，对照 JD**；不继承现有 writing 实验/占位 skill（`skills/writing/reader_first_explainer`、`one_call_writer`、`prose_writer_probe`、`comprehension_view`、`writer_view`、`bind_merged_frames`）。它们只作历史/参考，不是基线。
+- 新 session 先读 architecture/AGENTS/HANDOFF/STATE/substrate freeze，再读代码，再自行规划；本文件不提供 writing 路线。
+- writing 层仍遵守 §2/§3/§5：证据优先、默认 1 Writer、多文体 = Skill/View、不伪造 reader test/A-B、不自动发布、不按单篇调参、不为单个文体加 validator/gate。
+- 质量门/评测由 writing 设计定义；reader test/A-B 必须真实，不能用模型/模拟盲读冒充。模型调用仍记录 system/user prompt（hash + 原文路径）、raw response、usage（含 reasoning/cached）、latency、finish_reason、validation、decision。
+- 先测后调：优化模型/参数/prompt 前先有 trace 和 before/after；不凭感觉调，不按单条 finding/单篇调参。
+- 详细 substrate v1 合同/接口见 [docs/substrate-v1-freeze.md](docs/substrate-v1-freeze.md)；S0/S1/view 文档是历史，不是当前基线。
+
+## 7. 素材消费与硬性措施（2026-11-01 修正）
+
+- **默认 light path**：Writer 读 edited text（no claims/IDs/timecodes）+ frames；claim 层是可选 audit/reuse，不是默认输入。full pack/source_map 只作 audit。旧的 A+C+D、lean view、index+parts 是历史实验，不是当前默认。
+- **不硬截断**：`max_chars` 只 advisory；`over_budget` 记录；frame caption cap 必须报告 `caption_truncated`/`caption_full_chars`；不静默删内容。
+- **skill 只作参考**：本地 17 个 skill 是素材；当前 writing 层从零设计，不直接搬参考 skill 的整条 pipeline/prompt，也不复用占位 skill。
+- **不按单篇修**：任何 view/排序/覆盖/格式修复都必须跨 ≥2 视频复现；不手改 claim/reader。
+- **substrate v1 只读**：writing 层通过 [docs/substrate-v1-freeze.md](docs/substrate-v1-freeze.md) 的接口使用它；非必要不改 substrate。
+- 详细契约见 [docs/substrate-v1-freeze.md](docs/substrate-v1-freeze.md)；旧 [docs/substrate-view-contract.md](docs/substrate-view-contract.md) 是历史。

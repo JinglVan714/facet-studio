@@ -1,5 +1,10 @@
 """Build a context-preserving EvidencePack from existing substrate JSON.
 
+Legacy path.  This builder still applies hard unit/frame trimming at
+``max_chars`` and is not the default v3 pack path; ``pack_from_claims`` is.
+Do not extend the trimming behavior here; use writer-view partitioning for
+budgeted views instead.
+
 v3 prototype.  Reads EvidenceSnapshot / TemporalOutline / optional
 KnowledgeSnapshot, groups claims by temporal segment, and emits one compact
 JSON pack:

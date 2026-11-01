@@ -7,8 +7,10 @@ and replay can substitute recorded responses without touching the pipeline.
 
 from __future__ import annotations
 
+import json
 import time
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Protocol
 
 from ..core.config import Settings
@@ -72,6 +74,7 @@ class LLMResponse:
     finish_reason: str | None = None
     provider_response_id: str | None = None
     replayed: bool = False
+    cached: bool = False
 
 
 @dataclass
@@ -403,6 +406,127 @@ class ReplayLLM(_BudgetMixin):
             provider_response_id=record.get("call_id"),
             replayed=True,
         )
+
+
+class CachedLLM:
+    """Content-addressed cache around another LLM client.
+
+    The key is the exact provider request identity (model + system + user +
+    max_tokens + temperature).  A hit does not call the inner provider; it
+    records a replay-style call row and returns the cached response.  Corrupt
+    cache entries fall back to a real call.
+    """
+
+    provider = "cache"
+
+    def __init__(self, inner: Any, cache_dir: Path, *, call_sink: Any | None = None):
+        self.inner = inner
+        self.cache_dir = Path(cache_dir)
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        self.model = getattr(inner, "model", "unknown")
+        self.call_sink = call_sink
+
+    def complete(
+        self,
+        *,
+        stage: str,
+        key: str,
+        system: str,
+        user: str,
+        max_tokens: int | None = None,
+        temperature: float = 0.0,
+    ) -> LLMResponse:
+        settings = getattr(self.inner, "settings", None)
+        resolved_max_tokens = max_tokens or getattr(
+            settings, "max_output_tokens", 32768
+        )
+        input_hash, system_hash, user_hash = request_identity(
+            model=self.model,
+            system=system,
+            user=user,
+            max_tokens=resolved_max_tokens,
+            temperature=temperature,
+        )
+        cache_path = self.cache_dir / f"{input_hash}.json"
+        if cache_path.exists():
+            try:
+                payload = json.loads(cache_path.read_text(encoding="utf-8"))
+                usage = LLMUsage(
+                    **{
+                        k: int(v or 0)
+                        for k, v in payload.get("usage", {}).items()
+                    }
+                )
+                record = LLMCallRecord(
+                    call_id=(
+                        "cache_"
+                        + semantic_hash(
+                            {
+                                "stage": stage,
+                                "key": key,
+                                "h": input_hash,
+                                "t": utc_now_iso(),
+                            },
+                            drop_volatile=False,
+                        )[:16]
+                    ),
+                    stage=stage,
+                    key=key,
+                    input_hash=input_hash,
+                    model=payload.get("model", self.model),
+                    provider="cache",
+                    system_hash=system_hash,
+                    user_hash=user_hash,
+                    max_tokens=resolved_max_tokens,
+                    temperature=temperature,
+                    status="succeeded",
+                    raw_response=payload.get("text", ""),
+                    finish_reason=payload.get("finish_reason"),
+                    usage=usage.as_dict(),
+                    latency_ms=0,
+                    replayed=True,
+                )
+                if self.call_sink is not None:
+                    self.call_sink(record.as_dict())
+                return LLMResponse(
+                    text=payload.get("text", ""),
+                    model=payload.get("model", self.model),
+                    provider="cache",
+                    usage=usage,
+                    latency_ms=0,
+                    finish_reason=payload.get("finish_reason"),
+                    provider_response_id=payload.get("provider_response_id"),
+                    replayed=True,
+                    cached=True,
+                )
+            except (OSError, ValueError, TypeError):
+                # Corrupt cache entry: fall through to a real call.
+                pass
+
+        response = self.inner.complete(
+            stage=stage,
+            key=key,
+            system=system,
+            user=user,
+            max_tokens=resolved_max_tokens,
+            temperature=temperature,
+        )
+        if response.text.strip():
+            payload = {
+                "text": response.text,
+                "model": response.model,
+                "provider": response.provider,
+                "usage": response.usage.as_dict(),
+                "finish_reason": response.finish_reason,
+                "provider_response_id": response.provider_response_id,
+                "created_at": utc_now_iso(),
+            }
+            tmp_path = cache_path.with_suffix(".tmp")
+            tmp_path.write_text(
+                json.dumps(payload, ensure_ascii=False), encoding="utf-8"
+            )
+            tmp_path.replace(cache_path)
+        return response
 
 
 def _usage_from_response(response: Any) -> LLMUsage:

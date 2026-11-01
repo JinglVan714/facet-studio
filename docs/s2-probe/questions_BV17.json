@@ -1,0 +1,38 @@
+{
+  "schema": "s2-probe-questions-v1",
+  "case_id": "BV17",
+  "video_id": "BV17DHC6CELr",
+  "source_request": "runs/_scripts/requests/BV17DHC6CELr.json",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "central",
+      "question": "为什么文字可以直接搜照片，而且文字对照片的分数整体偏低时仍能靠排名找到正确结果？"
+    },
+    {
+      "id": "q2",
+      "type": "mechanism",
+      "question": "为什么文字和照片能进入同一个 768 维空间并直接比较？两个 encoder 分别做什么？"
+    },
+    {
+      "id": "q3",
+      "type": "mechanism",
+      "question": "为什么用 0.8 作为固定门槛会搜不到结果？正确的做法是什么？"
+    },
+    {
+      "id": "q4",
+      "type": "procedure",
+      "question": "把 768 维切到 256/128 维后为什么要归一化？视频给出了什么质量/效果变化？"
+    },
+    {
+      "id": "q5",
+      "type": "boundary",
+      "question": "视频有没有给出 128 维相对 768 维的通用质量百分比，或一个适用于所有数据的最优维度？它明确说了什么？"
+    },
+    {
+      "id": "q6",
+      "type": "quote",
+      "question": "请逐字引用视频中解释“文字对照片分数偏低但排名仍然正确”原因的那段原文，不要改写。"
+    }
+  ]
+}

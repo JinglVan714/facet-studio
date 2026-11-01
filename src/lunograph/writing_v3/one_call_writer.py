@@ -20,13 +20,43 @@ from typing import Any
 
 from lunograph.core.config import get_settings
 from lunograph.core.jsonutil import StructuredOutputError, extract_json_object
-from lunograph.providers.llm import DeepSeekLLM, ProviderError
+from lunograph.providers.llm import CachedLLM, DeepSeekLLM, ProviderError
 from lunograph.runtime.budget import BudgetPolicy, BudgetState
+
+from .bind_merged_frames import bind_output as bind_merged_frames_output
+from .bind_merged_frames import bind_span as bind_merged_frames_span
 
 ID_LIKE = re.compile(r"(?<![A-Za-z0-9])[a-z]{2,8}_[0-9a-f]{6,}(?![A-Za-z0-9])")
 CITATION = re.compile(r"\[S\d+\]|\[cite[^\]]*\]", re.IGNORECASE)
 TIMECODE = re.compile(r"(?<!\d)\d{1,2}:\d{2}(?::\d{2})?(?!\d)")
 NUMBER = re.compile(r"\d+(?:\.\d+)?")
+
+MERGED_FRAMES_CONTRACT = """
+## Evidence mode: merged_frames (overrides the skill's evidence_pack discipline)
+
+The evidence is merged transcript passages plus per-segment frame captions. It has no claim/evidence IDs.
+
+- A grounded span must include:
+  "grounding_ref": {"passage_id": "<id from evidence>", "quote": "<exact continuous substring of that passage's text>"}
+  or for a real frame:
+  "grounding_ref": {"frame_id": "<id from evidence>", "caption": "<short look-here caption>"}
+- Do NOT output claim_ids/evidence_ids in this mode.
+- The quote must be copied exactly from the passage (continuous substring); do not translate, join distant fragments, or add punctuation.
+- Numbers in a grounded span must appear in the bound quote or frame caption.
+- Editorial spans: role="editorial", no grounding_ref, no claim/evidence/quote; they may organize/limit/synthesize but not add facts.
+- The rest of the output schema (plan_header, sections, media_choices, self_review) is unchanged.
+"""
+
+LEAN_CW0_CONTRACT = """
+## Evidence mode: lean_cw0
+
+evidence_view is the writer view: claims (claim_id/text/status/scope/evidence), context sentences, frames. Use claim/evidence IDs and exact quotes from the view.
+
+- grounded spans carry claim_ids/evidence_ids/quote (the existing skill contract).
+- status="bounded" + scope are explicit limitations/qualifications; use them when the article needs a boundary.
+- editorial spans carry no binding.
+- Do not use claims/quotes/frames that are not in the view.
+"""
 
 
 def _read_json(path: Path) -> Any:
@@ -50,12 +80,21 @@ def _span_texts(output: dict[str, Any]):
                 yield span.get("text", "")
 
 
-def _validate_output(
-    output: dict[str, Any], pack: dict[str, Any]
-) -> list[str]:
+def _iter_spans(output: dict[str, Any]):
+    for s_index, section in enumerate(output.get("sections", [])):
+        for p_index, paragraph in enumerate(section.get("paragraphs", [])):
+            for sp_index, span in enumerate(paragraph.get("spans", [])):
+                yield (
+                    f"s{s_index}/p{p_index}/sp{sp_index}",
+                    section,
+                    paragraph,
+                    span,
+                )
+
+
+def _validate_structure(output: dict[str, Any]) -> list[str]:
+    """Mode-independent structure and reader-hygiene checks."""
     issues: list[str] = []
-    claims = {c["claim_id"]: c for c in pack.get("claims", [])}
-    evidence = {e["evidence_id"]: e for e in pack.get("evidence", [])}
     if not output.get("plan_header", {}).get("title"):
         issues.append("plan_header.title missing")
     if not output.get("sections"):
@@ -76,37 +115,19 @@ def _validate_output(
                 path = f"sections[{s_index}].paragraphs[{p_index}].spans[{sp_index}]"
                 text = span.get("text", "")
                 role = span.get("role")
-                claim_ids = span.get("claim_ids") or []
-                evidence_ids = span.get("evidence_ids") or []
-                quote = span.get("quote")
                 if not text.strip():
                     issues.append(f"{path}.text empty")
-                if role == "grounded":
-                    if not claim_ids or not evidence_ids:
-                        issues.append(f"{path} grounded without claim/evidence")
-                    for cid in claim_ids:
-                        if cid not in claims:
-                            issues.append(f"{path} unknown claim {cid}")
-                    for eid in evidence_ids:
-                        if eid not in evidence:
-                            issues.append(f"{path} unknown evidence {eid}")
-                    bound_quotes = [
-                        evidence[eid]["quote"]
-                        for eid in evidence_ids
-                        if eid in evidence
-                    ]
-                    joined = "\n".join(bound_quotes)
-                    if quote and not any(quote in q for q in bound_quotes):
-                        issues.append(f"{path}.quote not in bound evidence")
-                    for number in NUMBER.findall(text):
-                        if number not in joined:
-                            issues.append(
-                                f"{path} number {number!r} not in bound evidence"
-                            )
-                elif role == "editorial":
-                    if claim_ids or evidence_ids or quote:
-                        issues.append(f"{path} editorial carries binding/quote")
-                else:
+                if role == "editorial":
+                    if (
+                        span.get("claim_ids")
+                        or span.get("evidence_ids")
+                        or span.get("quote")
+                        or span.get("grounding_ref")
+                    ):
+                        issues.append(
+                            f"{path} editorial carries binding/quote/grounding_ref"
+                        )
+                elif role != "grounded":
                     issues.append(f"{path} invalid role {role!r}")
     reader_text = "\n".join(_span_texts(output))
     if ID_LIKE.search(reader_text):
@@ -116,6 +137,89 @@ def _validate_output(
     if TIMECODE.search(reader_text):
         issues.append("reader text contains timecode")
     return issues
+
+
+def _validate_output(
+    output: dict[str, Any], pack: dict[str, Any]
+) -> list[str]:
+    """Validate a full_pack/lean_cw0 output that carries claim/evidence IDs."""
+    issues = _validate_structure(output)
+    claims = {c["claim_id"]: c for c in pack.get("claims", [])}
+    evidence = {e["evidence_id"]: e for e in pack.get("evidence", [])}
+    for path, _section, _paragraph, span in _iter_spans(output):
+        if span.get("role") != "grounded":
+            continue
+        text = span.get("text", "")
+        claim_ids = span.get("claim_ids") or []
+        evidence_ids = span.get("evidence_ids") or []
+        quote = span.get("quote")
+        if not claim_ids or not evidence_ids:
+            issues.append(f"{path} grounded without claim/evidence")
+        for cid in claim_ids:
+            if cid not in claims:
+                issues.append(f"{path} unknown claim {cid}")
+        for eid in evidence_ids:
+            if eid not in evidence:
+                issues.append(f"{path} unknown evidence {eid}")
+        bound_quotes = [
+            evidence[eid]["quote"] for eid in evidence_ids if eid in evidence
+        ]
+        joined = "\n".join(bound_quotes)
+        if quote and not any(quote in q for q in bound_quotes):
+            issues.append(f"{path}.quote not in bound evidence")
+        for number in NUMBER.findall(text):
+            if number not in joined:
+                issues.append(f"{path} number {number!r} not in bound evidence")
+    return issues
+
+
+def _validate_output_merged_frames(
+    output: dict[str, Any],
+    pack: dict[str, Any],
+    passages: list[dict[str, Any]],
+) -> tuple[list[str], dict[str, Any]]:
+    """Validate a merged_frames output via grounding_ref and the audit adapter."""
+    issues = _validate_structure(output)
+    span_by_ref: dict[str, dict[str, Any]] = {}
+    for path, _section, _paragraph, span in _iter_spans(output):
+        span_by_ref[path] = span
+        if span.get("role") != "grounded":
+            continue
+        ref = span.get("grounding_ref")
+        if not isinstance(ref, dict):
+            issues.append(f"{path} grounded without grounding_ref")
+        elif "frame_id" not in ref and not (ref.get("quote") or "").strip():
+            issues.append(f"{path} grounding_ref missing quote")
+        if span.get("claim_ids") or span.get("evidence_ids"):
+            issues.append(
+                f"{path} merged_frames should not carry claim/evidence IDs"
+            )
+    report = bind_merged_frames_output(output, pack=pack, passages=passages)
+    evidence_by_id = {e["evidence_id"]: e for e in pack.get("evidence", [])}
+    frames_by_id = {f["frame_id"]: f for f in pack.get("frames", [])}
+    for binding in report["bindings"]:
+        status = binding["status"]
+        path = binding["span_ref"]
+        if status not in {"bound", "frame_bound"}:
+            issues.append(f"{path} binding {status}: {binding.get('notes')}")
+            continue
+        span = span_by_ref.get(path, {})
+        numbers = NUMBER.findall(span.get("text", ""))
+        if not numbers:
+            continue
+        if status == "bound":
+            joined = "\n".join(
+                evidence_by_id[eid]["quote"]
+                for eid in binding["evidence_ids"]
+                if eid in evidence_by_id
+            )
+        else:
+            frame_id = (binding.get("frame") or {}).get("frame_id")
+            joined = frames_by_id.get(frame_id, {}).get("caption", "")
+        for number in numbers:
+            if number not in joined:
+                issues.append(f"{path} number {number!r} not in bound evidence")
+    return issues, report
 
 
 def _render_reader(
@@ -171,26 +275,67 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--request", type=Path, required=True)
     parser.add_argument("--out-dir", type=Path, required=True)
     parser.add_argument("--temperature", type=float, default=0.3)
-    parser.add_argument("--max-tokens", type=int, default=65536)
+    parser.add_argument(
+        "--max-tokens",
+        type=int,
+        default=None,
+        help="optional; default provider/settings max_output_tokens",
+    )
     parser.add_argument("--budget-tokens", type=int, default=300_000)
+    parser.add_argument("--cache-dir", type=Path)
+    parser.add_argument("--no-cache", action="store_true")
+    parser.add_argument(
+        "--view-mode",
+        choices=["full_pack", "merged_frames", "lean_cw0"],
+        default="full_pack",
+    )
+    parser.add_argument("--view", type=Path)
+    parser.add_argument("--passages", type=Path)
     parser.add_argument("--validate-only", action="store_true")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args(argv)
 
+    if args.view_mode == "merged_frames":
+        if args.passages is None:
+            parser.error("--view-mode merged_frames 需要 --passages")
+        if not args.validate_only and args.view is None:
+            parser.error(
+                "--view-mode merged_frames 运行需要 --view（rendered text）"
+            )
+    elif args.view_mode == "lean_cw0" and not args.validate_only and args.view is None:
+        parser.error("--view-mode lean_cw0 运行需要 --view（writer view JSON）")
+
     pack = _read_json(args.pack)
     request = _read_json(args.request)
+    passages = (
+        _read_json(args.passages).get("passages", []) if args.passages else []
+    )
     if args.validate_only:
         if args.output is None:
             raise SystemExit("--validate-only requires --output")
         output = _read_json(args.output)
-        issues = _validate_output(output, pack)
         args.out_dir.mkdir(parents=True, exist_ok=True)
         metrics_path = args.out_dir / "metrics.json"
         metrics = (
             _read_json(metrics_path) if metrics_path.exists() else {}
         )
+        if args.view_mode == "merged_frames":
+            issues, report = _validate_output_merged_frames(
+                output, pack, passages
+            )
+            bindings_path = args.out_dir / "bindings.json"
+            bindings_path.write_text(
+                json.dumps(report, ensure_ascii=False, indent=1),
+                encoding="utf-8",
+            )
+            metrics["binding_status"] = report["status"]
+            metrics["binding_counts"] = report["counts"]
+            metrics["bindings"] = str(bindings_path)
+        else:
+            issues = _validate_output(output, pack)
         metrics["status"] = "complete" if not issues else "partial"
         metrics["issues"] = issues
+        metrics["view_mode"] = args.view_mode
         metrics_path.write_text(
             json.dumps(metrics, ensure_ascii=False, indent=1), encoding="utf-8"
         )
@@ -211,17 +356,62 @@ def main(argv: list[str] | None = None) -> int:
     examples_path = args.skill_dir / "examples.md"
     if examples_path.exists():
         skill += "\n\n## Examples\n\n" + examples_path.read_text(encoding="utf-8")
-    system = skill + "\n\nReturn only one JSON object; no markdown fence, no prose outside JSON."
-    user = json.dumps(
-        {"request": request, "evidence_pack": pack},
-        ensure_ascii=False,
-        separators=(",", ":"),
+    mode_contract = ""
+    if args.view_mode == "merged_frames":
+        mode_contract = MERGED_FRAMES_CONTRACT
+    elif args.view_mode == "lean_cw0":
+        mode_contract = LEAN_CW0_CONTRACT
+    system = (
+        skill
+        + mode_contract
+        + "\n\nReturn only one JSON object; no markdown fence, no prose outside JSON."
     )
+    view_text = None
+    view_json = None
+    if args.view_mode == "merged_frames":
+        view_text = args.view.read_text(encoding="utf-8")
+        user = json.dumps(
+            {"request": request, "evidence_text": view_text},
+            ensure_ascii=False,
+            separators=(",", ":"),
+        )
+    elif args.view_mode == "lean_cw0":
+        view_json = _read_json(args.view)
+        user = json.dumps(
+            {"request": request, "evidence_view": view_json},
+            ensure_ascii=False,
+            separators=(",", ":"),
+        )
+    else:
+        user = json.dumps(
+            {"request": request, "evidence_pack": pack},
+            ensure_ascii=False,
+            separators=(",", ":"),
+        )
 
     policy = BudgetPolicy(max_calls=1, max_tokens=args.budget_tokens)
     budget = BudgetState(policy)
-    provider = DeepSeekLLM(settings, budget=budget)
     args.out_dir.mkdir(parents=True, exist_ok=True)
+    prompts_dir = args.out_dir / "prompts"
+    prompts_dir.mkdir(parents=True, exist_ok=True)
+    system_path = prompts_dir / "v3_writer.system.txt"
+    user_path = prompts_dir / "v3_writer.user.txt"
+    system_path.write_text(system, encoding="utf-8")
+    user_path.write_text(user, encoding="utf-8")
+    llm_calls_path = args.out_dir / "llm_calls.jsonl"
+    llm_calls_path.write_text("", encoding="utf-8")
+
+    def call_sink(record: dict[str, Any]) -> None:
+        with llm_calls_path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+    inner = DeepSeekLLM(settings, budget=budget, call_sink=call_sink)
+    cache_dir = args.cache_dir or (settings.runs_root / "_cache" / "llm")
+    provider = (
+        inner
+        if args.no_cache
+        else CachedLLM(inner, cache_dir, call_sink=call_sink)
+    )
     calls: list[dict[str, Any]] = []
     raw_text = ""
     try:
@@ -241,6 +431,7 @@ def main(argv: list[str] | None = None) -> int:
                 "latency_ms": response.latency_ms,
                 "usage": response.usage.as_dict(),
                 "finish_reason": response.finish_reason,
+                "cached": response.cached,
             }
         )
         (args.out_dir / "raw_response.txt").write_text(raw_text, encoding="utf-8")
@@ -261,7 +452,19 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 4
 
-    issues = _validate_output(output, pack)
+    bindings_path = None
+    binding_report = None
+    if args.view_mode == "merged_frames":
+        issues, binding_report = _validate_output_merged_frames(
+            output, pack, passages
+        )
+        bindings_path = args.out_dir / "bindings.json"
+        bindings_path.write_text(
+            json.dumps(binding_report, ensure_ascii=False, indent=1),
+            encoding="utf-8",
+        )
+    else:
+        issues = _validate_output(output, pack)
     reader = _render_reader(
         output, pack, data_root=settings.data_root, out_dir=args.out_dir
     )
@@ -269,14 +472,42 @@ def main(argv: list[str] | None = None) -> int:
         json.dumps(output, ensure_ascii=False, indent=1), encoding="utf-8"
     )
     (args.out_dir / "reader.md").write_text(reader, encoding="utf-8")
+    if view_text is not None:
+        view_chars = len(view_text)
+    elif view_json is not None:
+        view_chars = len(
+            json.dumps(
+                view_json, ensure_ascii=False, separators=(",", ":")
+            )
+        )
+    else:
+        view_chars = len(
+            json.dumps(pack, ensure_ascii=False, separators=(",", ":"))
+        )
     metrics = {
         "status": "complete" if not issues else "partial",
         "issues": issues,
+        "view_mode": args.view_mode,
+        "view_path": str(args.view) if args.view else None,
+        "view_chars": view_chars,
+        "binding_status": (
+            binding_report["status"] if binding_report else None
+        ),
+        "binding_counts": (
+            binding_report["counts"] if binding_report else None
+        ),
+        "bindings": str(bindings_path) if bindings_path else None,
         "calls": calls,
+        "cached": response.cached,
         "reader_chars": len(reader),
         "pack_chars": pack.get("pack_chars"),
         "pack_id": pack.get("pack_id"),
+        "pack_hash": pack.get("pack_hash"),
         "skill": str(args.skill_dir),
+        "prompt_system": str(system_path),
+        "prompt_user": str(user_path),
+        "llm_calls": str(llm_calls_path),
+        "cache_dir": str(cache_dir),
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     (args.out_dir / "metrics.json").write_text(

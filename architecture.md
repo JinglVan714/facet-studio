@@ -92,6 +92,13 @@
 - 生图提示词：图像检查 + 真实帧/生成图 provenance。
 - 所有公开发布：人工 `publish_approved`；不自动发布。
 
+### 2.5 阶段门：substrate 先于 skill
+
+- substrate（units/sentences/passages/claims/evidence/context/frames）是独立阶段；它先用固定 probe 证明自己比 raw ASR / merged text 更适合理解+写作，再进入 skill 阶段。
+- 阶段门不是“能写出一篇文章”：P0 文章不能作为 skill 验收；skill 必须从零一个个做、一个个打磨。
+- substrate 的验收维度：覆盖、上下文、忠实/可回查、不冗余、不离散、下游 probe、成本/延迟、可观测；具体合同/协议/trace schema 见 `docs/substrate-s0.md`。
+- 在 substrate 阶段不做真实 reader test/A-B、不 freeze P1、不扩第二文体；这些是 skill 阶段的 gate。
+
 ---
 
 ## 3. 设计原则
@@ -270,6 +277,11 @@ View 的规则：
 - **先覆盖 passage/beat，再按 request focus 补**：每个 passage/beat 至少一条 claim，避免 lexical top-k 把一整个模式/步骤挤掉；
 - 带 counterevidence/gaps/conflicts；
 - 可缓存；同输入同 hash。
+- **View 必须带 selection/truncation report**：claims considered/selected/dropped by reason；每个 selected claim 至少保留一条 quote 所在 sentence 作为上下文；截断/上下文丢失必须显式，不静默。
+- **写作级聚合 claim 必须在 pack 的 provenance 块回指 `source_claim_ids`/`source_evidence_ids`**；provenance 是 audit-only，不进 writer view；View 只引用 EvidenceSnapshot 的 ID，不能成为第二套事实源。
+- **Writer-facing View 只带写作所需字段**：segments/claims/evidence quotes/context/frames/gaps/conflicts；selection/provenance/budget/truncation/hashes 等审计字段不进 Writer 上下文。audit metadata 不能挤掉 writer context 预算。
+- **默认不一次性注入 full pack**：Writer 读 lean view；大内容先读 index，再按需读 parts；full pack 只作 audit sidecar。契约见 `docs/substrate-view-contract.md`。
+- **pack 不做硬截断**：full pack 超出 advisory 预算时保留全部 claims/context/frames，记 `over_budget`；预算由 writer view 处理，超预算按 segment 分区（parts），不丢内容；单个 segment 超预算时保留并标记 oversize。
 
 ### 5.4 证据如何复用
 
@@ -516,6 +528,8 @@ Writer 看不到：
 
 - 每个 grounded span 有 claim/evidence；ID 在 EvidencePack；claim-evidence 闭合。
 - quote 是 evidence `raw_content` 的精确连续子串；它是 audit binding，不要求逐字出现在 span text 中；只有正文直接引用时才要求与 span text 一致。
+- quote 必须是对应 `sentence_ids` 拼接文本的连续子串；evidence 的 `t_start_ms`/`t_end_ms` 取这些 sentence 的并集；不满足 → `binding_failed`。
+- pack 的 selection/truncation 必须可回查：dropped claim/sentence/frame 带原因；任何 claim 的上下文句丢失必须显式记录。
 - grounded span 的 ASCII 数字必须出现在 bound evidence；不新增专名/说话人。
 - editorial span 不带 claim/evidence/quote；只能做组织/限定/综合。
 - 结构：section/heading/paragraph/span 非空；plan_header 与 sections 一致。
@@ -696,6 +710,7 @@ Writer 看不到：
 3. Third-party skill 要审计 prompt injection/工具权限。
 4. 与 EvidencePack/证据优先冲突的中间摘要链，不搬。
 5. 复用代码要有测试/可回退；不把框架类型带进领域对象。
+6. 2026-10-31 的本地 17 个 skill + web writing 项目扫描见 [docs/reference-writing-scan.md](docs/reference-writing-scan.md)；只作参考，不是 v3 基线。
 
 ### 14.2 候选
 
@@ -745,7 +760,14 @@ v3 只保留必要 schema；详细字段在实现时定，不先写 18 个合同
       "frame_candidates": ["f_..."]
     }
   ],
-  "claims": [{"claim_id": "c_...", "text": "...", "kind": "...", "scope": {}}],
+  "claims": [
+    {
+      "claim_id": "c_...",
+      "text": "...",
+      "kind": "...",
+      "scope": {}
+    }
+  ],
   "evidence": [
     {
       "evidence_id": "ev_...",
@@ -753,18 +775,44 @@ v3 只保留必要 schema；详细字段在实现时定，不先写 18 个合同
       "quote": "...",
       "t_start_ms": 0,
       "t_end_ms": 0,
+      "sentence_ids": ["..."],
       "frame_ids": ["..."],
       "capture_method": "asr|ocr|vlm|manual",
+      "stance": "supports|qualifies|contradicts|contextualizes",
       "rights_scope": "..."
     }
   ],
+  "provenance": {
+    "summary": {
+      "claims_total": 0,
+      "claims_with_source": 0,
+      "claims_without_source": 0,
+      "source_claim_count": 0,
+      "source_evidence_count": 0,
+      "stance_counts": {},
+      "support_status_counts": {},
+      "rights_scope_counts": {}
+    },
+    "claims": {
+      "c_...": {
+        "source_claim_ids": ["..."],
+        "source_evidence_ids": ["..."]
+      }
+    }
+  },
   "gaps": [],
   "conflicts": [],
   "budget": {"max_chars": 0, "max_frames": 0},
   "truncated": false,
+  "over_budget": false,
+  "budget_excess_chars": 0,
   "pack_hash": "..."
 }
 ```
+
+- `provenance` 与 `selection/truncation` 是 audit-only；Writer-facing View 只带写作字段，不带这些块。
+- `budget.max_chars`/`max_frames` 是 advisory；full pack 不做硬截断；`over_budget`/`budget_excess_chars` 记录超预算；writer view 超预算按 segment 分区（parts）。
+- View 产物：`writer_view`（lean single）、`writer_index` + `writer_parts` + `manifest`（按需）、full pack（audit）；详细 schema/不变量见 `docs/substrate-view-contract.md`。
 
 ### 15.2 SkillManifest
 
@@ -795,6 +843,8 @@ v3 只保留必要 schema；详细字段在实现时定，不先写 18 个合同
 
 - 每个 grounded span 一条 binding：span_ref/claim/evidence/quote/timecode/frame/capture/rights。
 - audit：sections/spans/binding/gaps/conflicts/verifier/rights。
+- provenance：写作 claim → substrate atomic claim/evidence；audit-only，不进 writer view。
+- writer view：lean projection（segments/claims/evidence/context/frames/gaps/conflicts）；audit 字段不进 Writer 上下文。
 - citations：evidence 去重、span_refs、quote/timecode/frame。
 - 同输入同 hash；可 replay。
 
@@ -827,6 +877,11 @@ v3 只保留必要 schema；详细字段在实现时定，不先写 18 个合同
 - 每个关键选择：skill 选择、verifier 触发、revise 原因、human waiver。
 - Trace/replay：固定 skill/evidence/prompt/model；旧 artifact 冻结。
 - 质量：reader test/A-B/专家 review；binding/quote 通过率；失败/partial 统计。
+- **模型调用 trace**：每次记录 stage/model/params、system/user prompt 的 hash 与原文路径、raw response、usage（prompt/completion/reasoning/cached）、latency、finish_reason、validation、decision；prompt 原文按 hash 存文件，不塞进 jsonl。
+- **实验记录**：输入变体（raw ASR/merged text/pack）、模型/参数、probe 分数、tokens/latency；同 case 同 prompt 可比；不按单篇调参。
+- **writer view 与 full pack 分开计**：writer_view chars/tokens、full pack chars/tokens；audit 字段不能挤掉 writer context 预算。
+- **views 分开计**：lean view、index、parts、full pack 的 chars/tokens/part 数/oversize 都记录；index+parts 的消费方不读 full pack。
+- **模型调用 cache**：按 provider request identity（model/system/user/max_tokens/temperature）做 content-addressed cache；hit 不调用 provider，记录 cached/replayed 与 usage；miss 成功后写缓存；corrupt 回退真实调用。
 
 ---
 

@@ -32,10 +32,11 @@
 使用规则：
 
 - 全部只读；复用/二开前先审 license、安全、维护状态。
-- 当前 [reader_first_explainer](skills/writing/reader_first_explainer/) 是 **v0.1 provisional**；不要把它当最终 skill，也不要因为它存在就停止调研。
-- 下一轮 skill 工作先重新大量调研这些参考 skill + 本地 `bilibili-render-pdf`，再决定重写、二开或保留。
+- 当前 [reader_first_explainer](skills/writing/reader_first_explainer/) 是前序 session 自动生成的 **v0.1 provisional 占位**；它不是已验收 skill，不作为基线；substrate 阶段不继续打磨它。
+- 等 substrate 过关后的下一轮 skill 工作，先重新大量调研这些参考 skill + 本地 `bilibili-render-pdf`，再决定重写、二开或保留。
 - 不把第三方仓库整目录复制进 v3；不照搬与证据优先冲突的整条 pipeline。
 - 初步来源/复用记录见 [handoffs/2026-10-31/skill-reuse-map.md](handoffs/2026-10-31/skill-reuse-map.md)，那是历史快照，不是最终结论。
+- 2026-10-31 的本地 17 个仓库 + web 对照扫描见 [docs/reference-writing-scan.md](docs/reference-writing-scan.md)；只作参考，不是 v3 基线。
 
 ## 2. 视频证据
 

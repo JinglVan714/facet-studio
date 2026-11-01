@@ -1,56 +1,74 @@
-# STATE.md — 当前代码 / 分支 / 测试状态
+# STATE.md — 当前项目快照（2026-11-01）
 
-> 2026-10-31。架构见 [architecture.md](architecture.md)，规则见 [AGENTS.md](AGENTS.md)，任务见 [HANDOFF.md](HANDOFF.md)。
+> 当前阶段：**writing 层设计/落地**。substrate v1 已冻结并作为可信底座；writing 层从零设计，不沿用现有 writing 实验/占位。
+> 本文件只记录事实；路线/设计由新 session 自己研究。
 
-## 1. Git / 仓库
+## 1. 分支 / 工作树 / 测试
 
-- 当前分支：`v3`（orphan branch，只含 v3 文档/代码/skill）。
-- 工作树：应保持 clean；不 push。
-- 旧分支：`rebuild-v2`、`main` 等仍存在，只作历史；不从中恢复写作链。
-- 旧架构/旧 AB：`_archive/_blocked/video-writing-product-architecture/`、`_archive/_blocked/AB/`；被 `.gitignore` 屏蔽。
-- v2 冻结素材：`docs/_frozen/v2-2026-10-31/`；本地只读，不在 v3 git。
+- 分支：`v3`；工作树有未提交改动（substrate v1 + 历史实验）。
+- 不擅自 revert/commit；`data/`、`参考素材/skills/` 只读；`data/cookies/` 不读。
+- 测试：`PYTHONPATH=src python -m pytest -q` → **426 passed**；v3 122 + v2 304。
 
-## 2. 代码结构
+## 2. 阶段
 
-| 模块 | 作用 |
-|---|---|
-| `src/lunograph/core`、`evidence`、`knowledge`、`providers`、`runtime` | substrate（ASR units、snapshot、证据、provider、runtime） |
-| `src/lunograph/writing_v3/transcript.py` | ASR units → sentences → passages；确定性；写 receipt |
-| `src/lunograph/writing_v3/claim_extract.py` | passages → 写作级 claims（1 次模型调用）；校验 quote/IDs、去重 |
-| `src/lunograph/writing_v3/evidence_pack.py` | snapshot → 原始 EvidencePack（早期路径） |
-| `src/lunograph/writing_v3/pack_from_claims.py` | claims + passages → coverage-aware EvidencePack |
-| `src/lunograph/writing_v3/one_call_writer.py` | pack + skill + request → reader；校验 span/quote/数字/审计语言；渲染与拷贝素材 |
-| `src/lunograph/writing_v3/trace.py` | `trace.jsonl` + `stage_receipts/*.json`（路径、sha256、字节数、counts、decisions） |
-| `skills/writing/reader_first_explainer/` | 当前唯一写作 skill（SKILL.md / examples.md / manifest.json / SOURCES.md） |
+- substrate v1：**冻结/可信**；默认 light path；claim 可选 audit/reuse。接口见 [docs/substrate-v1-freeze.md](docs/substrate-v1-freeze.md)。
+- writing 层：**未开始**；只有占位 skill 和 substrate plumbing。
+- 非必要不改 substrate；发现真实阻塞先报告。
 
-## 3. 测试
+## 3. substrate v1 代码（可用）
 
-- 命令：`PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m pytest -q`
-- 最近结果：**304 passed**；全部属于 `tests/writing_v2/`（旧链路测试）。
-- **v3 没有自动化测试**；`writing_v3/` 目前靠 P0 运行 + `trace`/`stage_receipts` + `--validate-only` 验证。
-- `pyproject.toml` 的 `testpaths = ["tests"]`，因此 v3 改动不会被现有测试覆盖。
+| 模块 | 作用 | 状态 |
+|---|---|---|
+| `writing_v3/transcript.py` | units → sentences/passages | baseline |
+| `writing_v3/claim_extract.py` | passages → writing claims（1 次模型/视频，可选） | baseline/optional |
+| `writing_v3/pack_from_claims.py` | claims → EvidencePack | baseline/optional |
+| `writing_v3/light_context.py` | transcript+outline+frames → 无 claim context | baseline |
+| `writing_v3/edited_transcript.py` | full/anchored text + source_map | baseline |
+| `writing_v3/bind_article.py` | fact/quote/paragraph + input-scope | baseline |
+| `writing_v3/quote_hygiene.py` | 非精确引号去引号 | baseline |
+| `writing_v3/generate.py` | text/article → Writer → hygiene → binding（plumbing，不是 skill；可参考/改造，不是 writing 设计基线） | plumbing |
+| `writing_v3/trace.py` | trace/receipt | baseline |
 
-## 4. P0 样本
+**不是基线**（历史/实验）：`one_call_writer.py`、`prose_writer_probe.py`、`comprehension_view.py`、`writer_view.py`、`bind_merged_frames.py`、`probe.py`、`probe_parts.py`；`skills/writing/reader_first_explainer/` 是占位。
 
-| 样本 | 时长 | units → sentences → passages | claims → pack | pack chars | Writer tokens | reader | 校验 |
-|---|---:|---|---|---|---:|---:|---|
-| BV1AC | 656s | 385 → 116 → 32 | 43 → 40 | 47,850 | 38,071 | 1,865 字 | complete |
-| BV17 | 未记录 | 185 → 53 → 16 | 31 → 28 | 30,556 | 33,583 | 1,497 字 | complete |
+## 4. substrate v1 已验证（3 case：2 短 + 1 长 28.2min）
 
-- claim extraction：BV1AC 31,277 tokens；BV17 20,239 tokens。
-- 两样本总调用均为 2 次（claim extraction + Writer）。
-- 样例与 trace：`handoffs/2026-10-31/examples/`。
-- `BV1AC_BV17_advisory_blind_read.json` 是模型冷读，**不是真实 reader test/A-B**，不能当验收。
+- light path writer-only total：10.8k / 10.4k / 13.9k（P3）；M1 real 13.0k / 7.5k / 21.6k。
+- 旧 structured pipeline：58.2k / 44.6k / 85.4k；light path 平均约 −78%。
+- 短文本 B+frames = lean view（18/18 + 18/18）；claims/IDs 0 分。
+- 长文本 cw0 = merged text（14/14）；claim 的价值是 selection/boundary。
+- boundary：bounded claims 让 q5 1→2；3 case 0 unreported。
+- fact binding：43/43、51/52、4/4；BV17 1 个 0.78 舍入 unsupported。
+- quote hygiene：P3/M1 文章 long quote 归零；binding 2/3 complete。
+- 文章质量：developer advisory；结构/机制/边界完整；无 ID/timecode/schema。
+- 测试：426 passed。
 
-## 5. 能力边界
+## 5. 已知限制
 
-已具备：单视频 → 证据 → reader-first 文章的端到端原型；失败/partial 状态可见；quote/span/ID 可审计。`reader_first_explainer` 仅为 v0.1 provisional。
+- 没有 >30min；没有第二长视频；没有多文体复用回本实验。
+- 没有真实 reader test/A-B；文章质量是 developer advisory。
+- paragraph provenance 是 n-gram 近似；fact/quote 级可回查，不能承诺 span 级。
+- pack 只保留 selection 句（如 67/116），不是完整转写；binding 需要完整 transcript。
+- 数字精度/单位/引号仍可能出现；quote hygiene 处理引号，数字规则已加入 prose 契约但未复测。
+- frame caption 是 VLM/OCR 文本，可能不完整；caption cap 160 并报告。
 
-未具备：真实读者测试/A-B；第二文体 skill；Verifier；v3 自动化测试；多视频/多源；publish 工作流；图表/生成图方案。
+## 6. writing 层状态
 
-## 6. 输入与屏蔽
+- 未开始；没有可验收 skill；没有真实 reader test/A-B；没有多文体复用；没有 publish/citations 工作流。
+- 现有 writing 实验（`one_call_writer`、`prose_writer_probe`、`comprehension_view`、`writer_view`、`bind_merged_frames`）只作历史/参考；占位 skill 不作为起点。
+- 期望后续（由新 session 自行研究如何做）：对照 JD 从零设计/落地 writing 层，使用 substrate v1 的 light text/source_map/binding；真实评测/reader test；多文体；trace/cost；不伪造、不自动发布。
 
-- 有效只读：`data/`（9 个视频，约 283MB；结构待用户提供；`data/cookies/` 不读）、`参考素材/skills/`（17 个参考仓库，约 73MB）、`C:/Users/30279/.claude/skills/bilibili-render-pdf`（约 33KB）。
-- git 可见索引：[REFERENCES.md](REFERENCES.md)；完整 `data/`、`参考素材/skills/` 本地只读、不入库。
-- 不读：`_archive/`、旧 run、旧 audit/reader.md，除非用户明确要求。
-- 环境：Python `D:/anaconda/envs/myagent/python.exe`（3.11.14）；`PYTHONPATH=src`。
+## 7. 关键产物
+
+- substrate v1：`runs/m1_light/`、`runs/m1_real/`、`runs/p3_light/`。
+- 历史/证据：`runs/p0_edit/`、`runs/p1_prose/`、`runs/p1b_prose/`、`runs/s2_probe/`、`runs/s3_boundary/`、`runs/v3_poc/`。
+- 分析：`runs/m1_real/analysis.md`、`runs/m1_light/analysis.md`、`runs/p3_light/analysis.md`、`runs/p1b_prose/analysis.md`、`runs/p1_prose/analysis.md`、`runs/p0_edit/analysis.md`。
+
+## 8. 关键入口
+
+- 规则：`AGENTS.md`
+- 架构：`architecture.md`
+- 交接：`HANDOFF.md`
+- substrate v1 合同：`docs/substrate-v1-freeze.md`
+- 旧 substrate 文档（历史）：`docs/substrate-s0.md`、`docs/substrate-s1-*.md`、`docs/substrate-view-contract.md`、`docs/substrate-view-split.md`
+- 历史交接：`handoffs/2026-10-31/`、`handoffs/2026-11-01/`
