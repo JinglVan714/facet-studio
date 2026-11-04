@@ -1,11 +1,13 @@
 # Claude Code 入口
 
-开始任何任务前，按顺序读：
+开始任何任务前，只读：
 
-1. [AGENTS.md](AGENTS.md) — 全局规则/护栏（最高优先）。
-2. [architecture.md](architecture.md) — v3 设计事实源。
-3. [HANDOFF.md](HANDOFF.md) — 当前任务交接。
-4. [STATE.md](STATE.md) — 当前分支/代码/测试状态。
-5. [docs/substrate-v1-freeze.md](docs/substrate-v1-freeze.md) — 已冻结的 substrate v1 接口/证据/限制（writing 层可信底座）。
+1. `handoffs/2026-11-03/NEXT_SESSION_PROMPT.md` — 当前写作层干净重做任务。
+2. `docs/writing-rebuild-brief.md` — 开发方法/认知（好 writing、纪律、架构、参考、边界）。
+3. 两份只读标准：`runs/_reader_test_2026-11-03/reader_pack/评价方法.md`、`5个persona.md`。
+4. `AGENTS.md` 的全局护栏（证据优先、不伪造、不自动发布、不单例、可观测）。
+5. 需要 substrate 接口时，只读 `docs/substrate-v1-freeze.md` 的相关接口。
 
-本文件只做入口，不复制规则或状态，避免与 AGENTS/architecture 漂移。历史看 [handoffs/](handoffs/)，不要当基线。
+**不要读**旧写作层的 memo/runs/skill/judge/operating model（已归档，历史，不是基线）。
+
+本文件只做入口，不复制规则或状态。

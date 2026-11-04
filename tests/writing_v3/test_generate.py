@@ -53,6 +53,20 @@ def _write(path: Path, value) -> None:
         )
 
 
+def _skill_dir(tmp_path: Path) -> Path:
+    skill_dir = tmp_path / "skill"
+    skill_dir.mkdir()
+    (skill_dir / "SKILL.md").write_text(
+        "# Test reader-first\n\nIntro.\n\n## Inputs\n\n- request\n\n"
+        "## Method\n\nFind one thing.\n\n"
+        "## Evidence discipline\n\n- Use only evidence.\n\n"
+        "## Output\n\nReturn Markdown.\n\n"
+        "## Self-review before returning\n\nCheck.\n",
+        encoding="utf-8",
+    )
+    return skill_dir
+
+
 def test_generate_with_existing_article_cleans_and_binds(tmp_path) -> None:
     request = tmp_path / "request.json"
     _write(request, {"central_question": "为什么？"})
@@ -118,6 +132,8 @@ def test_generate_dry_run_writes_prompts_without_article(tmp_path) -> None:
             str(request),
             "--edited-text",
             str(edited),
+            "--skill-dir",
+            str(_skill_dir(tmp_path)),
             "--out-dir",
             str(out_dir),
         ]

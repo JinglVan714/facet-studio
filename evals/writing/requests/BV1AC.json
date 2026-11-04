@@ -1,0 +1,64 @@
+{
+ "schema_version": "writing-request-v1",
+ "request_id": "req_BV1AC_article_v1",
+ "video_ids": [
+  "BV1ACbi6DEvC"
+ ],
+ "method_id": "reader_first_explainer",
+ "form_id": "article",
+ "style_id": null,
+ "central_question": "DeepSeek Harness 为什么能用同一套插件框架组装出四种不同的 Agent 工作模式？",
+ "job_to_be_done": "解释 DeepSeek Harness 与普通 AI 模型或 Agent 产品的区别，说明 Cordis 插件架构如何让工具、模型适配器、沙箱、会话日志、Agent 循环甚至 UI 都成为可替换插件，并解释标准、PTC、极简、创造四种模式各自改变了什么、适合什么场景；最后写出视频没有覆盖的边界。",
+ "reader_before_state": "读者知道大模型可以通过工具调用完成一些任务，但不清楚 Harness 是什么、为什么需要它，也不知道四种工作模式的区别。",
+ "desired_reader_outcome": "读者能用自己的话解释 Harness 在模型和工具之间负责什么，能说明 Cordis 的插件化架构为什么能支持四种模式，能说出四种模式各自改变了什么，并能说出视频没有验证的范围。",
+ "success_criteria": [
+  "能解释 Harness 与模型、Agent 产品之间的区别",
+  "能说明 Cordis 插件架构为什么能支持四种工作模式",
+  "能说出标准、PTC、极简、创造四种模式各自改变了什么",
+  "能说出视频没有覆盖或没有验证的范围"
+ ],
+ "required_information": [
+  "Harness 的定义与它负责的工程问题",
+  "Cordis 插件架构与“一切皆插件”的关系",
+  "标准、PTC、极简、创造四种模式的区别",
+  "视频对开发者预览版、安全、生态的边界说明"
+ ],
+ "forbidden_information": [
+  "视频没有给出的具体性能数字或基准",
+  "视频外的产品推荐或安全结论",
+  "把视频作者的体验判断写成客观定律"
+ ],
+ "language": "zh",
+ "platform": "markdown",
+ "risk_level": "low",
+ "audit_level": "none",
+ "sections_required": 1,
+ "media_policy": {
+  "allowed_kinds": [
+   "real_frame",
+   "table",
+   "chart",
+   "diagram",
+   "text_experiment",
+   "no_visual"
+  ],
+  "max_assets": 6,
+  "generated_image_policy": "editorial_only",
+  "real_frame_policy": "only_if_relevant"
+ },
+ "length_advisory": {
+  "unit": "chars",
+  "target": null,
+  "min": null,
+  "max": null
+ },
+ "source_policy": {
+  "substrate_facts": true,
+  "model_knowledge": "editorial_only",
+  "user_supplements": false,
+  "external_web": false
+ },
+ "profile_override": null,
+ "created_by": "user",
+ "request_hash": "fde81f96e90d3d3c7cf04c6a7d5362d94dc9809e6f9fc4f10d01fbee7f808f83"
+}

@@ -1,20 +1,32 @@
 # Sources and reuse
 
-> Status: provisional v0.1. This skill may be replaced or rebuilt after a fresh survey of `参考素材/skills/` and the local `bilibili-render-pdf` skill. Do not treat it as the final skill.
+> Status: original complete composition. It borrows methods/structures, not verbatim text, from the sources below.
+> Before public release, re-check every license and rewrite any text that cannot be cleared.
 
-This skill is a v3 composition. It borrows ideas/structure from the following sources; it does not copy long verbatim passages from sources whose license is unclear or non-commercial.
+## Reuse table
 
-| Source | License | What was reused |
-|---|---|---|
-| `C:/Users/30279/.claude/skills/bilibili-render-pdf` | License not found in the local skill folder | Pedagogical flow (motivation → idea → mechanism → example → takeaway), long-video segmentation, frame-selection checklist, frame time provenance, final synthesis. No verbatim copying. |
-| `参考素材/skills/d-wwei__great-writer` | MIT | Reader stance, core tension, evidence density, structure-first, humanizer/polish ideas. Its 6-phase pipeline and hard red lines are not part of this skill. |
-| `参考素材/skills/Norman-bury__research-writing-skill` | MIT | Evidence over claims; no fabricated citations; traceability. Its paper orchestration/chapter confirmation pipeline is not used. |
-| `参考素材/skills/blader__humanizer` | MIT | Style/eval inspiration; no blacklist is included. |
-| `参考素材/skills/conorbronsdon__avoid-ai-writing` | MIT | Anti-AI-slop evaluation inspiration; no rule list is included. |
-| `参考素材/skills/VincentOld__stop-slop-zh` | MIT | Chinese anti-slop evaluation inspiration; no rule list is included. |
-| `参考素材/skills/aislinn-yang__rednote-writing-skill` | MIT | Examples-driven voice and write/check separation (for the later social skill; not used as the reader-first voice). |
-| `参考素材/skills/yaoleifly__wechat-writing-style` | MIT | Platform voice for the later WeChat skill; not used as the reader-first default. |
-| `参考素材/skills/dexhunter__seedance2-skill` | MIT | Prompt structure for the later image/video-prompt skill. |
-| `参考素材/skills/NEKOINEKOI__tomoai-longform-skill` | CC BY-NC 4.0 | Not used in this skill; only noted as a long-form structure reference. Must not be copied into commercial output. |
+| Source | License | What was reused | What was not reused |
+|---|---|---|---|
+| `d-wwei__great-writer` | MIT (Copyright (c) 2026 d-wwei) | Reader stance, core tension, structure-first method | 6-phase pipeline, hard word/length rules |
+| `Mouriya-Emma__writing-pipeline-zh` | MIT | Planning lens: source topology, angle selection, reader profile, core argument, logic/question chain, rhythm, title promise, adversarial check | Four-stage waterfall, per-stage gates |
+| `Norman-bury__research-writing-skill` | MIT (Copyright (c) 2026 旬常) | Evidence over claims; source/evidence discipline; boundary/risk thinking | Paper orchestration, citation-count gates |
+| `aislinn-yang__rednote-writing-skill` | MIT (Copyright (c) 2026 Aislinn Yang) | Examples-driven voice; write/check separation; title/cover workflow | Platform word lists, account positioning |
+| `conorbronsdon__avoid-ai-writing` | MIT (Copyright (c) 2026 Conor Bronsdon) | Detect/edit separation; source fidelity; protected content; one corrective pass; "subtract and sharpen without inventing" | Detector rule lists as core; word-tier catalog as a writer rule |
+| `VincentOld__stop-slop-zh` | MIT | 8 Chinese AI-slop rewrite rules (cut filler/degree adverbs, break rule-of-three, de-nominalize, no gold-sentence endings, concrete subjects, no meta-commentary, be specific, break the total-then-parts skeleton); 5-dimension "直/实/变/散/真" judgment | Hard word lists / 35-of-50 score as a gate |
+| `imraywang__wewrite` | MIT | One-page brief; claim ledger (type/status/boundary); five editorial criteria (accuracy/viewpoint/usefulness/voice/readability); review must edit, max two rounds | Full ledger into every writer call; CLI state machine |
+| `mattpocock__skills` (writing-beats / writing-shape / writing-for-agents) | MIT | Grounding: every concept must be available before a beat leans on it; beats; format arguments (prose vs list vs table vs quote vs code) | Interactive user-in-the-loop session flow |
+| `anthropics__skills` (doc-coauthoring) | Per-folder license; method only | Context → structure → reader testing; predict reader questions; fresh-context reader check | The full 3-stage collaborative workflow; no text copied |
+| `zenstory-ai__drama-skills` | MIT (Copyright (c) 2026 drama-skills contributors) | Single-index discipline; coverage thinking | "Aggregate without rereading" for evidence writing |
+| `bilibili-render-pdf` | No license found in local skill folder | Pedagogical flow (motivation → idea → mechanism → example → takeaway); frame selection/provenance method | LaTeX/PDF delivery, 305-line monolith, "more figures is better" |
+| Agent Skills spec | Official spec | SKILL.md / progressive disclosure / scripts-as-execution format | Single monolithic prompt |
+| `NEKOINEKOI__tomoai-longform-skill` | CC BY-NC 4.0 | Not used in this skill (structure reference only) | Commercial delivery/verbatim copy |
 
-Before shipping publicly, re-check the bilibili-render-pdf license and replace/rewrite any text that cannot be cleared. MIT sources retain their copyright notices; this skill's original text is v3-specific.
+## Attribution notice
+
+Portions of the method are informed by MIT-licensed works listed above. Their copyright notices are retained here. This skill's text is an original complete composition for this project; it is not a verbatim copy of any source. The local `bilibili-render-pdf` skill has no license file, so only its method/structure is referenced; no text is copied. Anthropic `doc-coauthoring` is used as a method reference only; its license is per-folder and its text is not copied.
+
+## Related docs
+
+- [docs/writing-skill-study.md](../../../docs/writing-skill-study.md)
+- [docs/writing-reuse-map.md](../../../docs/writing-reuse-map.md)
+- [docs/writing-operating-model.md](../../../docs/writing-operating-model.md)

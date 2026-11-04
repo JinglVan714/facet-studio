@@ -25,6 +25,17 @@
 - `zenstory-ai__drama-skills`
 - `zwzhangyu__ai-agent-lab`
 
+### 2026-11-03 新下载的高赞参考（local-only）
+
+路径：`参考素材/skills_downloaded/`（约 36MB）
+
+- `anthropics__skills` — 官方 Agent Skills；重点看 `skills/doc-coauthoring`、`skills/internal-comms`、`skills/skill-creator`、`template/`
+- `mattpocock__skills` — 重点看 `skills/in-progress/writing-beats`、`writing-fragments`、`writing-shape`、`skills/productivity/writing-for-agents`（MIT）
+- `skillsdirectory__claude-skills` — SKILL.md 目录/模板（CC0）
+- `ComposioHQ__awesome-claude-skills` — 重点看 `content-research-writer`、`internal-comms`（license per folder）
+
+使用：先读 `参考素材/skills_downloaded/README.md`；只读、不运行仓库代码、不把示例当本项目事实、复用前查 license。只借方法/结构，不照搬整条 pipeline。
+
 本地 `bilibili-render-pdf`：
 
 `C:/Users/30279/.claude/skills/bilibili-render-pdf`（约 33KB，含 `SKILL.md` / `assets` / `agents`；本地未见 LICENSE）
@@ -32,7 +43,7 @@
 使用规则：
 
 - 全部只读；复用/二开前先审 license、安全、维护状态。
-- 当前 [reader_first_explainer](skills/writing/reader_first_explainer/) 是前序 session 自动生成的 **v0.1 provisional 占位**；它不是已验收 skill，不作为基线；substrate 阶段不继续打磨它。
+- 旧 `skills/writing/reader_first_explainer/` 占位已删除（2026-11-01）；writing 层从零设计，不继承它。学习/设计笔记见 [docs/writing-skill-study.md](docs/writing-skill-study.md)。
 - 等 substrate 过关后的下一轮 skill 工作，先重新大量调研这些参考 skill + 本地 `bilibili-render-pdf`，再决定重写、二开或保留。
 - 不把第三方仓库整目录复制进 v3；不照搬与证据优先冲突的整条 pipeline。
 - 初步来源/复用记录见 [handoffs/2026-10-31/skill-reuse-map.md](handoffs/2026-10-31/skill-reuse-map.md)，那是历史快照，不是最终结论。

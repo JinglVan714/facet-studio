@@ -1,0 +1,65 @@
+{
+ "schema_version": "writing-request-v1",
+ "request_id": "req_BV1yb_article_v1",
+ "video_ids": [
+  "BV1ybHXzfEEu"
+ ],
+ "method_id": "reader_first_explainer",
+ "form_id": "article",
+ "style_id": null,
+ "central_question": "这场 28 分钟的对话如何解释虚拟主播菜菜子为什么能成为粉丝的情感陪伴？她的形象、直播定位、互动方式和真诚原则各自起了什么作用，视频又留下了哪些没有验证的边界？",
+ "job_to_be_done": "解释菜菜子的虚拟形象与服装设计、直播间“幼儿园园长”的定位、与粉丝的互动方式（游戏、心理疏导、家长沟通）以及“以真诚换真诚”的原则；说明她为什么认为虚拟主播能提供陪伴；最后写出视频没有覆盖或没有验证的范围。",
+ "reader_before_state": "读者知道虚拟主播是一种二次元形象直播，但不清楚虚拟主播与粉丝之间为什么能形成情感陪伴，也不清楚这种陪伴的边界。",
+ "desired_reader_outcome": "读者能用自己的话解释菜菜子的形象/定位/互动/真诚原则如何共同形成陪伴，能说出视频里的具体例子，并能说出视频没有验证的范围。",
+ "success_criteria": [
+  "能解释虚拟形象与服装设计如何服务于粉丝互动",
+  "能说明“幼儿园园长”定位解决了什么问题",
+  "能举例说明她如何处理粉丝的心理/家庭问题",
+  "能说出视频没有覆盖或没有验证的范围"
+ ],
+ "required_information": [
+  "菜菜子的虚拟形象、服装与魔法杖设计",
+  "直播间“幼儿园园长”的定位与粉丝称呼",
+  "与粉丝玩游戏、心理疏导、家长沟通的具体做法",
+  "以真诚换真诚的原则",
+  "视频对虚拟主播陪伴效果、数据、边界的说明"
+ ],
+ "forbidden_information": [
+  "视频没有给出的粉丝效果量化数据",
+  "视频外的虚拟主播行业结论",
+  "把菜菜子的个人经验写成普遍定律"
+ ],
+ "language": "zh",
+ "platform": "markdown",
+ "risk_level": "low",
+ "audit_level": "none",
+ "sections_required": 1,
+ "media_policy": {
+  "allowed_kinds": [
+   "real_frame",
+   "table",
+   "chart",
+   "diagram",
+   "text_experiment",
+   "no_visual"
+  ],
+  "max_assets": 6,
+  "generated_image_policy": "editorial_only",
+  "real_frame_policy": "only_if_relevant"
+ },
+ "length_advisory": {
+  "unit": "chars",
+  "target": null,
+  "min": null,
+  "max": null
+ },
+ "source_policy": {
+  "substrate_facts": true,
+  "model_knowledge": "editorial_only",
+  "user_supplements": false,
+  "external_web": false
+ },
+ "profile_override": null,
+ "created_by": "user",
+ "request_hash": "29562ffdd45801dd4f315ac8042fb1cb5f8c2fb0a4a703d9ecf5b07ac5f95af8"
+}

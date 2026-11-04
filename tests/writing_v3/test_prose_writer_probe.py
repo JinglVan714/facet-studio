@@ -81,6 +81,16 @@ def test_dry_run_writes_prompts_without_provider(tmp_path) -> None:
     request.write_text('{"central_question":"为什么？"}', encoding="utf-8")
     source = tmp_path / "input.txt"
     source.write_text("第一段。", encoding="utf-8")
+    skill_dir = tmp_path / "skill"
+    skill_dir.mkdir()
+    (skill_dir / "SKILL.md").write_text(
+        "# Test reader-first\n\nIntro.\n\n## Inputs\n\n- request\n\n"
+        "## Method\n\nFind one thing.\n\n"
+        "## Evidence discipline\n\n- Use only evidence.\n\n"
+        "## Output\n\nReturn Markdown.\n\n"
+        "## Self-review before returning\n\nCheck.\n",
+        encoding="utf-8",
+    )
     out_dir = tmp_path / "out"
     with patch.object(
         prose_writer_probe,
@@ -99,6 +109,8 @@ def test_dry_run_writes_prompts_without_provider(tmp_path) -> None:
                 str(source),
                 "--input-kind",
                 "text",
+                "--skill-dir",
+                str(skill_dir),
                 "--out-dir",
                 str(out_dir),
             ]

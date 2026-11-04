@@ -2,6 +2,8 @@
 
 > 状态：v3 架构事实来源（只读为主）
 > 本文件只定义 v3 的设计；当前状态/任务/历史分别见 `STATE.md`、`HANDOFF.md`、`handoffs/`。
+> **2026-11-04 writing rebuild**：写作层进入干净重做；§4/§6–§10/§15 的 writing 设计已归档，不是基线；当前写作层认知见 [docs/writing-rebuild-brief.md](docs/writing-rebuild-brief.md)。Substrate 章节（§5/§12）仍有效。
+> **2026-11-03 writing-layer update**：写作层的当前方法/契约/评测/开发习惯以 [docs/writing-operating-model.md](docs/writing-operating-model.md) 为准；本文件 §4/§6–§10/§15 中旧的“一次 Writer + 可选 Verifier / JSON plan_header / span-level WriterOutput”是早期设计假设。凡与 operating model + 当前代码 + 最新 runs 冲突，以后者为准；旧 writing 设计笔记（`docs/writing-*.md`）同理。
 
 ---
 
@@ -66,14 +68,17 @@
 ### 2.1 业务质量
 
 - 读者只读文章能回答 central question、复述机制/流程、说出边界。
+- **未看视频的读者也能获得≈同等认知/体验**：能复述视频讲了什么、怎么讲、展示了什么、留下了什么边界。
+- **标题与 H2 本身构成 TOC**：只看标题/章节标题就能理解文章框架与推进顺序。
+- **视觉优先**：能用图/表/帧说明的结构、数据、流程，不写成一大段文字硬讲；无图时说明为什么。
 - 事实性句子有绑定；quote 精确；时间码/帧可回查。
 - 同一证据在不同文体中说法一致，不出现“这篇一个版本、那篇另一个版本”。
 - 文章连续、可读、尽量精简；不是 evidence 清单，也不是 plan 的复述。
 
 ### 2.2 速度与成本
 
-- 短文章默认 **1 次 Writer 调用**；结构/绑定失败最多 1 次 repair。
-- 高风险内容才加 **1 次 Verifier**；发现问题最多 1 次 revise，不 loop。
+- 当前默认写作链：brief（条件）+ 1 次 Writer；结构/绑定/contract 失败 → 1 次 bounded repair；semantic verifier 可驱动至多 1 次 repair；polish；visual；final verifier 只读审计。没有无限 loop。
+- 不设 per-call `max_tokens`；provider headroom 64k，单次预算 400k，client timeout 300s；以实测 usage/latency 为准。
 - claim extraction 一次/视频；实际成本以模型/样本测量为准，不写死。
 - 每个 stage 的 calls/tokens/latency 可查；失败/partial 不静默。
 
@@ -85,11 +90,10 @@
 
 ### 2.4 质量门
 
-- reader-first/社媒：真实读者 test + A/B（按文体定义）。
-- 讲义/企业知识：专家/使用者 review + 事实绑定检查。
-- 视频脚本：table read / 视频团队 review + 真实帧引用。
-- 二创：人工 review + 证据段/发散段分离。
-- 生图提示词：图像检查 + 真实帧/生成图 provenance。
+- L1 确定性：structure/reader hygiene/quote hygiene/binding/contract；技术 complete 不等于 reader pass。
+- L2 semantic verifier：initial 驱动至多 1 次 repair；final 只读审计交付稿；residual findings 保留为 partial/known risk，不自动二次 repair。
+- L3 LLM-as-Judge：5 persona × 6 篇，匿名 A/B；两份只读标准（`runs/_reader_test_2026-11-03/reader_pack/5个persona.md`、`评价方法.md`）；团队权重 0.20/0.25/0.20/0.15/0.20；P5 红线；用户 manual acceptance。
+- L4 真人 reader test：未做；未来可选；不得用模型/模拟盲读冒充。
 - 所有公开发布：人工 `publish_approved`；不自动发布。
 
 ### 2.5 阶段门：substrate 先于 skill
@@ -106,8 +110,8 @@
 1. **证据优先**：EvidenceSnapshot 是唯一事实底座；Knowledge/View/Skill/Writer 都不是新事实源。
 2. **模型写作，代码编译/校验**：Writer 只负责表达；quote/时间码/citation/绑定/结构由代码做。
 3. **Skill 优先，不堆规则**：用角色、读者模型、方法、示例、self-review 控制生成；不用词表/规则怪谈。
-4. **默认一次生成**：短文章一次 Writer 看完整证据包；中间摘要越少，连续性越好。
-5. **可选 Verifier，不 loop**：只有高风险/确定性失败才加一次独立复核；最多一次 revise。
+4. **连续写作优先**：Writer 一次看完整证据文本/上下文；brief 是护栏，不是 section schema；中间摘要越少，连续性越好。
+5. **有界复核，不 loop**：一次 Writer 后跑确定性校验 + contract + semantic verifier；blocking 至多一次 bounded repair；final verifier 只审计交付稿，不再 repair。
 6. **证据单元带上下文**：不把证据拍平成 claim 列表，也不拆成失去上下文的句子碎片。
 7. **一次编译，多视图复用**：View 是引用 ID 的投影，不是模型摘要；换文体不重读 ASR。
 8. **ASR 为主，帧为证**：内容以 ASR 为主；关键帧在 ASR 关键节点附近挑，不做全片均匀抽帧。
@@ -117,6 +121,10 @@
 12. **失败一等**：partial/unknown/insufficient evidence 明确记录；不包装成成功；不静默降级。
 13. **度量驱动**：每一步都要回答“它是否服务于数据/质量/速度”；不服务就删。
 14. **容量 advisory**：不做固定 length/focus 硬门；长度/证据量只作预算、截断、审计；质量由 reader/专家/A-B 判断。
+15. **读者体验等价**：写完不是“摘要了视频”，而是“读者没看视频也能获得≈同等的认知与体验”；具体例子、演示、画面、数字和作者判断都要在文章中站得住。
+16. **视觉优先**：机制/流程/架构/对比/数字优先用 diagram/chart/table/real frame；长段文字不能替代本可画出来的结构；生成图只作 editorial。
+17. **标题即目录**：标题和 H2 要具体、可读、成框架；不写“背景/介绍/总结”这类空标题；读者扫标题就能知道文章怎么推进。
+18. **模型知识可解释、不可伪造事实**：模型可用自身知识做解释、类比、背景组织；但不能把外部知识写成视频里的事实/数字/引语。
 
 ---
 
@@ -128,46 +136,62 @@
 接入层        CLI / API / SDK（后置）
 编排层        Run / Stage / Attempt / Human Gate（小号）
 证据编译层    Source → Temporal → Evidence → Knowledge → Views
-写作层        Skill Registry → Writer → optional Verifier → revise
-校验渲染层    Bindings / Citations / Audit / Reader render
-发布层        Reader test / A-B / 专家 review / 人工 publish
+写作层        Skill Registry → Brief（条件）→ Writer → contract + semantic verifier
+              → bounded repair → polish → visual → final audit
+校验渲染层    Bindings / Citations / Contract / Audit / Reader render
+发布层        LLM-as-Judge / 人工 publish（真人 reader test 未来可选）
 观测层        usage / trace / replay / decisions / eval
 ```
 
-### 4.2 默认数据流
+### 4.2 当前数据流
 
 ```text
-WritingRequest
-  + EvidencePack（来自同一 EvidenceSnapshot 的 View）
-  + WritingSkill（角色/方法/示例/输出 schema）
+WritingRequest（可选 reader_profile）
+  + consume index + edited text + source map + light pack
+  + WritingSkill（角色/方法/示例/self-review）
         │
         ▼
-Writer（1 次模型）
-  → plan header + 全文 + span 级 claim/evidence/quote + self_review
+Editorial Brief（条件；full 时短编辑 brief + knowledge ledger）
         │
         ▼
-确定性校验（binding / quote / ID / 结构 / reader hygiene）
-  ├─ 通过 → render reader.md + audit.json + citations.json
-  └─ 失败 → 1 次 repair（同一 Skill，带具体错误）
+Writer（1 次；Markdown）
         │
         ▼
-可选 Verifier（1 次，风险触发）
-  → findings（可定位/可路由）
-  → 最多 1 次 revise
+确定性校验 + contract audit
+  - structure / reader hygiene / quote hygiene / fact+quote binding
+  - source line 剥离；模型知识术语 → editorial_terms
+  - source line / title quote / title numbers / image captions /
+    source gaps / absolute words
+        │
+        ├─ 失败 → 1 次 bounded repair（带具体 findings）
         │
         ▼
-Reader test / A-B / 专家 review / 人工 publish
+Semantic Verifier（initial；只读 findings）
+        │
+        ├─ blocking → 1 次 bounded repair（binding + contract + verifier）
+        │
+        ▼
+Polish（style/voice/terms；preserve facts/numbers/quotes/source）
+        │
+        ▼
+Visual planner + renderer（caption-aware；max_assets/genre）
+        │
+        ▼
+Final validation + contract + Final Verifier（只读审计交付稿）
+        │
+        ▼
+render reader.md + assets + audit/citations/validation/manifest
 ```
 
 ### 4.3 调用预算
 
-| 场景 | 默认调用 | 说明 |
+| 场景 | 当前调用 | 说明 |
 |---|---|---|
-| 普通 reader-first/社媒短文章 | 1 Writer | 确定性校验通过即 render |
-| 高风险（数字/因果/医疗/金融/法律） | 1 Writer + 1 Verifier | Verifier 看文章 + EvidencePack，不看 plan 摘要 |
-| 结构/绑定失败 | 1 Writer + 1 repair | repair 只修结构/引用，不重新设计文章 |
-| Verifier 发现 blocking | +1 revise | revise 后确定性校验 + 人工；不再 recheck loop |
-| 长文/多源 | 1 Writer（或分节 Writer）+ 可选 Verifier | 长文分节后置；不先做多阶段瀑布 |
+| 普通 reader-first | brief（条件）+ Writer + initial Verifier + polish + visual + final Verifier | 有 binding/contract/verifier blocking 时 +1 repair；没有无限 loop |
+| 结构/绑定/contract 失败 | +1 repair | repair 只修 findings，不重新设计文章；重新 validation/contract |
+| Verifier blocking | +1 repair | repair 后不再 recheck loop；final verifier 只 audit |
+| 长文/多源 | 同链；视觉/分节后置 | 不先做多阶段瀑布 |
+| 不设 per-call max_tokens | provider headroom 64k | 总预算 400k；timeout 300s；usage/latency 可查 |
 
 ### 4.4 最小 artifact
 
@@ -176,11 +200,15 @@ Reader test / A-B / 专家 review / 人工 publish
 | `evidence_snapshot` | 视频证据编译器 | Views/Writer/Verifier/audit | 不可变事实底座 |
 | `temporal_outline` | 证据编译器 | Views/Writer | 时间分段/关键节点 |
 | `evidence_pack` | View builder（确定性） | Writer/Verifier | 带上下文/预算/截断的证据投影 |
-| `writing_skill` | Skill 库 | Writer/Verifier | 角色/方法/示例/输出 schema/版本 |
-| `writer_output` | Writer | 校验/渲染/Verifier | plan header + 文章 + spans/bindings + self_review |
+| `writing_skill` | Skill 库 | Brief/Writer/Verifier | 角色/方法/示例/self-review/版本 |
+| `editorial_brief` | Brief planner | Writer/Verifier | 短编辑 brief + concept/mechanism/number/source/texture/next |
+| `writer_output` | Writer/repair | 校验/polish/visual | Markdown article + title + self_review + usage |
+| `validation/contract` | 确定性校验 | repair/render/人工 | binding / quote / 结构 / 来源行 / 标题 / caption / gaps |
+| `verifier_report` | semantic verifier | repair/人工 | 只读 findings（初始） |
+| `polish_report` | polish | render/人工 | 风格/voice/term 修改 + preservation 状态 |
+| `verifier_final_report` | final verifier | 人工/render | 交付稿只读 findings；不触发 repair |
 | `bindings/citations/audit` | 确定性校验/渲染 | Publish/人工 | 引用/时间码/帧/审核指针 |
-| `verifier_report` | 可选 Verifier | revise/人工 | 只读 findings |
-| `reader_test`/`ab_test` | 真人采集 | Publish | 发布前质量输入 |
+| `llm_judge` | 5 persona 独立评审 | 人工验收 | 不是真人 reader test；分数不等于发布许可 |
 | `publish_review` | 发布门（确定性） | 人工 | 记录签章/风险 |
 | `run/usage/trace/decisions` | Harness | 观测/回放 | 小号但真实 |
 
@@ -340,8 +368,9 @@ Skill 不是模板，也不是 pipeline 阶段。它是一包**程序性知识**
 - 方法：怎么想、怎么组织、什么算讲清楚；
 - 语气/文风：内容为主语，来源归属只在需要时出现；
 - 示例：2–3 段好/坏对照，比词表更能控制文风；
-- 输出 schema：plan header + 文章 + span 绑定 + self_review；
+- 输出：文章 + binding/audit + self_review；写作前如需 brief，brief 是编辑合同，不是 per-form validator，也不预写章节；
 - 可选脚本：确定性检查/格式化（由代码执行，不进模型上下文）。
+- 读者体验/标题 TOC/视觉计划合同：skill 定义文章如何形成框架、如何用图/表替代长文、读者应带走什么；不是 per-form validator。
 
 Skill 采用渐进披露：
 
@@ -380,6 +409,19 @@ skills/writing/<skill_id>/
 - 不为每个文体加 pipeline；Skill 只是同一 Writer 的输入。
 - Skill 不注入新事实、不绕过 EvidencePack、不改变确定性校验。
 
+### 6.3.1 Editorial Brief（可选/条件启用）
+
+Planner 不是固定的一次模型调用，也不是 4–7 节 section schema；它是**编辑 brief 角色**：
+
+- 决定 angle、reader、core argument、source question、payoff、throughline、spine moves、must-use anchors、stance/speaker policy、cut、challenge、evidence status；
+- 不写 H2/段落/每节 promise/takeaway/visual slot；Writer 保留章节/句子/视觉意图的自由；
+- 输入是 request（含可选 reader_profile）+ 结构化 source map + skill 的 `references/planning.md`；不是“全文 + 硬编码大纲 prompt”；
+- 可条件启用：`none/mini/full/human_review`，按素材拓扑/长度/风险/预算决定，不在架构里写死阈值；
+- **full brief 两层**：短编辑 brief + knowledge ledger（`concept_ledger` / `mechanism_chain` / `number_ledger` / `source_block` / `texture_policy` / `next_step`）；知识 brief 是护栏，不要求 Writer 粘贴；
+- brief 是合同/护栏，不是笼子；Writer 发现 brief 与素材冲突时以素材为准并记录，不静默服从。
+
+详见 [docs/writing-operating-model.md](docs/writing-operating-model.md) 和 [docs/writing-planner-position.md](docs/writing-planner-position.md)（后者是历史定位笔记）。
+
 ### 6.4 Skill 如何解决连续性与“来源归属”
 
 - **角色**：写作者是“为读者解释内容的人”，不是“汇报视频的人”。
@@ -408,6 +450,8 @@ skills/writing/<skill_id>/
 ---
 
 ## 7. Writer（默认一次调用）
+
+> 2026-11-03 注：以下 §7–§10 是早期设计假设，特别是 JSON `plan_header`/span-level 输出、可选 Verifier、reader test 作为默认质量门，均已被当前实现取代。当前契约/流程/评测以 [docs/writing-operating-model.md](docs/writing-operating-model.md) + 当前代码为准；本节保留作为设计历史。
 
 ### 7.1 输入
 
@@ -487,9 +531,21 @@ Writer 看不到：
 | `provider_outcome_unknown` | 可能已调用但结果未知；不自动重放 |
 | `complete` | 结构/绑定通过；不是 reader pass |
 
+### 7.5 读者体验 / 标题 / 视觉合同
+
+- **体验等价**：读者未看视频也能复述 central question、机制/流程、关键例子/演示/画面、作者判断与边界；不是 coverage 摘要。
+- **TOC 标题**：title 承诺一个 payoff/问题/转变，不只是架构/设定；title + H2 构成可读目录；每个 H2 具体、平行、能单独说明本节讲什么；禁止空泛“背景/介绍/总结”；H2 数量按内容定，不硬凑。
+- **section job/takeaway**：每节先明确“这节让读者理解/带走什么”；结尾一句 takeaway；这是 Writer 的写作检查，不是 Planner 的 7 节 schema；不逐节 recap。
+- **视觉优先**：机制/流程/架构/对比/数字优先 diagram/chart/table/real frame；真实帧只在确实展示操作/结果且可读时用；没有合适图时 text/no_visual 并说明；生成图 editorial。VisualPlanner 在成稿后决定视觉，不预写 visual slot。
+- **简洁**：一段一个意思；能表格/图替代的长描述删掉；不按视频时间顺序复述。
+- **模型知识**：可做解释/类比/背景；不得伪造视频事实/数字/引语；reader 文本不出现 ID/时间码/审计语言。
+- **质量门**：TOC/体验/视觉覆盖由 skill rubric + 人工/reader test 判断；不做 per-form 硬 validator。
+
 ---
 
 ## 8. Verifier（可选）
+
+> 2026-11-03 更新：当前 pipeline 默认跑 initial verifier（驱动至多 1 次 repair）+ final verifier（只读审计交付稿，不 repair）。本节旧的“默认不跑/revise”是历史设计；当前以 [docs/writing-operating-model.md](docs/writing-operating-model.md) 为准。
 
 ### 8.1 触发条件
 
@@ -524,6 +580,8 @@ Writer 看不到：
 
 ## 9. 确定性校验与渲染
 
+> 2026-11-03 更新：当前实现是 Markdown Reader 文章的 binding/quote/README hygiene + `contract`（source line/title quote/title numbers/image captions/source gaps/absolutes）；source line 在 binding 前剥离；模型知识拉丁术语降为 `editorial_terms`（advisory）。旧 span-level 校验是历史设计；以 [docs/writing-operating-model.md](docs/writing-operating-model.md) + 当前代码为准。
+
 ### 9.1 校验
 
 - 每个 grounded span 有 claim/evidence；ID 在 EvidencePack；claim-evidence 闭合。
@@ -553,6 +611,8 @@ Writer 看不到：
 
 ## 10. 质量门
 
+> 2026-11-03 更新：当前默认质量门是 L1 确定性 + L2 semantic verifier（initial/final）+ L3 LLM-as-Judge（5 persona × 6 篇，两份只读标准，manual acceptance）；真人 reader test 未做，未来可选。本节旧的“真实读者 test 是默认门”是历史设计；不得用模型盲读冒充真人，也不要把 verifier/judge 分数当发布许可。
+
 ### 10.1 按文体
 
 | 文体 | 主要质量门 | 说明 |
@@ -577,6 +637,8 @@ Writer 看不到：
 ---
 
 ## 11. 多文体产出
+
+所有文体共用“读者体验等价 / TOC 标题 / 视觉优先 / 简洁”合同；文体差异放 Skill/View/输出 schema，不复制管线。
 
 ### 11.1 深度解析 / reader-first 文章
 
@@ -649,6 +711,7 @@ Writer 看不到：
 ### 12.2 不应该做的
 
 - 全片均匀抽帧、按帧写文章；
+- 不要把机制/流程/数据写成一大段文字而不给图/表；能画出来的结构优先画；
 - 让 VLM caption 变成事实 claim；
 - 用生成图/示意图冒充视频证据；
 - 没有匹配帧却写“这段演示”；
@@ -832,6 +895,8 @@ v3 只保留必要 schema；详细字段在实现时定，不先写 18 个合同
 
 ### 15.3 WriterOutput
 
+> 2026-11-03 更新：当前 Writer 输出是 Markdown article（单 H1 + H2 + 段落 + 可选图片）+ title/self_review/usage，不是下面的 plan_header/span JSON；校验在 article 文本上做。以 [docs/writing-operating-model.md](docs/writing-operating-model.md) 为准。
+
 - plan_header：title/controlling_idea/reader_path/sections/mechanism_or_steps/demo_choice；
 - sections/spans：text/role/claim_ids/evidence_ids/quote/scope_note；
 - media_choices：frame_id/section_id/caption；
@@ -841,6 +906,8 @@ v3 只保留必要 schema；详细字段在实现时定，不先写 18 个合同
 
 ### 15.4 Binding / Audit / Citations
 
+> 2026-11-03 更新：当前是 article 的 paragraph/fact/quote binding + contract audit + citations，不是 span-level binding；source line/heading 在 binding 前剥离；模型知识拉丁术语进入 `editorial_terms`。以 [docs/writing-operating-model.md](docs/writing-operating-model.md) 为准。
+
 - 每个 grounded span 一条 binding：span_ref/claim/evidence/quote/timecode/frame/capture/rights。
 - audit：sections/spans/binding/gaps/conflicts/verifier/rights。
 - provenance：写作 claim → substrate atomic claim/evidence；audit-only，不进 writer view。
@@ -849,6 +916,8 @@ v3 只保留必要 schema；详细字段在实现时定，不先写 18 个合同
 - 同输入同 hash；可 replay。
 
 ### 15.5 VerifierReport / PublishReview
+
+> 2026-11-03 更新：当前有 `verifier-report-v1` 的 initial + final 两份；final 只读审计，不触发第二次 repair；发布仍由人工 `publish_approved`，LLM judge 不是发布许可。以 [docs/writing-operating-model.md](docs/writing-operating-model.md) 为准。
 
 - VerifierReport：findings（axis/target/severity/observation/impact/action）+ provenance。
 - PublishReview：reader/audit/citations hash、reader test/A-B/human review、checklist、known risks、status。
@@ -898,6 +967,8 @@ v3 只保留必要 schema；详细字段在实现时定，不先写 18 个合同
 
 ### 17.2 开放问题
 
+- **标题 TOC / 视觉覆盖 / 体验等价如何测量？** 先用 skill rubric + 人工 reader test，不写死字数/图数。
+- **视觉规划/图表生成的模型参与与验证**：先确定性候选，再考虑模型；图表数据必须绑定 evidence。
 - Skill prompt 的质量/长度/示例数量：需要真实案例测量。
 - EvidencePack 的上下文窗口/预算：按视频类型/文体调，不写死。
 - Verifier 触发阈值：高风险分类/抽样/self_review；先人工判断。

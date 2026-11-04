@@ -58,10 +58,14 @@ class Settings:
     model: str
     base_url: str | None
     api_key: str | None = field(repr=False)
-    timeout_s: float = 180.0
+    # The 64k verifier can spend close to three minutes on reasoning; a
+    # 180s client timeout cuts it at the finish line.  Keep headroom.
+    timeout_s: float = 300.0
     # deepseek-flash spends a large share of the budget on reasoning before
-    # emitting JSON; 8k is too small for a 90-claim knowledge build.
-    max_output_tokens: int = 32768
+    # emitting JSON; 32k truncates longer verification prompts (the final
+    # verifier can burn the whole cap on reasoning).  Keep headroom and let
+    # the model finish; the total budget below remains the real guardrail.
+    max_output_tokens: int = 65536
     budget_max_calls: int = 32
     budget_max_tokens: int = 400_000
     section_concurrency: int = 3
@@ -103,8 +107,8 @@ def get_settings(*, load_env: bool = True) -> Settings:
             or None
         ),
         api_key=os.getenv("LUNOGRAPH_API_KEY") or os.getenv("DEEPSEEK_API_KEY"),
-        timeout_s=float(os.getenv("LUNOGRAPH_TIMEOUT_S", "180")),
-        max_output_tokens=int(os.getenv("LUNOGRAPH_MAX_OUTPUT_TOKENS", "32768")),
+        timeout_s=float(os.getenv("LUNOGRAPH_TIMEOUT_S", "300")),
+        max_output_tokens=int(os.getenv("LUNOGRAPH_MAX_OUTPUT_TOKENS", "65536")),
         budget_max_calls=int(os.getenv("LUNOGRAPH_BUDGET_MAX_CALLS", "32")),
         budget_max_tokens=int(os.getenv("LUNOGRAPH_BUDGET_MAX_TOKENS", "400000")),
         section_concurrency=max(

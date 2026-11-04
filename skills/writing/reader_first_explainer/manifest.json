@@ -1,11 +1,60 @@
 {
-  "schema_version": "writing-skill-v3",
+  "schema_version": "writing-skill-v1",
   "skill_id": "reader_first_explainer",
-  "version": "0.1.0",
-  "forms": ["deep_analysis", "article"],
-  "required_views": ["mechanism", "highlight", "frame"],
-  "output_schema": "writer-output-v3",
-  "quality_rubric": "reader-first-v1",
-  "examples": ["examples.md"],
-  "scripts": []
+  "name": "reader-first-explainer",
+  "kind": "method",
+  "version": "2.0.0",
+  "status": "draft_v2",
+  "validation": "judge_and_reader_test_pending",
+  "description": "Use when turning a video's compiled evidence into a standalone reader-first article that gives a non-viewer approximately the same understanding and experience as watching the video: one controlling idea, a concrete mechanism/argument chain, examples and demos the reader can picture, visual-first explanations where they help, honest boundaries, and a natural source entry. Not for chapter-by-chapter notes, coverage dumps, encyclopedias, or papers.",
+  "experience_contract": "video_equivalent",
+  "heading_contract": "specific_parallel_toc",
+  "visual_first": true,
+  "model_knowledge": "explanatory",
+  "forms": [
+    "article",
+    "deep_analysis"
+  ],
+  "form_default": "article",
+  "compatible_methods": [
+    "reader_first_explainer"
+  ],
+  "required_evidence": [
+    "edited_text"
+  ],
+  "optional_evidence": [
+    "frames",
+    "claims"
+  ],
+  "output_contract": "markdown",
+  "media_policy": {
+    "allowed_kinds": [
+      "real_frame",
+      "table",
+      "chart",
+      "diagram",
+      "text_experiment",
+      "no_visual"
+    ],
+    "max_assets": 6,
+    "generated_image_policy": "editorial_only",
+    "real_frame_policy": "only_if_relevant"
+  },
+  "quality_rubric": "reader-first-v2",
+  "examples": [
+    "examples.md"
+  ],
+  "references": [
+    "references/planning.md",
+    "references/structure.md",
+    "references/visuals.md",
+    "references/evidence.md"
+  ],
+  "scripts": [],
+  "assets": [],
+  "sources": [
+    "SOURCES.md"
+  ],
+  "manifest_hash": "810fa3f2d3bebf4e7a4b04c274705bafd02be7740560bfa8e3e18c2ccbceafcc",
+  "planning_contract": "editorial-brief-v1"
 }

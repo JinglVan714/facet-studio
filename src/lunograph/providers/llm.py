@@ -7,6 +7,8 @@ and replay can substitute recorded responses without touching the pipeline.
 
 from __future__ import annotations
 
+import base64
+import hashlib
 import json
 import time
 from dataclasses import dataclass, field
@@ -64,6 +66,27 @@ class LLMUsage:
         }
 
 
+@dataclass(frozen=True)
+class ImageInput:
+    """One image content part for a VLM call.
+
+    ``data`` stays out of artifacts; only its SHA-256 and name are recorded.
+    """
+
+    data: bytes
+    media_type: str = "image/jpeg"
+    name: str = ""
+
+    def hash(self) -> str:
+        digest = hashlib.sha256()
+        digest.update(self.media_type.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(self.name.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(self.data)
+        return digest.hexdigest()
+
+
 @dataclass
 class LLMResponse:
     text: str
@@ -94,6 +117,7 @@ class LLMCallRecord:
     finish_reason: str | None
     usage: dict[str, int]
     latency_ms: int
+    image_hashes: list[str] = field(default_factory=list)
     error: str | None = None
     error_kind: str | None = None
     replayed: bool = False
@@ -116,6 +140,7 @@ class LLMCallRecord:
             "finish_reason": self.finish_reason,
             "usage": self.usage,
             "latency_ms": self.latency_ms,
+            "image_hashes": self.image_hashes,
             "error": self.error,
             "error_kind": self.error_kind,
             "replayed": self.replayed,
@@ -136,14 +161,22 @@ class LLMClient(Protocol):
         user: str,
         max_tokens: int | None = None,
         temperature: float = 0.0,
+        images: list[ImageInput] | None = None,
     ) -> LLMResponse: ...
 
 
 def request_identity(
-    *, model: str, system: str, user: str, max_tokens: int, temperature: float
+    *,
+    model: str,
+    system: str,
+    user: str,
+    max_tokens: int,
+    temperature: float,
+    images: list[ImageInput] | None = None,
 ) -> tuple[str, str, str]:
     system_hash = semantic_hash({"text": system}, drop_volatile=False)
     user_hash = semantic_hash({"text": user}, drop_volatile=False)
+    image_hashes = [image.hash() for image in (images or [])]
     input_hash = semantic_hash(
         {
             "model": model,
@@ -151,6 +184,7 @@ def request_identity(
             "user_hash": user_hash,
             "max_tokens": max_tokens,
             "temperature": temperature,
+            "image_hashes": image_hashes,
         },
         drop_volatile=False,
     )
@@ -206,6 +240,7 @@ class DeepSeekLLM(_BudgetMixin):
         user: str,
         max_tokens: int | None = None,
         temperature: float = 0.0,
+        images: list[ImageInput] | None = None,
     ) -> LLMResponse:
         if self._client is None:
             raise ProviderUnavailable("未配置 DEEPSEEK_API_KEY / DEEPSEEK_MODEL")
@@ -216,7 +251,9 @@ class DeepSeekLLM(_BudgetMixin):
             user=user,
             max_tokens=max_tokens,
             temperature=temperature,
+            images=images,
         )
+        image_hashes = [image.hash() for image in (images or [])]
         self._before_call()
         started = time.perf_counter()
         response_id: str | None = None
@@ -224,11 +261,26 @@ class DeepSeekLLM(_BudgetMixin):
         finish_reason: str | None = None
         usage = LLMUsage()
         try:
+            user_content: Any = user
+            if images:
+                user_content = [{"type": "text", "text": user}]
+                for image in images:
+                    encoded = base64.b64encode(image.data).decode("ascii")
+                    user_content.append(
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": (
+                                    f"data:{image.media_type};base64,{encoded}"
+                                )
+                            },
+                        }
+                    )
             response = self._client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {"role": "system", "content": system},
-                    {"role": "user", "content": user},
+                    {"role": "user", "content": user_content},
                 ],
                 max_tokens=max_tokens,
                 temperature=temperature,
@@ -250,14 +302,14 @@ class DeepSeekLLM(_BudgetMixin):
                 self._record(
                     stage, key, input_hash, system_hash, user_hash, max_tokens,
                     temperature, "failed", raw, finish_reason, usage, latency_ms,
-                    detail, kind, False,
+                    detail, kind, False, image_hashes,
                 )
                 raise ProviderError(kind, detail, raw=raw)
             self._after_call(usage)
             self._record(
                 stage, key, input_hash, system_hash, user_hash, max_tokens,
                 temperature, "succeeded", raw, finish_reason, usage, latency_ms,
-                None, None, False,
+                None, None, False, image_hashes,
             )
             return LLMResponse(
                 text=raw,
@@ -276,7 +328,7 @@ class DeepSeekLLM(_BudgetMixin):
             self._record(
                 stage, key, input_hash, system_hash, user_hash, max_tokens,
                 temperature, "failed", raw, finish_reason, usage, latency_ms,
-                message, "provider_outcome_unknown", False,
+                message, "provider_outcome_unknown", False, image_hashes,
             )
             # 不自动重放未知结果；交由调用方决定是否新 run。
             raise ProviderOutcomeUnknown(
@@ -300,6 +352,7 @@ class DeepSeekLLM(_BudgetMixin):
         error: str | None,
         error_kind: str | None,
         replayed: bool,
+        image_hashes: list[str] | None = None,
     ) -> None:
         record = LLMCallRecord(
             call_id=f"call_{semantic_hash({'stage': stage, 'key': key, 'h': input_hash, 't': utc_now_iso()}, drop_volatile=False)[:16]}",
@@ -317,6 +370,7 @@ class DeepSeekLLM(_BudgetMixin):
             finish_reason=finish_reason,
             usage=usage.as_dict(),
             latency_ms=latency_ms,
+            image_hashes=list(image_hashes or []),
             error=error,
             error_kind=error_kind,
             replayed=replayed,
@@ -341,7 +395,7 @@ class ReplayLLM(_BudgetMixin):
     ):
         super().__init__(budget)
         self.model = model or (records[0].get("model") if records else "replay")
-        self.default_max_tokens = default_max_tokens or 32768
+        self.default_max_tokens = default_max_tokens or 65536
         self.call_sink = call_sink
         self._index: dict[tuple[str, str, str], dict[str, Any]] = {}
         for record in records:
@@ -359,6 +413,7 @@ class ReplayLLM(_BudgetMixin):
         user: str,
         max_tokens: int | None = None,
         temperature: float = 0.0,
+        images: list[ImageInput] | None = None,
     ) -> LLMResponse:
         max_tokens = max_tokens or self.default_max_tokens
         self._before_call()
@@ -368,6 +423,7 @@ class ReplayLLM(_BudgetMixin):
             user=user,
             max_tokens=max_tokens,
             temperature=temperature,
+            images=images,
         )
         record = self._index.get((stage, key, input_hash))
         if record is None:
@@ -392,6 +448,7 @@ class ReplayLLM(_BudgetMixin):
             finish_reason=record.get("finish_reason"),
             usage=usage.as_dict(),
             latency_ms=0,
+            image_hashes=[image.hash() for image in (images or [])],
             replayed=True,
         )
         if self.call_sink is not None:
@@ -435,17 +492,20 @@ class CachedLLM:
         user: str,
         max_tokens: int | None = None,
         temperature: float = 0.0,
+        images: list[ImageInput] | None = None,
     ) -> LLMResponse:
         settings = getattr(self.inner, "settings", None)
         resolved_max_tokens = max_tokens or getattr(
-            settings, "max_output_tokens", 32768
+            settings, "max_output_tokens", 65536
         )
+        image_hashes = [image.hash() for image in (images or [])]
         input_hash, system_hash, user_hash = request_identity(
             model=self.model,
             system=system,
             user=user,
             max_tokens=resolved_max_tokens,
             temperature=temperature,
+            images=images,
         )
         cache_path = self.cache_dir / f"{input_hash}.json"
         if cache_path.exists():
@@ -484,6 +544,7 @@ class CachedLLM:
                     finish_reason=payload.get("finish_reason"),
                     usage=usage.as_dict(),
                     latency_ms=0,
+                    image_hashes=image_hashes,
                     replayed=True,
                 )
                 if self.call_sink is not None:
@@ -503,14 +564,17 @@ class CachedLLM:
                 # Corrupt cache entry: fall through to a real call.
                 pass
 
-        response = self.inner.complete(
-            stage=stage,
-            key=key,
-            system=system,
-            user=user,
-            max_tokens=resolved_max_tokens,
-            temperature=temperature,
-        )
+        inner_kwargs: dict[str, Any] = {
+            "stage": stage,
+            "key": key,
+            "system": system,
+            "user": user,
+            "max_tokens": resolved_max_tokens,
+            "temperature": temperature,
+        }
+        if images:
+            inner_kwargs["images"] = images
+        response = self.inner.complete(**inner_kwargs)
         if response.text.strip():
             payload = {
                 "text": response.text,
@@ -519,6 +583,7 @@ class CachedLLM:
                 "usage": response.usage.as_dict(),
                 "finish_reason": response.finish_reason,
                 "provider_response_id": response.provider_response_id,
+                "image_hashes": image_hashes,
                 "created_at": utc_now_iso(),
             }
             tmp_path = cache_path.with_suffix(".tmp")

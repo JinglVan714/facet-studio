@@ -1,0 +1,50 @@
+{
+  "schema_version": "writing-request-v1",
+  "request_id": "req_<video_id>_<form>_v1",
+  "video_ids": ["<BV...>"],
+  "method_id": "reader_first_explainer",
+  "form_id": "article",
+  "style_id": null,
+  "central_question": "<读者要回答的问题，不是视频主题>",
+  "job_to_be_done": "<这篇要帮读者完成什么>",
+  "reader_before_state": "<读者读前知道什么/不知道什么>",
+  "desired_reader_outcome": "<读者读后能说什么/做什么>",
+  "success_criteria": [
+    "<可观察的读者结果 1>",
+    "<可观察的读者结果 2>"
+  ],
+  "required_information": [
+    "<必须覆盖的信息 1>",
+    "<必须覆盖的信息 2>"
+  ],
+  "forbidden_information": [
+    "<不能出现的信息 1>",
+    "<不能出现的信息 2>"
+  ],
+  "language": "zh",
+  "platform": "markdown",
+  "risk_level": "low",
+  "audit_level": "none",
+  "sections_required": 1,
+  "media_policy": {
+    "allowed_kinds": ["real_frame", "table", "chart", "diagram", "text_experiment", "no_visual"],
+    "max_assets": 6,
+    "generated_image_policy": "editorial_only",
+    "real_frame_policy": "only_if_relevant"
+  },
+  "length_advisory": {
+    "unit": "chars",
+    "target": null,
+    "min": null,
+    "max": null
+  },
+  "source_policy": {
+    "substrate_facts": true,
+    "model_knowledge": "editorial_only",
+    "user_supplements": false,
+    "external_web": false
+  },
+  "profile_override": null,
+  "created_by": "user",
+  "request_hash": "<fill-after-freeze>"
+}
