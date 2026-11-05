@@ -1,5 +1,7 @@
 # Diagnostic Memo — writing 层现状（2026-11-03）
 
+> **历史诊断，已废弃，不要读。** 它基于旧的 brief/verifier/repair 链；当前写作层是 `writing_v4`，入口是 [NEXT_SESSION_PROMPT.md](NEXT_SESSION_PROMPT.md)。不要把本文结论当当前基线。
+
 > 性质：诊断，不是方案冻结；不修改代码/字段/agent/validator，不 commit。
 > 方法：按 `STARTUP_PROMPT.md` 顺序读 AGENTS / operating model / architecture / substrate freeze / HANDOFF / STATE / evals / 两份只读标准 / skill / 代码；直接读 `runs/_diag/{BV17_workflow_v5,BV1AC_workflow_v10,BV1yb_workflow_v1}` 的 `reader.md`、`assets/`、`manifest.json`、`verifier_final_report.json`；用当前代码离线复算 `source_map` 与 `contract`；跑全量测试。
 > 测试事实：`PYTHONPATH=src python -m pytest` → **508 passed in 5.33s**。

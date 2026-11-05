@@ -1,0 +1,16 @@
+{
+  "id": "video-article",
+  "version": "0.1.0",
+  "forms": ["article"],
+  "skill": "SKILL.md",
+  "examples": "references/examples.md",
+  "prompt": "prompts/user.md",
+  "source_line": "article",
+  "check_profile": "article",
+  "require_source": true,
+  "quality_rubric": "reader-first-v1",
+  "inputs": ["content.md"],
+  "max_tokens": 65536,
+  "temperature": 0.4,
+  "output_name": "article.md"
+}

@@ -13,6 +13,6 @@
 
 说明：
 
-- 架构以 [../../architecture.md](../../architecture.md) 为准；本目录只作历史证据。
+- 架构以 [../../architecture.md](../../architecture.md) 的 §0.1 阅读地图为准；本目录只作历史证据，不要当当前实现。
 - reader 中引用的 `assets/` 图片未随 git 保存；媒体在本地 run/data 目录。
 - 当时尚未做真实 reader test/A-B，只有两个 P0 样本。

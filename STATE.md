@@ -1,9 +1,28 @@
-# STATE — 2026-11-04
+# STATE — 2026-11-05
 
-- 分支 `v3`；归档 tag `archive/writing-v1-2026-11-04`。
-- 归档前测试：526 passed。
-- substrate v1：冻结/可信；不改。
-- 写作层：旧链（brief/verifier/repair/polish/source line/claim status）+ skill v1/v2 **已归档**；**干净重做中**。
-- 当前要做的：第一个 skill 做到优质、可发布；质量门 LLM-as-Judge；用户自己跑 30 份。
-- 旧 runs/judge/memo 是历史，不是当前证据；不要读。
-- 入口：`handoffs/2026-11-03/NEXT_SESSION_PROMPT.md`；方法：`docs/writing-rebuild-brief.md`。
+- 分支 `writing-rebuild`；旧写作层归档 tag `archive/writing-v1-2026-11-04`。
+- **当前方向（2026-11-05）**：多文体进行中；社媒（小红书 + 公众号）优先，视频脚本第二步；md 内容先过关；HTML 后续；PDF 暂不做；demo shell 完全体后置。见 [docs/multiform-roadmap.md](docs/multiform-roadmap.md)。
+- **多 Agent 编排定义**：Lead/Editor orchestrator + LeadPlan + specialists + 共享 RunState + bounded agents-as-tools + trace；当前 writer→consistency→svg→checks 是固定 workflow，待接 Lead。
+- **P1（已确认，直接 B）**：LeadPlan + Platform Editor + ViewRetriever + run manifest/receipts + per-skill eval；小红书/公众号 × BV1ix/BV17 → 4 个发布包（红书 card_copy/title/body/tags/images/publish/post；公众号 article/title_candidates/publish）；不设硬长度；真实帧优先；md first；HTML P3；PDF 不做；demo P4。
+- substrate v1：冻结/可信；本次未改 substrate。
+- 新写作层：`skills/writing/video-article/`（内容稿制 SKILL + README + 匿名例子 + 素材/写作分离规范）。
+- 多文体基础（2026-11-05）：`skills/writing/social-note/`、`skills/writing/video-script/`、`src/lunograph/writing_v4/skill_runner.py`、`form_checks.py`；video-article 补 manifest。`tests/writing_v4` 34 passed；全 suite 560 passed。
+- 多文体草稿（未定稿）：`runs/writing_rebuild_2026-11-04/multiform/`；社媒 2 篇过 floor，脚本 2 篇结构可用但 floor 未过（figures 未复制、素材说明出现“内容稿”）；不作为最终产物。
+- 最小管线：`src/lunograph/writing_v4/`（content_manuscript / material_packet / continuous_text / run / consistency_pass / svg_pass / pipeline / article_checks / ab_judge）。
+- 写作通路：writer → consistency review/edit（通用写作问题 + 严格视觉缺口）→ SVG spec/render → floor checks。
+- SVG 通路：writer/editor 只留 `<!-- svg: ... -->`；`svg_pass` 让模型返回图表 JSON 规格，本地确定性渲染 `figures/svg-XX.svg`，模型不写 SVG。严格门槛下，3 篇 CLEAR 都有真实图，未强插 SVG。
+- 编辑通路：来源行在 review 前剥离、edit 后原样接回；新增标题范围、分类层数、证据范围、工作痕迹、视觉缺口检查；本轮由通路自己修掉 CFA 范围、三层/两类、标题承诺、图注口径、动作清单等。
+- 当前可发布终稿：3 篇 `content_final_v4`（BV1ix 炸鸡、BV17 技术解释）与 `content_final_v4c`（BV1B 猫知识）；正文“作者”0 次；地板检查全过。3 篇 HOLD 仍为 `content_final_v3`，不发布。
+- 新 3 条从 substrate units 合并 transcript；原数据无 source.json，出处用 BV 号；`material.md` 已补。
+- 第一轮评审稿 `content_final/`；第二轮评审稿 `content_final_v2/`。
+- 第二轮评审已完成：`review_v2/SUMMARY.md`；团队 76.3 / 76.1 / 72.6，无 RISK HOLD；通用问题为内部矛盾/步骤/范围。
+- 历史 30 judge（旧质量门，5 persona × 6 篇）：3 CLEAR（BV1ix 81.65 / BV17 80.48 / BV1B5 74.05）+ 3 HOLD（BV13 77.95 / BV1zn 72.40 / BV1eUh 69.95）；只作参考，不重跑。
+- 交付包 `deliverables/writing-skill/` 已改为**只呈现文章**的作品集：`site/index.html`、`site/print.html`、`site/writing-articles.pdf`；无架构、评分、HOLD、官方 30 证据。内部说明/证据/SKILL 副本已移到 `runs/writing_rebuild_2026-11-04/deliverable_internal/`。
+- 3 篇 CLEAR 已过新编辑通路；HOLD 3 篇不发布。
+- 输入 A/B：完整素材包 3/4 胜；连续文本在 BV1ix 因配料表/细节胜。格式不是决定因素，编辑距离 + 具体细节/表格才是。
+- 测试：542 passed（含新增 SVG 渲染/占位符、来源行剥离测试）；未改 substrate/旧链。
+- 历史 30 份 judge 只作参考；**不再跑 5 persona × N 篇的批量 subagent 评审**。需要外部视角时做小规模、针对性抽查 + 人工 acceptance。
+- 下一步按 [docs/multiform-roadmap.md](docs/multiform-roadmap.md)：P0 本地 + GitHub 调研（小红书/公众号 reuse map）→ 讨论 → P1 社媒（小红书 + 公众号 × BV1ix/BV17）→ P2 视频脚本 → P3 JD 落点（LeadPlan/trace、ViewRetriever、tool receipts、per-skill eval、平台角色）→ P4 HTML → P5 demo shell。PDF 暂不做。
+- 入口文档已整理：`NEXT_SESSION_PROMPT.md` + `docs/writing-rebuild-brief.md` + `AGENTS.md` + `README.md`；旧 `STARTUP_PROMPT.md`/`session-handoff.md` 已标历史。
+- 未 commit/push。
+- 证据索引：`runs/writing_rebuild_2026-11-04/INDEX.md`。

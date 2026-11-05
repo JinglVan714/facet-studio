@@ -1,0 +1,89 @@
+import xml.etree.ElementTree as ET
+
+import pytest
+
+from lunograph.writing_v4.svg_pass import (
+    PLACEHOLDER,
+    SpecError,
+    normalize_spec,
+    render_svg,
+)
+
+
+def test_placeholder_regex_finds_brief() -> None:
+    text = "前言\n\n<!-- svg: 三层分类：毛色 / 类群 / 登记 -->\n\n后文"
+    matches = list(PLACEHOLDER.finditer(text))
+    assert len(matches) == 1
+    assert "三层分类" in matches[0].group(1)
+
+
+def test_normalize_rejects_too_few_items() -> None:
+    with pytest.raises(SpecError):
+        normalize_spec({"kind": "flow", "items": [{"label": "只有一个"}]})
+
+
+def test_normalize_defaults_kind_and_caption() -> None:
+    spec = normalize_spec(
+        {
+            "kind": "unknown",
+            "title": "两层关系",
+            "items": [
+                {"label": "A", "detail": "第一层"},
+                {"label": "B", "detail": "第二层"},
+            ],
+            "caption": "两层关系",
+        }
+    )
+    assert spec["kind"] == "flow"
+    assert spec["caption"].startswith("示意")
+
+
+def test_render_flow_is_valid_svg() -> None:
+    spec = normalize_spec(
+        {
+            "kind": "flow",
+            "title": "三步",
+            "items": [
+                {"label": "洗", "detail": "先洗"},
+                {"label": "切", "detail": "再切"},
+                {"label": "炸", "detail": "最后炸"},
+            ],
+        }
+    )
+    svg = render_svg(spec)
+    ET.fromstring(svg)
+    assert svg.count("<rect") == 3
+    assert 'marker-end="url(#arrow)"' in svg
+
+
+def test_render_compare_keeps_two_cards() -> None:
+    spec = normalize_spec(
+        {
+            "kind": "compare",
+            "title": "两种分布",
+            "items": [
+                {"label": "三花", "detail": "分界明显"},
+                {"label": "玳瑁", "detail": "混杂"},
+            ],
+        }
+    )
+    svg = render_svg(spec)
+    ET.fromstring(svg)
+    assert svg.count("<rect") == 2
+
+
+def test_render_escapes_xml() -> None:
+    spec = normalize_spec(
+        {
+            "kind": "stack",
+            "title": "A & B",
+            "items": [
+                {"label": "<分类>", "detail": "x & y"},
+                {"label": "第二层", "detail": ""},
+            ],
+        }
+    )
+    svg = render_svg(spec)
+    ET.fromstring(svg)
+    assert "&lt;分类&gt;" in svg
+    assert "&amp;" in svg

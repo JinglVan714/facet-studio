@@ -1,70 +1,110 @@
-# Writing rebuild brief（2026-11-04）
+# Writing layer brief（2026-11-04）
 
-> 当前写作层是**干净重做**，不是修旧链。旧写作层（brief/verifier/repair/polish/source line/claim status + skill v1/v2）已归档在 commit/tag `archive/writing-v1-2026-11-04`；不要按旧链做，不要读旧 memo/runs/skill/judge。
-> 上位：`AGENTS.md` 全局护栏；两份只读标准；开源参考原始仓库。
-> 读者：接手写作层重做的新 session。
+> 读者：接手写作层的新 session。
+> 上位：`AGENTS.md` 全局护栏；两份 reader_pack 标准只在评测时读。
+> 旧写作层（brief/verifier/repair/polish/source line/claim status + skill v1/v2）已归档；不要按旧链做，不要读旧 memo/runs/skill/judge。
 
 ## 1. 我们在做什么
 
-把一条视频的连续证据，写成一篇没看过视频的读者也能获得≈同等理解与体验的独立文章。**先把一个 skill 做好**：质量稳定、优质、可发布。质量门是 **LLM-as-Judge 高分通过**（5 persona × 两份标准）；确定性测试只是地板，不是质量评判。用户会自己重新跑 30 份 judge；**不要照着旧 judge 问题改**。
+把一条视频的连续证据，写成一篇没看过视频的读者也能获得≈同等理解与体验的独立文章。
+
+当前阶段：**一个写作 skill 已经做到质量稳定、能拿出手**；3 篇可发布文章已经形成 articles-only 作品集。下一步不是预设的“继续加 stage”，也不是预设的“先 JD”或“先多 skill”；先认知，再判断。
 
 ## 2. 什么是好 writing
 
-读两份标准全文：
-
-- `runs/_reader_test_2026-11-03/reader_pack/评价方法.md`
-- `runs/_reader_test_2026-11-03/reader_pack/5个persona.md`
-
-最低共识：
+完整标准在 `runs/_reader_test_2026-11-03/reader_pack/评价方法.md` 和 `5个persona.md`；需要评测时再读。最低共识：
 
 - 五层：Readable → Comprehensible → Value → Engagement → Shareable。
-- 12 维；知识准确性是红线；P5 发现重大事实错误/严重误导/未证实关键产品能力写成已证实 → risk hold。
-- 好文章：一个控制性 idea、一条机制/论证链、具体例子/演示/画面/数字、诚实边界、自然来源入口/下一步；不是章节笔记、coverage dump、百科/论文、正确废话。
+- 12 维；知识准确性是红线。P5 是质量红线概念（重大事实错误/严重误导/未证实关键能力写成已证实），不是要求你组织 30 份 subagent 评审。
+- 一个控制性 idea、一条机制/论证链、具体例子/演示/画面/数字、诚实边界、自然入口/下一步。
+- 不是章节笔记、coverage dump、术语表、论文、百科、正确废话。
 - 默认读者是 smart general reader with some technical baseline；`reader_profile` 注入时服从。
-- judge 是模型评审，不是真人，不能写成 reader pass；用户 manual acceptance 是发布门。
+- judge 是模型评审，不是真人；不能写成 reader pass。用户 manual acceptance 是发布门。
 
 ## 3. 开发纪律
 
 - **证据优先**：视频事实/数字/引语/说话人只来自 substrate evidence；模型知识只解释/类比/组织。
-- **写作层只保证“视频有就写，没有就不写”**：这是对视频内容的忠实，不是核实世界。视频说假设/单次演示，保留 scope；视频说 X，不要升级成“官方/已证实”。**“未证实”不是写作层的事**；不要每句“视频称/未核实”，不要写成体检报告/论文/百科。judge 的 P5 管红线；写作层不管。
-- **主语是内容**：模型采用并组织 substrate 内容来表述；它不需要“知道自己在总结视频”，也不要显式说“视频里/作者说”，除非真的需要区分观点/事实或指演示。source line 只做一行出处。
-- **Writer 是产品，检查是地板**：先写得好；不要用 validator/规则怪谈/多 stage 去“保证”质量。
+- **写作层只保证“视频有就写，没有就不写”**：这是对视频内容的忠实，不是核实世界。视频说假设/单次演示，保留 scope；视频说 X，不要升级成“官方/已证实”。
+- **核实与正文绝对分离**：“未证实”不是写作层的事。正文不写“视频称/未核实/待核”，不写成体检报告/论文/百科。验证/审计只能放在正文之外，或作为独立质量门。
+- **主语是内容，不是视频**：默认直接陈述；不要写“作者说/视频里/据内容介绍”，除非需要区分个人经验、主观判断或具体演示。出处只做正文外一行。
+- **Writer 是产品，检查是地板**：先写得好；不要用 validator、词表、规则怪谈、多 stage 去“保证”质量。
 - **Skill 优先**：角色/读者/方法/例子/self-review；规则少、例子多。
-- **严禁单例**：skill 里不能出现某个视频/产品/人物的具体内容、标题、台词、claim；每条规则必须由 ≥2 视频/文体或通用写作原则支持。例子匿名。
-- ≥2 视频/文体才进通用层；不按单篇调参；不手改 reader/claim。
+- **严禁单例**：skill/文档/代码里不能出现某个视频/产品/人物的具体内容、标题、台词、claim；每条规则必须由 ≥2 视频/文体或通用写作原则支持。例子匿名。
+- ≥2 视频/文体才进通用层；不按单篇调参；不手改单篇文章。
 - 先测后调；同 request + 盲评；不用“测试通过”代替读者质量。
 - 失败/partial/unknown 显式；不静默截断；不自动发布；不伪造 reader test/A-B。
 - trace/成本/状态可查；旧 artifact 冻结；可 replay。
+- 有界：一次修复；不做无限“再修一轮看看”。
 
-## 4. 项目架构（一屏）
+## 4. 架构一屏
 
-- **substrate v1（冻结）**：视频 → units/sentences/passages → edited text + frames + source metadata。writing 层通过既有接口消费，不改 substrate。
-- **写作层（重做中）**：skill + writer → 独立文章；visual 可选；judge 是质量门。
-- **旧写作层**（brief/verifier/repair/polish/source line/claim status）已归档，不是基线；不要修它。
+```text
+substrate v1（冻结）
+  视频 → units / sentences / passages → content.md + figures/ + source metadata
+        │
+        ▼
+写作层 v4
+  SKILL + 一次 writer → 文章草稿
+        → 有界 consistency review/edit
+        → SVG pass（占位符 → JSON 规格 → 本地确定性渲染）
+        → 地板检查
+        │
+        ▼
+交付层
+  deliverables/writing-skill/site/：articles-only HTML / PDF
+```
 
-## 5. 开源参考（直接读原始仓库）
+- substrate v1 在 `src/lunograph/writing_v3/` 的 substrate 链路；只读 substrate 相关文件，不要读同目录的旧写作实验。writing 层通过既有接口消费，不改 substrate。需要接口时只读 `docs/substrate-v1-freeze.md` 的相关部分。
+- 写作层代码在 `src/lunograph/writing_v4/`；skill 在 `skills/writing/video-article/`。
+- 当前通路：`pipeline.py` = writer → consistency → SVG → checks。
+- 质量门独立于正文；不要把评审语言写进文章。
+- 判断下一步看 `architecture.md` 的机会地图：§6.5 多文体矩阵、§11 多文体产出、§13.1 JD 映射、§14 复用；§4.2–4.3、§6.3.1、§7–§10 是旧实现，不要当当前代码。
 
-- `参考素材/skills/imraywang__wewrite/.../article-brief.md`、`editorial-quality.md` + claims：一页 brief、claim type/status/boundary、五项编辑标准。
-- `参考素材/skills/VincentOld__stop-slop-zh/.../SKILL.md` + `references/`：8 条中文 AI 味规则、五维“直/实/变/散/真”；借判断，不借词表/硬分数。
-- `参考素材/skills/conorbronsdon__avoid-ai-writing/.../SKILL.md`：detect/edit 分离、source fidelity、protected content、two-pass ceiling；不借英文 detector 目录。
-- `参考素材/skills_downloaded/anthropics__skills/skills/doc-coauthoring/SKILL.md`：context → structure → reader testing；只借方法。
-- `参考素材/skills_downloaded/mattpocock__skills/.../writing-beats|writing-shape|writing-for-agents`：grounding、beats、format arguments（prose/list/table/quote）。
-- `参考素材/skills/d-wwei__great-writer/`：reader stance、core tension、结构先行；不抄 6-phase。
-- 本地 `bilibili-render-pdf`：教学 flow（动机→idea→机制→例子→takeaway）；不抄 LaTeX/图越多越好。
-- 其余 curated：只作方法/结构参考；复用前查 license；不运行仓库脚本；不把示例当本项目事实。
-- **项目 vs agent skill 的本质**：agent skill 是程序性知识包（角色/方法/示例/渐进披露）；我们的项目多一层“视频证据 → 连续文本”的 substrate。skill 不复制 substrate/验证层；它只负责“怎么写好”。重叠部分直接借逻辑，不造轮子。
+## 5. 项目与 agent skill：本质区别与重叠
 
-## 6. 交付
+- Agent skill 是程序性知识包：角色、读者模型、方法、示例、渐进披露、self-review。
+- 本项目多一层 substrate：视频 → 连续内容稿 + figures + metadata。写作 skill 消费它，但不复制 substrate、证据校验、渲染、发布。
+- 重叠部分直接借：写作方法、读者模型、例子组织、自审问题、格式判断。
+- 区别部分不要混：skill 只负责“怎么写好”，不负责“怎么证明视频是真的”。
+- **能复用就复用**：先看本地 `参考素材/skills/`、`skills/`、`bilibili-render-pdf`；需要时再调研 GitHub 开源项目或知识文档。借逻辑不抄文本，复用前查 license，不把仓库示例当本项目事实，不运行不可信脚本。
+- 本地参考多是 skill；不要把“再写一个写作方法论”当默认答案。
 
-- 一个新 skill 包：通用、无单例、规则少例子多、writer-first。
-- 在 2–3 个视频上跑出文章（建议 BV13/BV1ix + 一个旧 dev 做回归），证明不是单例。
-- 一个简短说明：核心方法、借了哪些开源逻辑、刻意没做什么（验证官僚/多 stage/单例）。
-- 用户自己跑 30 份 judge；不用先跑，也不要照着旧 judge 问题改。
+## 6. 当前方法（已经跑通的部分）
 
-## 7. 不要做
+- **素材/写作分离**：素材层出 `content.md` + `figures/`，去掉标题/UP 主/时长/链接/时间码/ID/帧号/出处；Writer 只读内容稿，不知道视频/素材包/管线。
+- **直接陈述**：默认写“清洁是……”，不写“作者说清洁是……”。个人经验用“一个案例/一次观察/这个演示”，不用“作者”作过渡。
+- **证据范围**：一个案例/一次演示/一个预测保持一个；不升级成“所有人/一定/从来”。标题/小标题/开头与正文同 scope。
+- **一致性 pass**：先 review 列 Must fix（数字/步骤/条件/结论、标题/表格/正文/例子、标题承诺/核心价值位置、动作字面矛盾、默认/可选反转、术语、分类层数、工作痕迹、视觉缺口），再按 fix list 做最小 edit；不做外部核查、不加安全/百科内容、不改观点/结构。
+- **SVG 通路**：writer/editor 只留 `<!-- svg: ... -->`；模型返回图表 JSON 规格（flow/stack/two-axis/compare），本地确定性渲染；模型不写 SVG；最多 2 个/篇；有真实图就不画。
+- **地板**：`article_checks.py` 检查泄漏词/时间码/图片路径/标题/来源行；不是质量门。
+- **来源行**：review 前剥离、edit 后原样接回；正文不把它当工作痕迹删掉。
 
-- 不读旧写作层的 `DIAGNOSTIC_MEMO`/`PIPELINE_IO_AUDIT`/`DISCIPLINE_AUDIT`/旧 runs/旧 skill/旧 judge problems/旧 operating model。
-- 不修旧 pipeline；不基于旧错误做诊断 memo；不按旧 30-judge 问题改。
-- 不加 validator/agent/stage/词表来“保证”质量；不把文章写成论文/百科/体检报告；不每句“未核实”。
-- 不把某个视频/产品/人物写进 skill；不按单篇调参。
+## 7. 现在做到哪 / 已知边界
+
+- 一个 skill `skills/writing/video-article/` 已做到质量稳定；3 篇可发布文章：教程 / 技术解释 / 知识 / 文化。
+- 交付包 `deliverables/writing-skill/` 是 articles-only 作品集：`site/index.html`、`site/writing-articles.pdf`；没有架构、评分、HOLD、官方 30 证据。
+- 全 suite 542 passed；3 篇地板检查全过；正文“作者”0 次。
+- **还不是 demo-ready**：排版、字体、图片大小、PDF 文本层、移动端阅读等展示层还需要后续调整。
+- 帧 caption 主要是 OCR，纯文本 writer 不描述没看到的画面；没有 VLM；没有真人 reader test。
+- 历史 30 份结果是模型评审，不是真人通过；3 篇 HOLD 不发布。
+
+## 8. 不要做
+
+- **不要再跑 5 persona × N 篇的 30 份 subagent 评审**：太贵，收益递减。需要外部视角时，做小规模、针对性的单 persona 抽查，或先跑确定性地板检查。
+- 不读旧写作层 memo/runs/skill/judge；不读 `docs/writing-operating-model.md`、`docs/writing-layer-*.md` 等旧设计笔记；不照着旧 30-judge 问题改。
+- 不加 validator/agent/stage/词表来“保证”质量；不把文章写成论文/百科/体检报告。
+- 不把某个视频/产品/人物写进 skill；不按单篇调参；不手改单篇来“证明”方法有效。
+- 不为了“结构清晰”把内容切成孤立 claim/表格/小节；关系、连续性、上下文是写作的一部分。
 - 不伪造事实/数字/引语/说话人；不自动发布；不 commit/push 到用户没让你动的分支；不读 `data/cookies/`。
+- 不静默改 substrate/架构；发现真实阻塞先报告。
+
+## 9. 下一步怎么判断（不预设）
+
+先读、先看现有产出，再给用户 2–3 个方向，例如：
+
+- 对照目标 JD/岗位要求补作品集（architecture §13.1 有 JD 映射，只作参考）；
+- 先扩 skill 适配更多文体（architecture §6.5 多文体矩阵 / §11 多文体产出，作为机会地图，不是现成实现）；
+- 先修已有展示/质量问题（排版、图片、PDF、移动端）；
+- 或者你看到的其他问题。
+
+每个方向写：为什么、最小下一步、验收标准、需要几个 case 才能说明不是单例。不要直接开做；先让用户裁决。

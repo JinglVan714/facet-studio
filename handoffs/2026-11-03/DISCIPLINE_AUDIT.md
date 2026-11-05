@@ -1,5 +1,7 @@
 # Development Discipline Audit（2026-11-03）
 
+> **历史审计，已废弃，不要读。** 它基于旧 brief/verifier/repair 链；当前写作层是 `writing_v4`，入口是 [NEXT_SESSION_PROMPT.md](NEXT_SESSION_PROMPT.md)。
+
 > 触发：用户指出 references/examples 里有按单例适配的内容，并怀疑整体思考方式已走偏。
 > 范围：诊断 memo 之后的所有代码/skill/prompt 改动；本文件先自查，不再跑新 case。
 > 依据：AGENTS.md §5 开发纪律、operating model §4、用户反复强调的“不按单篇/单 finding 调参；≥2 视频/文体复现才进通用层；skill 优先，不堆规则；不设最小门槛/硬指标”。

@@ -1,6 +1,6 @@
 # Session handoff — 2026-11-03
 
-> **快照，不保真。** 新 session 先读 [STARTUP_PROMPT.md](STARTUP_PROMPT.md) 和 [docs/writing-operating-model.md](../../docs/writing-operating-model.md)，再用代码/最新 runs 验证本文件。不要把它当结论。
+> **历史快照，已废弃，不要作为入口。** 当前入口是 [NEXT_SESSION_PROMPT.md](NEXT_SESSION_PROMPT.md) 和 [docs/writing-rebuild-brief.md](../../docs/writing-rebuild-brief.md)。本文件属于旧的 brief/claim/verifier 框架，只作历史留存；不要把它当结论。
 
 ## 本轮做了什么
 

@@ -1,9 +1,8 @@
 # LunoGraph v3 架构书：证据编译器 + 写作 Skill
 
 > 状态：v3 架构事实来源（只读为主）
-> 本文件只定义 v3 的设计；当前状态/任务/历史分别见 `STATE.md`、`HANDOFF.md`、`handoffs/`。
-> **2026-11-04 writing rebuild**：写作层进入干净重做；§4/§6–§10/§15 的 writing 设计已归档，不是基线；当前写作层认知见 [docs/writing-rebuild-brief.md](docs/writing-rebuild-brief.md)。Substrate 章节（§5/§12）仍有效。
-> **2026-11-03 writing-layer update**：写作层的当前方法/契约/评测/开发习惯以 [docs/writing-operating-model.md](docs/writing-operating-model.md) 为准；本文件 §4/§6–§10/§15 中旧的“一次 Writer + 可选 Verifier / JSON plan_header / span-level WriterOutput”是早期设计假设。凡与 operating model + 当前代码 + 最新 runs 冲突，以后者为准；旧 writing 设计笔记（`docs/writing-*.md`）同理。
+> 本文件记录 v3 的设计与早期实现假设；当前状态/任务/历史分别见 `STATE.md`、`HANDOFF.md`、`handoffs/`。
+> **2026-11-04 writing rebuild**：写作层已按 writer-first 重做。本文件是“产品/机会地图 + 早期实现假设”的混合体；**先看 §0.1 阅读地图**。§4.2–4.3、§6.3.1、§7–§10 的 Editorial Brief / Verifier / repair / 30 份 judge 是历史实现，**不是当前代码**；但 §6.5 多文体矩阵、§11 多文体产出、§13 JD 映射仍是判断下一步的机会地图。当前写作层以 [docs/writing-rebuild-brief.md](docs/writing-rebuild-brief.md) + `src/lunograph/writing_v4/` 为准。
 
 ---
 
@@ -14,11 +13,42 @@
 - 视频如何变成可复用的证据；
 - 证据如何组织、如何被多种文体复用；
 - 写作如何用尽可能少的模型调用完成；
-- Skill、Writer、Verifier、确定性校验各自负责什么；
+- Skill、Writer、一致性编辑、确定性校验各自负责什么；
 - 多文体（深度解析、讲义、社媒、企业知识、视频脚本、二创、生图提示词）如何共用一套底座；
 - JD 能力在新架构中的落点，以及哪些只做“小号”、哪些后置。
 
-本文件只定义 v3；旧架构/旧实现不在本文件范围，也不作为 v3 默认。
+本文件保留 v3 的产品设计与早期实现假设；历史部分见 §0.1，不作为当前实现依据。
+
+### 0.1 2026-11-04 阅读地图（先看这个）
+
+这份架构书是“产品/机会地图 + 早期实现假设”的混合体。按下面分层读：
+
+**当前仍有效的产品/机会地图**
+
+- §1 产品定义：一次证据编译，多文体写作。
+- §2.1 / §2.3 成功标准：读者等价、TOC、视觉优先、证据可复用。
+- §4.1 分层：接入 / 编排 / 证据 / 写作 / 校验 / 发布 / 观测。
+- §5 substrate：视频 → units / sentences / passages → 证据。
+- §6.1 / §6.2 / §6.5：skill 本质、包结构、多文体矩阵（View/Skill 是设计语言；当前实现是 content.md + video-article skill，不要照搬 View/claims 层）。
+- §11 多文体产出：深度解析 / 讲义 / 社媒 / 企业知识 / 视频脚本 / 二创 / 生图（看文体机会，不要当现成实现）。
+- §12 关键帧与视觉。
+- §13.1 JD 映射：能力 → 最小 artifact（表中的 Writer plan_header/Verifier 等具体实现词按当前 writer-first 理解，不要照抄）；§13.3 不追求大而全。
+- §14 复用 / 二开开源。
+
+**历史实现，不要当当前代码**
+
+- §2.2 调用预算、§2.4 质量门（5 persona × 6 篇、30 报告）。
+- §4.2–4.3 Brief / Verifier / repair / polish 数据流。
+- §6.3.1 Editorial Brief。
+- §7–§10 Writer / Verifier / contract / quality gate 的 JSON/span-level 细节。
+- §13.2 小号 Harness 的 Writer plan_header/verifier 细节。
+
+**当前写作层**
+
+- `docs/writing-rebuild-brief.md` §4–§6 + `src/lunograph/writing_v4/`。
+- 一句话：SKILL + 一次 writer → 有界 consistency review/edit → SVG pass → 地板检查；不是 Brief / Verifier / repair 链。
+
+**判断下一步时，优先看机会地图**：§6.5 / §11（多文体）、§13.1（JD 能力）、§14（复用）。不要因为实现细节旧，就把这些机会一起跳过。
 
 ---
 
@@ -129,6 +159,8 @@
 ---
 
 ## 4. 总体架构
+
+> 2026-11-04：§4.1 的分层概念仍可参考；§4.2–4.3 的 Brief / Verifier / polish 是旧写作链，不是当前实现。当前写作层数据流见 [docs/writing-rebuild-brief.md](docs/writing-rebuild-brief.md) §4。
 
 ### 4.1 分层
 

@@ -1,5 +1,7 @@
 # Pipeline I/O & Prompt Audit（2026-11-03）
 
+> **历史审计，已废弃，不要读。** 它描述的是旧 brief/verifier/repair 管线；当前写作层是 `writing_v4`，入口是 [NEXT_SESSION_PROMPT.md](NEXT_SESSION_PROMPT.md)。
+
 > 目的：在实现 1–5 项之前，先拆每个 stage 的输入/输出、prompt 体积与冗余、架构重复，给出目标 pipeline 和 A/B 计划。
 > 数据来源：三篇 dev run 的 `prompts/*.txt`、`llm_calls.jsonl`、`manifest.json`；本地参考 skill；一次 VLM 能力探测。
 > 约束：不改代码、不 commit；测量只用于设计，不写死预算/门槛。

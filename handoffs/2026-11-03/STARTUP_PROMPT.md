@@ -1,5 +1,7 @@
 # New session startup prompt — writing layer takeover（2026-11-03）
 
+> **历史，已废弃，不要读。** 当前入口是 [NEXT_SESSION_PROMPT.md](NEXT_SESSION_PROMPT.md)；本文件属于旧的 brief/claim/verifier/repair 框架，只作历史留存。
+
 你接手的是一个已经把 substrate v1 冻结、正在迭代 writing 层的项目。你的任务不是继承上一轮结论，也不是马上改代码；你的任务是**先用项目当前的方法判断现状，再决定下一步**。
 
 ## 0. 第一个交付物：诊断 memo（先不要改代码）

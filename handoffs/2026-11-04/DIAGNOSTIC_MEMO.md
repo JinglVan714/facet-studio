@@ -1,5 +1,7 @@
 # Diagnostic Memo — writing 层现状（2026-11-04，新 session 独立诊断）
 
+> **历史诊断，已废弃，不要读。** 它基于旧的 `writing/` brief/verifier/repair 链，不是当前 `writing_v4`；当前入口是 [NEXT_SESSION_PROMPT.md](../2026-11-03/NEXT_SESSION_PROMPT.md)。不要把本文结论当当前基线。
+
 > 性质：诊断，不是方案冻结；**没有改代码、没有加字段/agent/validator、没有 commit、没有跑模型、没有跑 judge/reader test**。
 > 方法：按 `NEXT_SESSION_PROMPT.md` 顺序读 AGENTS / operating model / architecture / substrate freeze / HANDOFF / STATE / evals / 两份只读标准 / skill / 代码 / 最新 runs / 旧 judge / 上一轮 memo；跑全量测试；用当前代码离线复算 request hash、skill hash、quote binding、polish validation、repair diff。
 > 证据：`runs/_diag/{BV17_workflow_v7,BV1AC_workflow_v14,BV1yb_workflow_v3}` 的 `reader.md`、`brief.json`、`visual/plan.json`、`visual/render.json`、`verifier_final_report.json`、`verifier_final_after_report.json`、`writer/`、`writer_repair/`、`validation.json`、`output/validation.json`；`runs/_brief_final3/`（旧 current）；`runs/_reader_test_2026-11-03/llm_judge/`（旧 judge）。
