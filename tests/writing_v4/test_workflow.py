@@ -69,7 +69,16 @@ def test_workflow_pauses_at_plan_then_review(
     calls = {"plan": 0, "write": 0, "typeset": 0, "review": 0}
     _fakes(monkeypatch, calls)
 
-    started = workflow.start_workflow("BVtest", "公众号", "写一篇公众号")
+    progress: list[tuple[str, int, int]] = []
+    started = workflow.start_workflow(
+        "BVtest",
+        "公众号",
+        "写一篇公众号",
+        on_event=lambda event, step, total: progress.append(
+            (str(event.get("node") or event.get("type")), step, total)
+        ),
+    )
+    assert "plan" in [item[0] for item in progress]
     assert started["status"] == "awaiting_plan_approval"
     assert started["next"] == ["approval"]
     assert started["plan"]["central_idea"] == "一个想法"

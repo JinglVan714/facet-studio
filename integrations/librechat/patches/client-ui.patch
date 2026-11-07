@@ -176,10 +176,10 @@ index 3316633..720fe44 100644
 +  "com_ui_duration_announced_minutes_other": "耗时 {{value}} 分钟"
  }
 diff --git a/client/src/utils/toolLabels.ts b/client/src/utils/toolLabels.ts
-index 190df41..7553208 100644
+index 190df41..b486ed9 100644
 --- a/client/src/utils/toolLabels.ts
 +++ b/client/src/utils/toolLabels.ts
-@@ -31,6 +31,22 @@ export const TOOL_FRIENDLY_NAME_KEYS: Record<string, TranslationKeys> = {
+@@ -31,6 +31,25 @@ export const TOOL_FRIENDLY_NAME_KEYS: Record<string, TranslationKeys> = {
    read_file: 'com_ui_tool_name_read_file',
  };
  
@@ -193,6 +193,9 @@ index 190df41..7553208 100644
 +  typeset_article: '排版',
 +  get_run: '运行数据',
 +  review_artifact: '验收',
++  start_workflow: '启动工作流',
++  resume_workflow: '继续工作流',
++  get_workflow: '工作流状态',
 +};
 +
 +export function getMCPToolDisplayLabel(toolName: string): string {
@@ -202,7 +205,7 @@ index 190df41..7553208 100644
  export interface ParsedToolName {
    /** Original tool id (unchanged). */
    raw: string;
-@@ -85,7 +101,7 @@ export function getToolDisplayLabel(
+@@ -85,7 +104,7 @@ export function getToolDisplayLabel(
    knownServerNames?: readonly string[],
  ): string {
    const parsed = parseToolName(rawName, knownServerNames);

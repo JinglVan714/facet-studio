@@ -27,7 +27,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import Context, FastMCP
 from markdown_it import MarkdownIt
 
 from .core.config import get_settings
@@ -172,6 +172,21 @@ def _clip_error(value: object, limit: int = 1200) -> str:
     if len(text) <= limit:
         return text
     return text[:limit].rstrip() + "\n…（已截断）"
+
+
+def _progress_callback(ctx: Context | None):
+    """Bridge workflow stage events to MCP progress notifications."""
+    if ctx is None:
+        return None
+
+    def report(event: dict[str, Any], step: int, total: int) -> None:
+        label = str(event.get("node") or event.get("type") or "workflow")
+        try:
+            ctx.report_progress(step, total, label)
+        except Exception:  # noqa: BLE001 - progress is advisory
+            pass
+
+    return report
 
 
 def _source_dir(video_id: str) -> Path:
@@ -1270,6 +1285,7 @@ def start_workflow(
     form: str,
     request: str = "",
     auto_approve: bool = False,
+    ctx: Context | None = None,
 ) -> dict[str, Any]:
     """启动 LangGraph 工作流；默认停在计划卡，等 resume_workflow 确认。"""
     from .workflow import start_workflow as _start_workflow
@@ -1279,15 +1295,26 @@ def start_workflow(
         form=form,
         request=request,
         auto_approve=auto_approve,
+        on_event=_progress_callback(ctx),
     )
 
 
 @mcp.tool()
-def resume_workflow(run_id: str, decision: str, notes: str = "") -> dict[str, Any]:
+def resume_workflow(
+    run_id: str,
+    decision: str,
+    notes: str = "",
+    ctx: Context | None = None,
+) -> dict[str, Any]:
     """恢复暂停的工作流：计划卡或最终验收。decision=approved/changes_requested/rejected。"""
     from .workflow import resume_workflow as _resume_workflow
 
-    return _resume_workflow(run_id=run_id, decision=decision, notes=notes)
+    return _resume_workflow(
+        run_id=run_id,
+        decision=decision,
+        notes=notes,
+        on_event=_progress_callback(ctx),
+    )
 
 
 @mcp.tool()

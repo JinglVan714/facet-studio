@@ -406,7 +406,11 @@ def _snapshot_result(
 
 
 def _execute(
-    run_id: str, payload: Any, *, check_existing: bool
+    run_id: str,
+    payload: Any,
+    *,
+    check_existing: bool,
+    on_event: Any = None,
 ) -> dict[str, Any]:
     db = _workflow_db()
     with SqliteSaver.from_conn_string(str(db)) as checkpointer:
@@ -420,8 +424,17 @@ def _execute(
             return _read_json(path)
         previous = _read_json(path) if path.is_file() else {}
         events: list[dict[str, Any]] = list(previous.get("events") or [])
+        step = 0
         for chunk in app.stream(payload, config, stream_mode="updates"):
-            events.extend(_chunk_events(chunk))
+            chunk_events = _chunk_events(chunk)
+            events.extend(chunk_events)
+            for event in chunk_events:
+                step += 1
+                if on_event is not None:
+                    try:
+                        on_event(event, step, 8)
+                    except Exception:  # noqa: BLE001 - progress is advisory
+                        pass
         snapshot = app.get_state(config)
         result = _snapshot_result(run_id, snapshot, events)
         _write_json(path, result)
@@ -433,6 +446,7 @@ def start_workflow(
     form: str,
     request: str = "",
     auto_approve: bool = False,
+    on_event: Any = None,
 ) -> dict[str, Any]:
     """Start a checkpointed workflow and pause at the plan gate by default."""
     normalized = _normalize_form(form)
@@ -451,11 +465,14 @@ def start_workflow(
         "usage": {},
         "stages": [],
     }
-    return _execute(run_id, state, check_existing=False)
+    return _execute(run_id, state, check_existing=False, on_event=on_event)
 
 
 def resume_workflow(
-    run_id: str, decision: str, notes: str = ""
+    run_id: str,
+    decision: str,
+    notes: str = "",
+    on_event: Any = None,
 ) -> dict[str, Any]:
     """Resume a paused plan or review gate."""
     if decision not in REVIEW_DECISIONS:
@@ -464,6 +481,7 @@ def resume_workflow(
         run_id,
         Command(resume={"decision": decision, "notes": notes}),
         check_existing=True,
+        on_event=on_event,
     )
 
 

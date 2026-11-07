@@ -82,7 +82,7 @@ cd D:/luno_external/librechat && npm run backend
 
 LibreChat clone 里只改主题/展示层，不改核心 pipeline：
 
-- `client/src/utils/toolLabels.ts`：`FACET_MCP_TOOL_LABELS` 把 8 个 P1/P2 工具映射成中文动作名（查看来源/读取视频/规划/写作/排版/运行数据/验收）；P3 workflow 三个工具暂未加中文标签。
+- `client/src/utils/toolLabels.ts`：`FACET_MCP_TOOL_LABELS` 把 11 个工具映射成中文动作名（查看来源/读取视频/规划/写作/排版/运行数据/验收/启动工作流/继续工作流/工作流状态）。
 - `client/src/components/Chat/Messages/Content/ToolCall.tsx`：使用中文动作名；Facet 工具不再显示“来自 facet_studio”。
 - `client/src/components/Chat/Input/ConversationStarters.tsx`：三张引导卡 + 模型配置提示。
 - `client/index.html`、`client/src/locales/zh-Hans/translation.json`：品牌/标题/中文 UI。

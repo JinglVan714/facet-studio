@@ -118,7 +118,7 @@ Artifacts: 阅读 HTML / 公众号 HTML / 小红书卡片 / PDF / Markdown
 | P0 | 文档收口（本文件 + product + UI + reuse + jd）**已完成 2026-11-06** | 后续 session 不再把 bundle 当产品 |
 | P1 | LibreChat + MCP 工具服务原型：缓存内容 → 聊天 → 计划卡 → 一次 writer → 聊天内预览 **已完成原型 2026-11-06** | 一条 BV 走完；run 数据可见；不自动发布 |
 | P2 | 排版/导出：阅读 HTML + PDF；公众号 HTML；小红书卡片 **已完成原型 2026-11-07** | 成品可读/可复制/可下载；移动端可用 |
-| P3 | LangGraph workflow + HITL + 观测 | 可暂停/恢复/验收；trace/token/cost 可查 |
+| P3 | LangGraph workflow + HITL + 观测 **原型已接 2026-11-07** | 可暂停/恢复/验收；trace/token/cost 可查 |
 | P4 | 评测（先预留） | 可复跑报告；不伪造真人 reader test |
 | P5 | 视频转录接入 | 用户提供新视频后可跑通 |
 
