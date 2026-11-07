@@ -1169,6 +1169,7 @@ def get_run(run_id: str) -> dict[str, Any]:
     workflow_path = run_dir / "workflow.json"
     if workflow_path.is_file():
         workflow = _read_json(workflow_path)
+    cost_estimate = (workflow or {}).get("cost_estimate")
     write = meta.get("write") or {}
     planner_usage = meta.get("planner_usage") or {}
     write_usage = write.get("usage") or {}
@@ -1187,6 +1188,11 @@ def get_run(run_id: str) -> dict[str, Any]:
         status_label = f"待重新验收 · {status_label}"
     elif review_status == "draft" and status in {"typeset", "partial"}:
         status_label = f"草稿 · {status_label}"
+    cost_note = (
+        f" · ${cost_estimate:.4f}"
+        if isinstance(cost_estimate, (int, float))
+        else ""
+    )
     return {
         "run_id": run_id,
         "status": meta.get("status"),
@@ -1210,10 +1216,11 @@ def get_run(run_id: str) -> dict[str, Any]:
         "latency_total_ms": latency_total,
         "summary": (
             f"调用 {calls_total} 次 · {usage_total['total_tokens']} tokens · "
-            f"{latency_total}ms · {status_label}"
+            f"{latency_total}ms{cost_note} · {status_label}"
         ),
         "artifacts": meta.get("artifacts", {}),
         "typeset_errors": list(meta.get("typeset_errors") or []),
+        "cost_estimate": cost_estimate,
         "markdown_path": meta.get("markdown_path"),
         "review": review,
         "workflow": workflow,

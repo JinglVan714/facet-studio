@@ -27,7 +27,7 @@
   - 非单例验证：BV17 / BV1ix 两条小红书（6 图 / 3 图）、BV17 两篇长文（含代码块 / 不含代码块）均重新 typeset 通过。
   - 图片数量/水印/字幕/低信息素材属于 skill/素材层，本轮不按单篇修；渲染器只保证已有图完整、尺寸适配。
   - 用户 2026-11-07 大致通过；BV13/BV17 公众号、BV17/BV1ix 小红书、smoke/第二篇长文 PDF 已记 approved（`runs/product_v1/**/publish_review.json`，不入库）。
-- **P3 workflow 原型（2026-11-07）**：`src/facet_studio/workflow.py`（LangGraph StateGraph：intake → plan → approval → write → typeset → review；SQLite checkpoint；plan/review interrupt）；MCP 新增 3 tools；`workflow.json` 记录 stages/events/usage；真实 auto run `runs/product_v1/20261107T123505Z_BV1B5411A7ax_xiaohongshu_note/`（2 calls / 13,019 tokens / 33.9s）。`cost_estimate` 在未配置费率时为 null。
+- **P3 workflow 原型（2026-11-07）**：`src/facet_studio/workflow.py`（LangGraph StateGraph：intake → plan → approval → write → typeset → review；SQLite checkpoint；plan/review interrupt）；MCP 新增 3 tools；`workflow.json` 记录 stages/events/usage；真实 auto run `runs/product_v1/20261107T123505Z_BV1B5411A7ax_xiaohongshu_note/`（2 calls / 13,019 tokens / 33.9s）；真实 manual plan gate `runs/product_v1/20261107T124434Z_BV1B5411A7ax_wechat_article/`（plan 暂停→changes_requested，未写正文）。`cost_estimate` 在未配置费率时为 null。
 - **已知待改（内容层，不阻塞 P2 壳）**：
   - 小红书标题钩子偏弱/个别标题写成第一人称亲历（如“我让 AI…”），标题策略最后统一改，不按单篇调参。
   - 公众号正文数字偏多、图表不足；只做版式，不在本轮改写作认知。
