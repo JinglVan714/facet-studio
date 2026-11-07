@@ -33,7 +33,7 @@ PYTHONPATH=src PYTHONUTF8=1 python -m facet_studio.evals.product \
 ## 后续（P4 收口）
 
 - 生成 BV1ix long/wechat，补满 6 capability cases。
-- 窄 rubric judge（每形态一套）+ 用户标注 6–12 个产物做 judge-human 校准；2 次聚合，不做 30 judge。
+- 窄 rubric judge（每形态一套）+ 用户标注 6–12 个产物做 judge-human 校准；2 次聚合，不做 30 judge。协议见 [judge-protocol.md](judge-protocol.md)。
 - trajectory 扩展：required tools、loop、step budget、失败恢复、审批门。
 - regression gate：固定 cases + snapshot/replay；失败样本进 regression set。
 - 不把 deterministic pass 当 reader quality；人工验收仍是唯一发布门。
