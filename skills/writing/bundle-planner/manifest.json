@@ -1,0 +1,12 @@
+{
+  "id": "bundle-planner",
+  "kind": "planner",
+  "name": "内容包总编辑",
+  "description": "读内容稿、可用写作角色和用户请求，决定生成哪些产物、每个产物的角度和 brief；只输出 JSON 计划，不写正文。",
+  "version": "0.1.0",
+  "skill": "SKILL.md",
+  "examples": "references/examples.md",
+  "prompt": "prompts/user.md",
+  "max_tokens": 16384,
+  "temperature": 0.2
+}

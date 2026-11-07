@@ -1,44 +1,93 @@
-# LunoGraph v3 — 证据驱动的视频理解与多形态写作
+# Facet Studio — 聊天式内容工作台
 
-把视频编译成可复用、带上下文的证据，再由写作 Skill 生成文章/社媒/脚本等多文体产物。
+把一条视频变成可发布的文章/笔记：用户在聊天框里给视频和写作要求，Agent 按需写一种形态（深度总结 / 公众号 / 小红书），在聊天里预览、修改、验收。
 
-> 当前阶段（2026-11-05）：**多文体进行中**；社媒（小红书 + 公众号）优先，视频脚本第二步；md 内容先过关；HTML 后续；PDF 暂不做；demo shell 完全体后置。方向/JD/验收见 [docs/multiform-roadmap.md](docs/multiform-roadmap.md)。先读 [NEXT_SESSION_PROMPT.md](handoffs/2026-11-03/NEXT_SESSION_PROMPT.md)。
+> **2026-11-07 当前状态**：产品 v1 已定义（[docs/product-v1-chat-studio.md](docs/product-v1-chat-studio.md)）；目标壳是 **LibreChat + MCP + LangGraph + 排版/导出**。**P1/P2 原型已跑通**：LibreChat + MCP server + preview server + `review_artifact` + 公众号复制 HTML / 小红书 3:4 图集 + 导入包 / Tectonic PDF；LangGraph/评测未接。见 [integrations/librechat/README.md](integrations/librechat/README.md)。bundle 是内部/调试产物，不是产品默认输出。
+> 三种形态：深度总结（long_article）/ 公众号（wechat_article）/ 小红书（xiaohongshu_note）。短视频脚本暂不做。
+> 不把架构页/评测页放进产品；用户 run 数据、开发评测数据、简历数据分开。
 
-## 先读（按顺序，不要多读）
+## 产品一句话
 
-1. [NEXT_SESSION_PROMPT.md](handoffs/2026-11-03/NEXT_SESSION_PROMPT.md) — 先认知，再决定下一步。
-2. [docs/writing-rebuild-brief.md](docs/writing-rebuild-brief.md) 的 §2（好 writing）+ §3（开发纪律）。
-3. [AGENTS.md](AGENTS.md) — 全局护栏。
-4. 架构看 [architecture.md](architecture.md)：先看 §0.1 阅读地图；机会地图看 §1/§6.5/§11/§13.1/§14，分层看 §4.1，substrate 看 §5/§12。§4.2–4.3、§6.3.1、§7–§10 是旧实现，不要当当前代码。
-5. 最后看 [STATE.md](STATE.md)、[HANDOFF.md](HANDOFF.md) 的当前快照。
-6. 需要评测时，再读两份 reader_pack 标准；不要一开始就读。
+用户：用 BV17DHC6CELr 写一篇公众号，给普通技术读者，2500 字左右，语气克制，重点讲“分数为什么低但排名可靠”。
 
-## 结构
+Agent：确认来源/形态/读者/长度 → 读取内容（缓存）→ 计划卡 → 一次 writer → 排版 → 聊天内预览 → 修改 / 导出 / 验收。
 
-- `src/lunograph/writing_v3/`：substrate v1（冻结）：transcript / claim_extract / pack_from_claims / light_context / edited_transcript / bind_article / quote_hygiene / generate / trace。只读 substrate 相关文件，不要读同目录的旧写作实验。
-- `src/lunograph/writing_v4/`：当前写作层：`run`（一次 writer）/ `consistency_pass`（review → Must fix → 最小 edit）/ `svg_pass`（占位符 → JSON 规格 → 本地渲染）/ `pipeline`（全通路）/ `article_checks`（地板）/ `skill_runner`（按 manifest 跑任意文体）/ `form_checks`（article/social/script floor）。
-- `skills/writing/video-article/`：当前写作 skill（内容稿制；角色/读者/方法/形状/证据边界/自审 + 匿名例子）。
-- `skills/writing/social-note/`、`skills/writing/video-script/`：多文体 skill（社媒先做，脚本第二步）；各自有 manifest/prompt/匿名例子。
-- `docs/multiform-roadmap.md`：多文体方向、JD 表、阶段与验收。
-- `deliverables/writing-skill/site/`：articles-only HTML / PDF 作品集；`site/index.html` 是入口。HTML/PDF 展示层后续再调；PDF 暂不做。
-- `runs/writing_rebuild_2026-11-04/`：当前运行产物与历史评审；`deliverable_internal/` 是内部说明/证据。
-- `docs/substrate-v1-freeze.md`：substrate v1 接口/证据/限制；只读。
-- `REFERENCES.md`、`参考素材/skills/`、`参考素材/skills_downloaded/`：本地参考索引与原始 skill；只读，复用前查 license。
-- `data/`：有效只读输入；完整素材本地只读、不在 git。
-- `_archive/_blocked/`：旧架构/旧 AB，已屏蔽。
+**不是**：作品集网站；一次生成所有形态的 bundle 工厂；架构/评测演示；自动发布工具。
 
-## 运行
+## 先读（顺序）
+
+1. [docs/product-v1-chat-studio.md](docs/product-v1-chat-studio.md) — 产品定义/用户怎么用/UI/数据分层/路线；UI 细节见 [docs/ui-design-2026-11.md](docs/ui-design-2026-11.md)。
+2. [architecture.md](architecture.md) §0–§9 — 目标架构、组件、当前代码 vs 目标、路线；文末附录是 v3 机会地图，不是当前实现。
+3. [docs/writing-v5-architecture.md](docs/writing-v5-architecture.md) — 当前写作引擎（writing_v4）。
+4. [docs/jd-mapping-2026-11.md](docs/jd-mapping-2026-11.md) — 2026 JD 真实含义与评测口径。
+5. [docs/reuse-stack-2026-11.md](docs/reuse-stack-2026-11.md) — LibreChat/MCP/LangGraph/排版/卡片复用与 license。
+6. [STATE.md](STATE.md)、[HANDOFF.md](HANDOFF.md) — 当前快照/接手点。
+7. 方法/纪律：[docs/writing-rebuild-brief.md](docs/writing-rebuild-brief.md) §2/§3、[AGENTS.md](AGENTS.md) §5。
+8. 历史索引：[docs/README.md](docs/README.md)。
+
+## 当前代码（写作引擎）
+
+- `src/facet_studio/writing_v3/`：substrate v1（冻结）：transcript / sentences / frames / OCR / content manuscript。
+- `src/facet_studio/writing_v4/`：
+  - `content_manuscript` / `continuous_text` / `material_packet`：substrate → 连续内容稿。
+  - `skills.py`：core + form layer skill loader（支持 `extends`）。
+  - `writer.py` / `run_form.py`：单 form 路径：一次 writer + figures + SVG + title candidates + reader contract + source line + meta。
+  - `planner.py` / `tools.py` / `orchestrator.py` / `run_bundle.py`：Lead Planner → TaskPlan → per-form writers → tools → bundle + trace。
+  - `svg_pass.py`：占位符 → JSON 规格 → 本地确定性 SVG。
+- `src/facet_studio/runtime/`：RunStore / TaskPlan / ToolRegistry / WorkingMemory / ArtifactBoard / Decision / Trace / Budget / Eval。
+- `src/facet_studio/mcp_server.py`：P1/P2 MCP server（FastMCP）；`src/facet_studio/preview_server.py`：P1 reader 预览服务。
+- `integrations/librechat/`：LibreChat 配置/启动/Agent instructions（P1/P2）；`integrations/xhs/`：Playwright 3:4 卡片；`integrations/pdf/`：Pandoc + Tectonic 模板。
+- `skills/writing/video-article/`：深度总结 core（`long_article`）。
+- `skills/writing/wechat-article/`：公众号 platform layer（`extends ../video-article`）。
+- `skills/writing/xiaohongshu-note/`：小红书短版（一条主线覆盖整体）。
+- `skills/writing/bundle-planner/`：内容包总编辑（只输出 JSON plan，不写正文）。
+- `runs/writing_v5/`：当前运行产物；最新 bundle：`bundle_BV17_social_05/`、`bundle_BV1ix_social_04/`。
+- `docs/substrate-v1-freeze.md`：substrate v1 接口；只读。
+
+**未接**：LangGraph workflow、eval harness、视频转录、完整模型配置 UI；LibreChat/MCP/排版导出已有 P1/P2 原型。
+
+## 运行（当前写作引擎）
 
 ```bash
-PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m pytest -q
+PYTHONPATH=src python -m pytest -q
+
+# 单 form（公众号）
+PYTHONPATH=src python -m facet_studio.writing_v4.run_form \
+  --video-id BV17DHC6CELr \
+  --content runs/writing_rebuild_2026-11-04/BV17DHC6CELr/content_final_v3/content.md \
+  --out-dir runs/writing_v5/BV17DHC6CELr/wechat_article \
+  --skill-dir skills/writing/wechat-article \
+  --request "写一篇公众号文章：让没看过内容的人快速理解这件事；一个控制性 idea；数字少而有效；图和表服务理解。" \
+  --source-json data/BV17DHC6CELr/source.json
+
+# 多 form bundle（内部/调试形态；产品默认按需一种）
+PYTHONPATH=src python -m facet_studio.writing_v4.run_bundle \
+  --video-id BV17DHC6CELr \
+  --content runs/writing_rebuild_2026-11-04/BV17DHC6CELr/content_final_v3/content.md \
+  --out-root runs/writing_v5 \
+  --request-file runs/writing_v5/request_bundle.txt \
+  --forms wechat_article,xiaohongshu_note \
+  --source-json data/BV17DHC6CELr/source.json \
+  --run-id bundle_BV17_social_05
 ```
 
-Python 3.11.14。当前 **560 passed**（其中 `tests/writing_v4` 34）。substrate v1 链路见 [src/lunograph/writing_v3/README.md](src/lunograph/writing_v3/README.md)；写作层从 `writing_v4/run.py`、`writing_v4/pipeline.py` 或 `writing_v4/skill_runner.py` 进入。
+## 产品原型（P1/P2 已跑通）
+
+- **壳**：LibreChat（MIT）：chat、Agents、MCP、Artifacts、Trace Viewer、Token 统计。外部 clone 在 `D:/luno_external/librechat`；配置见 [integrations/librechat/README.md](integrations/librechat/README.md)。
+- **服务**：`src/facet_studio/mcp_server.py`（FastMCP 8 tools）+ `src/facet_studio/preview_server.py`（FastAPI reader 预览）+ writing_v4 引擎。
+- **已验证**：BV17 → 公众号（2767 字 / 5 图 / approved）；BV1ix → 小红书（999 字 / 3 图）；新 skill → 小红书（1,172 字 / 2 图 / 5 标签）；完整 Agent → 小红书（1,274 字 / 6 图 / 6 张卡片）；深度总结 → PDF（9 页）；`review_artifact` 写 `publish_review.json`。
+- **启动**：`powershell -ExecutionPolicy Bypass -File scripts/start_p1.ps1`（先改脚本顶部路径）；详见 [integrations/librechat/README.md](integrations/librechat/README.md)。
+- **未做**：LangGraph workflow、eval、视频转录、完整模型配置 UI。
+- **路线**：P3 LangGraph + HITL + 观测 → P4 评测（先预留）→ P5 视频转录。
 
 ## 边界
 
-- `data/`、`参考素材/` 只读；不自动 commit/push/publish；不读 `data/cookies/`。
-- 证据优先：不编造画面/引用；生成图只作 editorial。
-- 一次 Writer + 一次有界 consistency edit；不加 verifier/brief/claim 多 stage。
-- 不要再跑 5 persona × N 篇的 30 份 subagent 评审；太贵，收益递减。
-- 不把个例写进 skill；通用层只收 ≥2 视频/文体复现的规则。
+- **一个产物一次 writer**：没有草稿、editor、checker、词表、核实；Lead Planner 只编排。
+- **Writer 不知道来源**：只拿到「这件事的完整内容」；正文不出现来源/工作痕迹。
+- **不核验内容本身**：不挑内容错、不做百科；只处理已有内容 + 用户补充/未来联网调研。
+- **不写死数量/数字**：字数、H2 数、段落数都跟 request/内容相关；request 优先，没 request 用默认。
+- **active skill 不出现具体视频/产品/人物**；例子匿名；≥2 视频/文体复现才改通用层；不按单篇调参。
+- **用户验收**：质量和架构由用户判断；测试绿/跑通都不等于通过。
+- **不加**：validator、词表、规则怪谈、30 judge、旧 supervisor/demo/P1 两段式。
+- 不自动发布；不 commit/push；不改 substrate；不读 `data/cookies/`。
+- 复用优先；嵌入代码优先 MIT/BSD/Apache；AGPL/BUSL 只作设计参考，除非用户同意合规。

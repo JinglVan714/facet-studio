@@ -7,10 +7,10 @@ from pathlib import Path
 
 import pytest
 
-from lunograph.writing.brief import _title_check, write_brief
-from lunograph.writing.pipeline import _resolve_brief_mode
-from lunograph.writing.request import validate_request
-from lunograph.writing.skill import load_skill
+from facet_studio.writing.brief import _title_check, write_brief
+from facet_studio.writing.pipeline import _resolve_brief_mode
+from facet_studio.writing.request import validate_request
+from facet_studio.writing.skill import load_skill
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SKILL_DIR = PROJECT_ROOT / "skills" / "writing" / "reader_first_explainer"

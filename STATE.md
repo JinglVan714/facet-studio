@@ -1,28 +1,36 @@
-# STATE — 2026-11-05
+# STATE — 2026-11-07
 
-- 分支 `writing-rebuild`；旧写作层归档 tag `archive/writing-v1-2026-11-04`。
-- **当前方向（2026-11-05）**：多文体进行中；社媒（小红书 + 公众号）优先，视频脚本第二步；md 内容先过关；HTML 后续；PDF 暂不做；demo shell 完全体后置。见 [docs/multiform-roadmap.md](docs/multiform-roadmap.md)。
-- **多 Agent 编排定义**：Lead/Editor orchestrator + LeadPlan + specialists + 共享 RunState + bounded agents-as-tools + trace；当前 writer→consistency→svg→checks 是固定 workflow，待接 Lead。
-- **P1（已确认，直接 B）**：LeadPlan + Platform Editor + ViewRetriever + run manifest/receipts + per-skill eval；小红书/公众号 × BV1ix/BV17 → 4 个发布包（红书 card_copy/title/body/tags/images/publish/post；公众号 article/title_candidates/publish）；不设硬长度；真实帧优先；md first；HTML P3；PDF 不做；demo P4。
-- substrate v1：冻结/可信；本次未改 substrate。
-- 新写作层：`skills/writing/video-article/`（内容稿制 SKILL + README + 匿名例子 + 素材/写作分离规范）。
-- 多文体基础（2026-11-05）：`skills/writing/social-note/`、`skills/writing/video-script/`、`src/lunograph/writing_v4/skill_runner.py`、`form_checks.py`；video-article 补 manifest。`tests/writing_v4` 34 passed；全 suite 560 passed。
-- 多文体草稿（未定稿）：`runs/writing_rebuild_2026-11-04/multiform/`；社媒 2 篇过 floor，脚本 2 篇结构可用但 floor 未过（figures 未复制、素材说明出现“内容稿”）；不作为最终产物。
-- 最小管线：`src/lunograph/writing_v4/`（content_manuscript / material_packet / continuous_text / run / consistency_pass / svg_pass / pipeline / article_checks / ab_judge）。
-- 写作通路：writer → consistency review/edit（通用写作问题 + 严格视觉缺口）→ SVG spec/render → floor checks。
-- SVG 通路：writer/editor 只留 `<!-- svg: ... -->`；`svg_pass` 让模型返回图表 JSON 规格，本地确定性渲染 `figures/svg-XX.svg`，模型不写 SVG。严格门槛下，3 篇 CLEAR 都有真实图，未强插 SVG。
-- 编辑通路：来源行在 review 前剥离、edit 后原样接回；新增标题范围、分类层数、证据范围、工作痕迹、视觉缺口检查；本轮由通路自己修掉 CFA 范围、三层/两类、标题承诺、图注口径、动作清单等。
-- 当前可发布终稿：3 篇 `content_final_v4`（BV1ix 炸鸡、BV17 技术解释）与 `content_final_v4c`（BV1B 猫知识）；正文“作者”0 次；地板检查全过。3 篇 HOLD 仍为 `content_final_v3`，不发布。
-- 新 3 条从 substrate units 合并 transcript；原数据无 source.json，出处用 BV 号；`material.md` 已补。
-- 第一轮评审稿 `content_final/`；第二轮评审稿 `content_final_v2/`。
-- 第二轮评审已完成：`review_v2/SUMMARY.md`；团队 76.3 / 76.1 / 72.6，无 RISK HOLD；通用问题为内部矛盾/步骤/范围。
-- 历史 30 judge（旧质量门，5 persona × 6 篇）：3 CLEAR（BV1ix 81.65 / BV17 80.48 / BV1B5 74.05）+ 3 HOLD（BV13 77.95 / BV1zn 72.40 / BV1eUh 69.95）；只作参考，不重跑。
-- 交付包 `deliverables/writing-skill/` 已改为**只呈现文章**的作品集：`site/index.html`、`site/print.html`、`site/writing-articles.pdf`；无架构、评分、HOLD、官方 30 证据。内部说明/证据/SKILL 副本已移到 `runs/writing_rebuild_2026-11-04/deliverable_internal/`。
-- 3 篇 CLEAR 已过新编辑通路；HOLD 3 篇不发布。
-- 输入 A/B：完整素材包 3/4 胜；连续文本在 BV1ix 因配料表/细节胜。格式不是决定因素，编辑距离 + 具体细节/表格才是。
-- 测试：542 passed（含新增 SVG 渲染/占位符、来源行剥离测试）；未改 substrate/旧链。
-- 历史 30 份 judge 只作参考；**不再跑 5 persona × N 篇的批量 subagent 评审**。需要外部视角时做小规模、针对性抽查 + 人工 acceptance。
-- 下一步按 [docs/multiform-roadmap.md](docs/multiform-roadmap.md)：P0 本地 + GitHub 调研（小红书/公众号 reuse map）→ 讨论 → P1 社媒（小红书 + 公众号 × BV1ix/BV17）→ P2 视频脚本 → P3 JD 落点（LeadPlan/trace、ViewRetriever、tool receipts、per-skill eval、平台角色）→ P4 HTML → P5 demo shell。PDF 暂不做。
-- 入口文档已整理：`NEXT_SESSION_PROMPT.md` + `docs/writing-rebuild-brief.md` + `AGENTS.md` + `README.md`；旧 `STARTUP_PROMPT.md`/`session-handoff.md` 已标历史。
-- 未 commit/push。
-- 证据索引：`runs/writing_rebuild_2026-11-04/INDEX.md`。
+- **新 session 入口**：[handoffs/2026-11-07/NEXT_SESSION_PROMPT.md](handoffs/2026-11-07/NEXT_SESSION_PROMPT.md)；本轮自检：[ROUND_REVIEW.md](handoffs/2026-11-07/ROUND_REVIEW.md)。
+- 分支 `writing-rebuild`；正式基线 commit `2f8faea`；工作树有未提交改动；未 commit/push。
+- **产品 v1 已定义（2026-11-06）**：聊天式内容工作台。用户给一条视频 + 写作要求，Agent 按需写一种形态（深度总结 / 公众号 / 小红书），聊天内预览/修改/验收。见 [docs/product-v1-chat-studio.md](docs/product-v1-chat-studio.md)。
+- **目标壳**：LibreChat（MIT）+ MCP + LangGraph + 排版/导出 + 人工验收。见 [architecture.md](architecture.md) §0–§9；复用见 [docs/reuse-stack-2026-11.md](docs/reuse-stack-2026-11.md)。
+- **项目名已统一为 Facet Studio**：包名 `src/facet_studio`，品牌/文档/环境变量前缀 `FACET_STUDIO_`。历史文档里的 LunoGraph 是旧名。
+- **当前代码**：writing_v4 写作引擎 + **P1/P2 产品原型**：`src/facet_studio/mcp_server.py`（FastMCP 8 tools）、`src/facet_studio/preview_server.py`（FastAPI reader 预览）、`integrations/librechat/`（外部 clone `D:/luno_external/librechat`）、`integrations/xhs/`、`integrations/pdf/`。LangGraph/评测**未接**。bundle 是内部/调试产物，不是产品默认输出。
+- 当前形态：`long_article`（深度总结）/ `wechat_article`（公众号）/ `xiaohongshu_note`（小红书）。短视频脚本暂不做。
+- **P1 原型（2026-11-06）已跑通**：LibreChat + MCP + 缓存内容 → 计划卡 → 一次 writer → 预览 URL → `review_artifact` 验收。
+  - BV17 公众号：`runs/product_v1/20261106T131015Z_BV17DHC6CELr_wechat_article/`（2767 字 / 5 图；原 approved，2026-11-07 重排版后标 stale，需重新验收）。
+- **P2 排版/导出/UI（2026-11-07）已在 P1 壳内完成原型**：
+  - 公众号：`wechat.html` 可复制富文本（内联样式 + 复制按钮）。
+  - 小红书：阅读页顶部横滑 3:4 图集（封面钩子 → 关键帧）、标题/正文/标签；`xhs_export/` 输出 `01_cover.png`、`02_card.png…`、`title.txt`、`body.txt`、`tags.txt`、`manifest.json`、`README.txt`，便于 App 手动导入。渲染器 `integrations/xhs/render_cards.mjs`（Playwright）。
+  - 深度总结：Pandoc → Tectonic PDF，封面/目录/正文/图注；`article.pdf` 可直接下载；`pages` 做结构校验。
+  - 首页：三张通用引导卡（输入视频 / 选择内容 / 告诉偏好）+ 模型配置提示；工具调用显示中文动作名，不再显示“来自 facet_studio”。
+- **P2 验证样例**：
+  - 完整 Agent 流程（LibreChat → plan → write → typeset → 预览/导出）：`runs/product_v1/20261107T032530Z_BV17DHC6CELr_xiaohongshu_note/`（1,274 字 / 6 张 3:4 PNG / 5 标签 / 2 次模型调用 / 16,208 tokens）。
+  - 小红书（单独 typeset 验证）：`runs/product_v1/20261107T031556Z_BV17DHC6CELr_xiaohongshu_note/`（1,172 字 / 2 图 / 标签 5 个）。
+  - 深度总结 PDF：`runs/product_v1/smoke_long_pdf/long_article/article.pdf`（9 页；封面/目录/正文已人工检查）。
+- **P2 收口（2026-11-07 本轮）**：
+  - 公众号“复制正文”不再带 H1；`title_candidates` 支持 ` / ` 分隔。
+  - `typeset_article` 失败写入 `typeset_errors`，状态 `partial`；`get_run` 增加 `review_status`（draft/stale/approved）与“草稿/待重新验收”摘要。
+  - `review_artifact` 只允许已排版且有产物的 run 验收；重新 typeset 会把旧验收标 stale。
+  - 视觉模板：小红书卡片改为 3:4 图框 `contain`（不裁 16:9）、阅读页纵向复用导出卡；PDF 图片限制在正文版心 / 62% 页高、剥离正文来源行消除孤儿页、首行缩进、代码块用 `--listings`；公众号图片限高 520px。
+  - 新视频按需验证：`runs/product_v1/20261107T080924Z_BV13EHX64EaY_wechat_article/`（公众号，2,734 字 / 3 图 / 2 次调用 / 31,157 tokens）。
+  - 非单例验证：BV17 / BV1ix 两条小红书（6 图 / 3 图）、BV17 两篇长文（含代码块 / 不含代码块）均重新 typeset 通过。
+  - 图片数量/水印/字幕/低信息素材属于 skill/素材层，本轮不按单篇修；渲染器只保证已有图完整、尺寸适配。
+- **已知待改（内容层，不阻塞 P2 壳）**：
+  - 小红书标题钩子偏弱/个别标题写成第一人称亲历（如“我让 AI…”），标题策略最后统一改，不按单篇调参。
+  - 公众号正文数字偏多、图表不足；只做版式，不在本轮改写作认知。
+- 测试：**570 passed**（新增 MCP 解析/排版/PDF 缺失依赖/验收状态/视觉模板测试；旧 skill 断言已修）。
+- 文档收口（2026-11-07）：STATE/HANDOFF/architecture/product/UI/integrations 已同步 Facet Studio 与 P2 状态；历史文档保留旧名并标注。
+- JD：2026 评测口径见 [docs/jd-mapping-2026-11.md](docs/jd-mapping-2026-11.md) §4（数据集/指标/judge 校准/trajectory/回归/pass^k；先预留）。
+- 未做项：LangGraph workflow、eval harness、视频转录接入、完整模型配置 UI。
+- substrate v1 未改；`data/cookies/` 未读；未 commit/push。

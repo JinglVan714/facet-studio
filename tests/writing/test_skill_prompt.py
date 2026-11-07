@@ -5,14 +5,14 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from lunograph.writing.prompt import (
+from facet_studio.writing.prompt import (
     build_repair_user,
     build_system_prompt,
     build_user_prompt,
 )
-from lunograph.writing.request import validate_request
-from lunograph.writing.skill import load_skill
-from lunograph.writing.writer import run_writer
+from facet_studio.writing.request import validate_request
+from facet_studio.writing.skill import load_skill
+from facet_studio.writing.writer import run_writer
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SKILL_DIR = PROJECT_ROOT / "skills" / "writing" / "reader_first_explainer"

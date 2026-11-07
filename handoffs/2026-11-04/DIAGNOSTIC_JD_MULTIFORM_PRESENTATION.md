@@ -1,5 +1,7 @@
 # 诊断：JD × 多文体 × 展示层（2026-11-05）
 
+> **状态：上一轮诊断，非基线。** 可能有未发现的问题；新 session 应独立判断方向与 JD，不要照单全收。可信基线 commit `2f8faea`。
+
 > 只读诊断：未改代码、未生成文章、未重跑 judge。对象是当前 writing_v4、`deliverables/writing-skill/` 和 `architecture.md` 的机会地图。
 > 结论先行：**多文体是主缺口，JD 是伴随证据，展示层是收口。** JD 只补“对核心业务有真实价值”的小 artifact；不为关键词造全量 harness。
 
@@ -8,9 +10,9 @@
 ## 0. 结论先行
 
 1. **产品核心已成立，但只证明了一种文体。** 1 个 skill + 3 篇 CLEAR 文章（官方 30：81.65 / 80.48 / 74.05），证据纪律和第三人称转述基本过关；但 §6.5/§11 的 7 种文体只覆盖“文章/教程”一种，“一次证据编译，多文体写作”没有被交付证明。
-2. **JD 覆盖多数是 partial，且不能拿旧 runtime 冒充。** `src/lunograph/runtime/` 有通用的 DecisionRecord / ToolSpec / RunStore / Budget / EvalCase，但 writing_v4 没有接线；`runtime/task_plan.py` 仍是旧 `brief/verifier/repair` 链，`RunStore.create()` 默认写入旧 plan。当前 v4 的确定性测试只有 **16 个**；全 suite 542 = 旧 writing 100 + writing_v2 304 + writing_v3 122 + writing_v4 16。
+2. **JD 覆盖多数是 partial，且不能拿旧 runtime 冒充。** `src/facet_studio/runtime/` 有通用的 DecisionRecord / ToolSpec / RunStore / Budget / EvalCase，但 writing_v4 没有接线；`runtime/task_plan.py` 仍是旧 `brief/verifier/repair` 链，`RunStore.create()` 默认写入旧 plan。当前 v4 的确定性测试只有 **16 个**；全 suite 542 = 旧 writing 100 + writing_v2 304 + writing_v3 122 + writing_v4 16。
 3. **展示层不是“差一点”，是有硬伤。** PDF 16 页、字体已嵌入，但中文文本层实测不可用：`pdftotext` 抽出 0 个汉字，PyMuPDF 能取到 CJK 码点但内容是乱码。站点无文章 TOC/封面/移动端表格处理，build 依赖硬编码 Edge 路径。
-4. **新增文体前必须先清单例。** [content_manuscript.py:68](src/lunograph/writing_v4/content_manuscript.py#L68) 有视频特定替换，[consistency_pass.py:34](src/lunograph/writing_v4/consistency_pass.py#L34) 有“中国猫里”，[svg_pass.py:4](src/lunograph/writing_v4/svg_pass.py#L4) 有具体视频图例；skill README 还有 BV 号 A/B 表。新文体会直接踩这些坑。
+4. **新增文体前必须先清单例。** [content_manuscript.py:68](src/facet_studio/writing_v4/content_manuscript.py#L68) 有视频特定替换，[consistency_pass.py:34](src/facet_studio/writing_v4/consistency_pass.py#L34) 有“中国猫里”，[svg_pass.py:4](src/facet_studio/writing_v4/svg_pass.py#L4) 有具体视频图例；skill README 还有 BV 号 A/B 表。新文体会直接踩这些坑。
 5. **推荐顺序**：0.5 天矩阵/裁决 → 4–5 天多文体垂直切片（社媒 + 视频脚本，2 视频 × 2 文体，至少 1 个视频跨文体）→ 1.5–2 天展示层收口；JD 小 artifact（skill manifest / run manifest / tool receipts / per-skill eval）伴随做，约 2–3 天。总计 8–10 天。
 6. **诚实不做**：Agent 框架/RAG 全栈、MCP 生态、全量 Scheduler、四类 Memory、多租户；这些对当前核心业务价值低，architecture §13.3 也明确不追求。
 
@@ -19,7 +21,7 @@
 ## 1. 审计范围与方法
 
 - **读**：`NEXT_SESSION_PROMPT.md`、`docs/writing-rebuild-brief.md` §2/§3、`AGENTS.md`、`architecture.md` §0.1/§1/§4.1/§5/§6.5/§11/§12/§13.1/§14、`STATE.md`、`HANDOFF.md`。
-- **代码/产物**：`src/lunograph/writing_v4/`、`src/lunograph/runtime/`、`src/lunograph/writing_v3/` 的 substrate 接口、`skills/writing/video-article/`、`deliverables/writing-skill/`、`runs/writing_rebuild_2026-11-04/`、`evals/writing/`。
+- **代码/产物**：`src/facet_studio/writing_v4/`、`src/facet_studio/runtime/`、`src/facet_studio/writing_v3/` 的 substrate 接口、`skills/writing/video-article/`、`deliverables/writing-skill/`、`runs/writing_rebuild_2026-11-04/`、`evals/writing/`。
 - **跑过的只读命令**：`pytest -q`（exit 0）、`pytest --collect-only` 分层计数、`pdftotext`/PyMuPDF 检查 PDF、`grep` 单例扫描、文件/测试/目录清单。
 - **没做**：没有调用模型、没有改代码/文章、没有重跑 30 judge、没有浏览器截图（当前环境 Edge headless 复现不稳定）。
 
@@ -31,8 +33,8 @@
 
 | §13.1 JD 能力 | 现状 | 真实证据 | 对核心业务的价值 | 缺口 | 最小真实 artifact | 成本 | 建议 |
 |---|---|---|---|---|---|---|---|
-| 多 Agent 协作 | Partial | [run.py](src/lunograph/writing_v4/run.py)（writer）、[consistency_pass.py](src/lunograph/writing_v4/consistency_pass.py)（review/edit）、[svg_pass.py](src/lunograph/writing_v4/svg_pass.py)（spec）；共享 content.md | **高**：角色分离已经在修一致性；记录角色/尝试能让失败可查 | 没有 run/attempt/role 记录 | v4 run manifest：stage/role/status/model/usage | 0.5–1 天 | 做 |
-| 任务规划/调度 | Partial | [pipeline.py](src/lunograph/writing_v4/pipeline.py) 固定 4 段 DAG | **中**：固定 DAG 够用；全量 scheduler 价值低 | 无 v4 task plan；`runtime/task_plan.py` 是旧链 | v4 专用 task plan（skill_load→writer→consistency→svg→checks）或只写 stages；不复用旧 NODE_SPECS | 0.5 天 | 轻量做 |
+| 多 Agent 协作 | Partial | [run.py](src/facet_studio/writing_v4/run.py)（writer）、[consistency_pass.py](src/facet_studio/writing_v4/consistency_pass.py)（review/edit）、[svg_pass.py](src/facet_studio/writing_v4/svg_pass.py)（spec）；共享 content.md | **高**：角色分离已经在修一致性；记录角色/尝试能让失败可查 | 没有 run/attempt/role 记录 | v4 run manifest：stage/role/status/model/usage | 0.5–1 天 | 做 |
+| 任务规划/调度 | Partial | [pipeline.py](src/facet_studio/writing_v4/pipeline.py) 固定 4 段 DAG | **中**：固定 DAG 够用；全量 scheduler 价值低 | 无 v4 task plan；`runtime/task_plan.py` 是旧链 | v4 专用 task plan（skill_load→writer→consistency→svg→checks）或只写 stages；不复用旧 NODE_SPECS | 0.5 天 | 轻量做 |
 | 工具调用/MCP | Partial | substrate ASR/OCR/frames（writing_v3）、content compile、SVG render、checks | **高**：工具回执服务证据审计/调试；MCP 生态价值低 | content compile/SVG/checks 没有 receipt；ToolRegistry 未接线 | `tool_calls.jsonl`：工具名、输入/输出 hash、计数、状态；可选注册 ToolRegistry | 0.5–1 天 | 做 receipts；MCP 不做 |
 | 记忆 | Partial | substrate v1 冻结（EvidenceSnapshot/KnowledgeSnapshot）、content.md、skill 库 | **高**：核心就是“一次编译，多文体复用” | 同一视频还没有第二种产物，复用未被证明 | 1 个视频 × 2–3 种文体，共享 content.md；记录复用 hash/边际成本 | 含在多文体 | 做 |
 | 决策/Trace/Budget | Partial | `response_meta.json`（model/usage/latency/finish_reason）、consistency/svg reports | **高**：replay/调试/成本 | 无 run-level trace、无 decision record、v4 无 budget | run manifest + `decision_records.jsonl` + `llm_calls.jsonl`；可复用 RunStore/DecisionRecord | 1–1.5 天 | 做（小） |
@@ -81,9 +83,9 @@
 ### 3.3 关键设计边界
 
 - **仍是一次 writer 调用**：每种文体一个 skill，共用 `run.py` 的 writer 调用；不新增 per-form pipeline。
-- **用户 prompt 不能写死“写一篇文章”**：[run.py](src/lunograph/writing_v4/run.py) 的 `USER_TEMPLATE` 是文章专用；新文体需要 skill manifest 提供 `user_prompt` 或通用模板。
-- **地板检查要 form-aware**：[article_checks.py](src/lunograph/writing_v4/article_checks.py) 强制 H1 + 来源行 + 文章泄漏词；社媒/脚本不应被同一套规则误伤。不是“每个文体一个 validator”，而是 skill manifest 声明 `checks: article|social|script`，共用检查函数。
-- **来源行 form-aware**：[run.py](src/lunograph/writing_v4/run.py) 的 `_ensure_source_line` 只会追加“本文根据 B 站视频…整理”；社媒/脚本需要不同的出处格式，或者由 skill 输出、编辑后补。
+- **用户 prompt 不能写死“写一篇文章”**：[run.py](src/facet_studio/writing_v4/run.py) 的 `USER_TEMPLATE` 是文章专用；新文体需要 skill manifest 提供 `user_prompt` 或通用模板。
+- **地板检查要 form-aware**：[article_checks.py](src/facet_studio/writing_v4/article_checks.py) 强制 H1 + 来源行 + 文章泄漏词；社媒/脚本不应被同一套规则误伤。不是“每个文体一个 validator”，而是 skill manifest 声明 `checks: article|social|script`，共用检查函数。
+- **来源行 form-aware**：[run.py](src/facet_studio/writing_v4/run.py) 的 `_ensure_source_line` 只会追加“本文根据 B 站视频…整理”；社媒/脚本需要不同的出处格式，或者由 skill 输出、编辑后补。
 - **视频脚本的 timecode 政策**：文章正文禁止时间码；脚本是制作文档，可以用相对 beat/时长，但不伪造帧内容；真实帧 vs editorial 图要分开。这个差异要写进 script skill，不要复用 article 的泄漏词规则。
 - **不做企业知识/FAQ/SOP**：当前 substrate 是单视频；多源冲突/权限/引用是另一个问题，硬做会变成假交付。
 
@@ -120,15 +122,15 @@
 
 | 位置 | 内容 | 影响 | 修法 |
 |---|---|---|---|
-| [content_manuscript.py:59](src/lunograph/writing_v4/content_manuscript.py#L59) | `食用小苏打.5克` 的 OCR 修复 | 只适用于食谱类；新文体/新视频可能误伤或失效 | 抽成通用 OCR 数字归一化（前导小数点/单位分隔），或按视频配置 |
-| [content_manuscript.py:68](src/lunograph/writing_v4/content_manuscript.py#L68) | “我男朋友他是一个大油皮” → “一个油皮、毛孔粗大的案例” | 视频特定；换视频就是死代码 | 移到 per-video `manuscript_config`；通用层只保留“第一人称经验→一个案例”的规则 |
-| [content_manuscript.py:65-91](src/lunograph/writing_v4/content_manuscript.py#L65-L91) | `VOICE_REPLACEMENTS` 大表 | 部分是通用口语归一化，部分会过度归一（“你们/咱们”→“你”） | 拆成通用规则 + 可选 per-video override；新文体（社媒）可能需要保留“你们/咱们” |
-| [consistency_pass.py:34](src/lunograph/writing_v4/consistency_pass.py#L34) | prompt 里的“中国猫里” | 具体视频 claim 进了通用 prompt | 换成匿名示例（“某个范围里/这个演示里”） |
-| [svg_pass.py:4](src/lunograph/writing_v4/svg_pass.py#L4) | 文档字符串里的“毛色叫法 / 地方类群 / CFA 登记” | 具体视频内容进了代码 | 换成匿名示例（“三层分类：A / B / C”） |
+| [content_manuscript.py:59](src/facet_studio/writing_v4/content_manuscript.py#L59) | `食用小苏打.5克` 的 OCR 修复 | 只适用于食谱类；新文体/新视频可能误伤或失效 | 抽成通用 OCR 数字归一化（前导小数点/单位分隔），或按视频配置 |
+| [content_manuscript.py:68](src/facet_studio/writing_v4/content_manuscript.py#L68) | “我男朋友他是一个大油皮” → “一个油皮、毛孔粗大的案例” | 视频特定；换视频就是死代码 | 移到 per-video `manuscript_config`；通用层只保留“第一人称经验→一个案例”的规则 |
+| [content_manuscript.py:65-91](src/facet_studio/writing_v4/content_manuscript.py#L65-L91) | `VOICE_REPLACEMENTS` 大表 | 部分是通用口语归一化，部分会过度归一（“你们/咱们”→“你”） | 拆成通用规则 + 可选 per-video override；新文体（社媒）可能需要保留“你们/咱们” |
+| [consistency_pass.py:34](src/facet_studio/writing_v4/consistency_pass.py#L34) | prompt 里的“中国猫里” | 具体视频 claim 进了通用 prompt | 换成匿名示例（“某个范围里/这个演示里”） |
+| [svg_pass.py:4](src/facet_studio/writing_v4/svg_pass.py#L4) | 文档字符串里的“毛色叫法 / 地方类群 / CFA 登记” | 具体视频内容进了代码 | 换成匿名示例（“三层分类：A / B / C”） |
 | [skills/writing/video-article/README.md:58-60](skills/writing/video-article/README.md#L58-L60) | BV 号 + 主题的 A/B 表 | skill 包里有具体视频；违反“skill 不出现具体视频” | 移到 `runs/` 或内部证据；skill README 只留匿名方法 |
 | [skills/writing/video-article/references/examples.md:305](skills/writing/video-article/references/examples.md#L305) | “CFA 登记”的 SVG 例子 | 具体视频 claim | 换成匿名三层分类例子 |
-| [run.py:52-76](src/lunograph/writing_v4/run.py#L52-L76) / [article_checks.py:41-44](src/lunograph/writing_v4/article_checks.py#L41-L44) | 来源行/H1 是文章专用 | 社媒/脚本会被误判 | skill manifest 声明 `source_line`/`checks` 策略；共用函数，不复制 validator |
-| [pipeline.py:80-110](src/lunograph/writing_v4/pipeline.py#L80-L110) | 总是跑 consistency → SVG → article checks | 新文体被文章后处理绑架 | 按 skill manifest 的 `passes` 路由；仍是一次 writer + 可选后处理 |
+| [run.py:52-76](src/facet_studio/writing_v4/run.py#L52-L76) / [article_checks.py:41-44](src/facet_studio/writing_v4/article_checks.py#L41-L44) | 来源行/H1 是文章专用 | 社媒/脚本会被误判 | skill manifest 声明 `source_line`/`checks` 策略；共用函数，不复制 validator |
+| [pipeline.py:80-110](src/facet_studio/writing_v4/pipeline.py#L80-L110) | 总是跑 consistency → SVG → article checks | 新文体被文章后处理绑架 | 按 skill manifest 的 `passes` 路由；仍是一次 writer + 可选后处理 |
 | [build_site.py:24-40](deliverables/writing-skill/build_site.py#L24-L40) | 硬编码 3 篇文章 | 加文体要改代码 | 改成 `works.json` 驱动 |
 
 ### 5.2 影响与顺序
@@ -145,7 +147,7 @@
 - **分层**：旧 writing 100 + writing_v2 304 + writing_v3 122 + writing_v4 **16**。
 - **v4 测试**：[test_article_checks.py](tests/writing_v4/test_article_checks.py) 7、[test_consistency_pass.py](tests/writing_v4/test_consistency_pass.py) 3、[test_svg_pass.py](tests/writing_v4/test_svg_pass.py) 6。没有 pipeline/run/form 的端到端测试（模型调用不可 deterministic，但可以用固定输入 + mock）。
 - **官方 30**：3 CLEAR（BV1ix 81.65 / BV17 80.48 / BV1B 74.05）+ 3 HOLD；对象是 v4 之前的候选（官方 30 时间 17:11，content_final_v4 18:52），**当前 v4 未再评审**。这是模型评审，不是真人 pass。
-- **旧评测文档**：[evals/writing/README.md](evals/writing/README.md) 仍写 `lunograph.writing.validate` + verifier + brief 协议，和当前 writer-first 链不一致；没有 cases。
+- **旧评测文档**：[evals/writing/README.md](evals/writing/README.md) 仍写 `facet_studio.writing.validate` + verifier + brief 协议，和当前 writer-first 链不一致；没有 cases。
 - **A/B**：`ab_judge.py` 存在；输入 A/B 3/4 胜；advisory，不是质量门。
 - **真人 reader test**：未做；必须标 `not_run`，不能写成 pass。
 
@@ -204,10 +206,10 @@
 ## 9. 证据索引
 
 - 架构机会地图：[architecture.md](architecture.md) §6.5（多文体）、§11（多文体产出）、§13.1（JD）、§14（复用）。
-- 当前写作层：[pipeline.py](src/lunograph/writing_v4/pipeline.py)、[run.py](src/lunograph/writing_v4/run.py)、[consistency_pass.py](src/lunograph/writing_v4/consistency_pass.py)、[svg_pass.py](src/lunograph/writing_v4/svg_pass.py)、[article_checks.py](src/lunograph/writing_v4/article_checks.py)。
+- 当前写作层：[pipeline.py](src/facet_studio/writing_v4/pipeline.py)、[run.py](src/facet_studio/writing_v4/run.py)、[consistency_pass.py](src/facet_studio/writing_v4/consistency_pass.py)、[svg_pass.py](src/facet_studio/writing_v4/svg_pass.py)、[article_checks.py](src/facet_studio/writing_v4/article_checks.py)。
 - 当前 skill：[SKILL.md](skills/writing/video-article/SKILL.md)、[README.md](skills/writing/video-article/README.md)、[examples.md](skills/writing/video-article/references/examples.md)。
 - 交付：[site/index.html](deliverables/writing-skill/site/index.html)、[writing-articles.pdf](deliverables/writing-skill/site/writing-articles.pdf)、[build_site.py](deliverables/writing-skill/build_site.py)。
 - 质量证据：[official_30/SUMMARY.md](runs/writing_rebuild_2026-11-04/official_30/SUMMARY.md)、[review_v2/SUMMARY.md](runs/writing_rebuild_2026-11-04/review_v2/SUMMARY.md)。
-- 旧 harness（不能当 current evidence）：[runtime/task_plan.py](src/lunograph/runtime/task_plan.py)、[runtime/artifact.py](src/lunograph/runtime/artifact.py)、[runtime/tools.py](src/lunograph/runtime/tools.py)、[runtime/decision.py](src/lunograph/runtime/decision.py)。
-- Substrate 接口：[substrate-v1-freeze.md](docs/substrate-v1-freeze.md)；[light_context.py](src/lunograph/writing_v3/light_context.py)、[edited_transcript.py](src/lunograph/writing_v3/edited_transcript.py)。
+- 旧 harness（不能当 current evidence）：[runtime/task_plan.py](src/facet_studio/runtime/task_plan.py)、[runtime/artifact.py](src/facet_studio/runtime/artifact.py)、[runtime/tools.py](src/facet_studio/runtime/tools.py)、[runtime/decision.py](src/facet_studio/runtime/decision.py)。
+- Substrate 接口：[substrate-v1-freeze.md](docs/substrate-v1-freeze.md)；[light_context.py](src/facet_studio/writing_v3/light_context.py)、[edited_transcript.py](src/facet_studio/writing_v3/edited_transcript.py)。
 - 测试分层：`pytest --collect-only` 计数；`tests/writing_v4/`。

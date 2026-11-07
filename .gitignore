@@ -43,9 +43,9 @@ _archive/
 # v2 / 冻结 / 领域参考：只留磁盘作为素材，不进入 v3 分支
 docs/_frozen/
 video-writing-product-architecture/
-src/lunograph/writing_v2/
-src/lunograph/prompts_v2/
-src/lunograph/prompts/
+src/facet_studio/writing_v2/
+src/facet_studio/prompts_v2/
+src/facet_studio/prompts/
 skills/methods/
 tests/writing_v2/
 AB/

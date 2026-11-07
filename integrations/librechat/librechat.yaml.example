@@ -1,0 +1,71 @@
+version: 1.3.18
+cache: false
+
+interface:
+  customWelcome: '把一条视频，变成可发布的文章。'
+  theme:
+    version: 1
+    name: facet-studio
+    modes:
+      light:
+        colors:
+          rgb-surface-primary: '244 243 238'
+          rgb-surface-primary-alt: '238 237 230'
+          rgb-surface-primary-contrast: '232 230 220'
+          rgb-surface-secondary: '238 237 230'
+          rgb-surface-secondary-alt: '232 230 220'
+          rgb-surface-tertiary: '238 231 220'
+          rgb-surface-tertiary-alt: '232 224 212'
+          rgb-surface-chat: '244 243 238'
+          rgb-surface-composer: '255 255 255'
+          rgb-surface-sidebar: '238 237 230'
+          rgb-surface-user-message: '238 231 220'
+          rgb-surface-hover: '232 230 220'
+          rgb-surface-active: '226 222 211'
+          rgb-text-primary: '25 24 23'
+          rgb-text-secondary: '90 85 78'
+          rgb-text-tertiary: '138 132 122'
+          rgb-text-muted: '138 132 122'
+          rgb-border-light: '216 211 200'
+          rgb-border-medium: '200 193 181'
+          rgb-accent-primary: '201 100 66'
+          rgb-accent-primary-hover: '181 87 56'
+          rgb-link: '201 100 66'
+          rgb-link-hover: '181 87 56'
+          rgb-surface-submit: '25 24 23'
+          rgb-surface-submit-hover: '60 55 48'
+          rgb-brand-purple: '201 100 66'
+        appearance:
+          controlRadius: '0.55rem'
+
+endpoints:
+  custom:
+    - name: 'DeepSeek'
+      apiKey: '${DEEPSEEK_API_KEY}'
+      baseURL: '${DEEPSEEK_BASE_URL}'
+      models:
+        default:
+          - 'deepseek-flash'
+        fetch: false
+      titleConvo: true
+      titleModel: 'deepseek-flash'
+      modelDisplayLabel: 'DeepSeek'
+
+mcpServers:
+  facet_studio:
+    type: stdio
+    # 替换为项目 Python 解释器
+    command: '__PYTHON_EXE__'
+    args:
+      - '-m'
+      - 'facet_studio.mcp_server'
+    env:
+      # 替换为项目根目录
+      PYTHONPATH: '__PROJECT_ROOT__/src'
+      FACET_STUDIO_PROJECT_ROOT: '__PROJECT_ROOT__'
+      PYTHONUTF8: '1'
+      PYTHONIOENCODING: 'utf-8'
+    timeout: 300000
+    serverInstructions: |
+      Facet Studio content studio tools. Resolve a cached video source, plan one form,
+      write one form once, and typeset it. One product = one writer; no editor/checker.

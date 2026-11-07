@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from lunograph.providers.llm import LLMResponse, LLMUsage
-from lunograph.writing_v3 import probe_parts
+from facet_studio.providers.llm import LLMResponse, LLMUsage
+from facet_studio.writing_v3 import probe_parts
 
 INDEX = {
     "schema": "writer-index-v1",
@@ -222,7 +222,7 @@ def test_run_path_selects_parts_then_answers(tmp_path: Path, monkeypatch) -> Non
                 finish_reason="stop",
             )
 
-    monkeypatch.setattr("lunograph.core.config.get_settings", lambda: FakeSettings())
+    monkeypatch.setattr("facet_studio.core.config.get_settings", lambda: FakeSettings())
     monkeypatch.setattr(probe_parts, "DeepSeekLLM", FakeLLM)
 
     paths = _write_fixtures(tmp_path)

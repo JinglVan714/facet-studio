@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from lunograph.writing import (
+from facet_studio.writing import (
     build_working_context,
     measure_text,
     select_profile,

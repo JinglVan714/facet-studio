@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from lunograph.writing.pipeline import (
+from facet_studio.writing.pipeline import (
     _restore_unrequested_captions,
     _repair_diff_guard,
     run_pipeline,

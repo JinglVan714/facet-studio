@@ -6,7 +6,7 @@
 
 ## 1. Claim extraction 覆盖合同
 
-[claim_extract.py](../src/lunograph/writing_v3/claim_extract.py)：
+[claim_extract.py](../src/facet_studio/writing_v3/claim_extract.py)：
 - Prompt 要求每个 passage 恰好出现一次：要么在 `claims`，要么在 `skipped_passages` 并给 short reason（greeting/self_intro/teaser/sponsorship/logistics/ui_detail/duplicate/low_information/other）；不得静默跳过。
 - 输出 schema 增加 `skipped_passages`。
 - `_validate` 增加：
@@ -14,7 +14,7 @@
   - `coverage`：passages_total、with_claims、skipped、unreported、skip_reason_counts；
   - `unreported_passages` 非空时 trace status=`partial`，但 claims 仍保留。
 - `claims.json` 增加 `skipped_passages` 和 `coverage`。
-- [pack_from_claims.py](../src/lunograph/writing_v3/pack_from_claims.py) 的 `selection.coverage` 读取 skipped：
+- [pack_from_claims.py](../src/facet_studio/writing_v3/pack_from_claims.py) 的 `selection.coverage` 读取 skipped：
   - `passages_skipped`、`skipped_passages`（带 segment/reason）、`skip_reason_counts`、`unreported_passages`；
   - 保留 `passages_dropped_by_selection`，用于区分“提取没 claim”和“pack 没选”。
 
@@ -41,7 +41,7 @@
 
 ## 3. Content-addressed cache
 
-[providers/llm.py](../src/lunograph/providers/llm.py) 增加 `CachedLLM`：
+[providers/llm.py](../src/facet_studio/providers/llm.py) 增加 `CachedLLM`：
 - cache key = provider 的精确 request identity：model + system + user + max_tokens + temperature。
 - hit：不调用 inner，返回 `cached=True`/`replayed=True`，写一条 replay-style call record；latency=0。
 - miss：调用 inner，成功且非空才写缓存；cache 文件损坏时回退真实调用。

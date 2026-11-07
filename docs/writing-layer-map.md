@@ -1,6 +1,8 @@
 # Writing Layer Functional Map（完整设计 v1.0 + EditorialBrief 增补）
 
-> **2026-11-03 历史状态**：这是早期 writing 设计笔记，不是当前基线。当前 writing 方法/契约/评测/开发习惯以 [writing-operating-model.md](writing-operating-model.md) + 当前代码 + 最新 runs 为准；本文件只作设计历史/假设，冲突时不采用。
+> **2026-11-05 session 2**：已由 [writing-v5-architecture.md](writing-v5-architecture.md) 取代；本文件是历史设计，不是当前基线。
+
+> **2026-11-03 历史状态**：这是早期 writing 设计笔记，不是当前基线。当前写作架构以 [writing-v5-architecture.md](writing-v5-architecture.md) 为准；本文件只作设计历史/假设，冲突时不采用。
 >
 > 状态：完整设计；**不是 architecture 事实源，不修改 architecture.md**。
 > 日期：2026-11-01（2026-11-02 增补 Planner/brief）
@@ -15,7 +17,7 @@
 2. **文体路线**：A 叙事/解释先做；**先学习参考 skill**（见 [writing-skill-study.md](writing-skill-study.md)），再写第一个 skill。
 3. **媒体路线**：同意真实帧/表格/示意图/图表 + 图像 prompt；生成图后置。
 4. **读者 test**：可招真实读者；按 5+ 人执行。
-5. **目录/命名**：同意 `src/lunograph/{writing,evidence_access,media}/`；原占位 skill 已删除。
+5. **目录/命名**：同意 `src/facet_studio/{writing,evidence_access,media}/`；原占位 skill 已删除。
 
 ---
 
@@ -852,7 +854,7 @@ article sections + consume-index + media_policy
 2. **文体路线**：同意 A 叙事/解释先做，B 分发、C 时间/媒体后置；**先学习参考 skill**（见 [writing-skill-study.md](writing-skill-study.md)），再写第一个 skill。
 3. **媒体路线**：同意先做真实帧/表格/示意图/图表（代码渲染）+ 图像 prompt；生成图后置。
 4. **读者 test**：用户确认可招真实读者；按 5+ 人执行；未跑则标 `not_run`，不伪造。
-5. **目录/命名**：同意 `src/lunograph/writing/` + `src/lunograph/evidence_access/` + `src/lunograph/media/`；新 skill 目录；原占位 skill 已删除。
+5. **目录/命名**：同意 `src/facet_studio/writing/` + `src/facet_studio/evidence_access/` + `src/facet_studio/media/`；新 skill 目录；原占位 skill 已删除。
 
 ---
 

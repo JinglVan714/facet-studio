@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from lunograph.writing_v3 import probe
-from lunograph.writing_v3.writer_view import resolve_quote
+from facet_studio.writing_v3 import probe
+from facet_studio.writing_v3.writer_view import resolve_quote
 
 UNITS = [
     {"unit_id": "u1", "t": [0, 1000], "channel": "speech", "raw": "第一句。"},
@@ -242,7 +242,7 @@ def test_dry_run_writes_prompts_but_never_calls_provider(tmp_path: Path) -> None
 def test_run_path_writes_responses_and_hashed_calls(
     tmp_path: Path, monkeypatch
 ) -> None:
-    from lunograph.providers.llm import LLMResponse, LLMUsage
+    from facet_studio.providers.llm import LLMResponse, LLMUsage
 
     class FakeSettings:
         provider_configured = True
@@ -284,7 +284,7 @@ def test_run_path_writes_responses_and_hashed_calls(
                 finish_reason="stop",
             )
 
-    monkeypatch.setattr("lunograph.core.config.get_settings", lambda: FakeSettings())
+    monkeypatch.setattr("facet_studio.core.config.get_settings", lambda: FakeSettings())
     monkeypatch.setattr(probe, "DeepSeekLLM", FakeLLM)
 
     paths = _write_fixtures(tmp_path)

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from lunograph.writing_v3.claim_extract import _validate
+from facet_studio.writing_v3.claim_extract import _validate
 
 PASSAGES = {
     "p1": {

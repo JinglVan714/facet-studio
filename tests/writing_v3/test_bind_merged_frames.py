@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from lunograph.writing_v3 import bind_merged_frames
+from facet_studio.writing_v3 import bind_merged_frames
 
 PACK = {
     "claims": [

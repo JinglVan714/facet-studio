@@ -1,6 +1,9 @@
 # Writing Reuse Map（完整设计 v1.0 + EditorialBrief 增补）
 
-> **2026-11-03 历史状态**：这是早期复用决策笔记，不是当前实现契约。当前 writing 方法/契约/评测以 [writing-operating-model.md](writing-operating-model.md) + 当前代码 + 最新 runs 为准；本文件只作复用历史/参考。
+> **2026-11-05 session 2**：已由 [writing-v5-architecture.md](writing-v5-architecture.md) 取代；本文件是历史复用决策，不是当前契约。
+> **2026-11-06**：当前复用栈见 [reuse-stack-2026-11.md](reuse-stack-2026-11.md)；本文件只作历史。
+
+> **2026-11-03 历史状态**：这是早期复用决策笔记，不是当前实现契约。当前写作架构以 [writing-v5-architecture.md](writing-v5-architecture.md) 为准；本文件只作复用历史/参考。
 >
 > 状态：实现层复用决策；不是架构基线。日期：2026-11-01（2026-11-02 增补 brief）。
 > 当前：`skills/writing/reader_first_explainer/` v1.1 已按本图复用 MIT 方法 + bilibili 教学结构；视觉层（table/SVG chart/SVG diagram/real frame）+ repair pass 已接进 pipeline；EditorialBrief 契约见 `docs/writing-planner-position.md`；3 个 dev brief complete runs（`runs/_brief_final3/`；BV17/BV1AC/BV1yb complete；legacy `runs/_final/` 保留对照）；`evidence_access/consume_index.py` 已复用 `light_context` 帧 helper + `writer_view` 分组逻辑；`writing/{request,context,skill,prompt,writer,validate,pipeline,cli}` + `media/{planner,render}` 已落；487 tests。
@@ -26,9 +29,9 @@
 | Skill 格式 | Agent Skills spec / `anthropics/skills` | `SKILL.md` + frontmatter + references/scripts/assets + 渐进披露 | 不自定义一套 skill 格式 |
 | Skill 方法 | `great-writer`（MIT）、`Norman`（MIT）、`bilibili-render-pdf`（方法）、`rednote`（MIT）、`avoid-ai-writing`（MIT） | 读者立场/核心张力/结构先行；evidence map；教学 flow；examples voice；写检分离；preservation | 不复制 NC/无 license 文本；不搬 6-phase/5 角色/平台词表 |
 | Claim/evidence | 我们的 substrate v1 + `wewrite` claim 字段 + `Norman` evidence map + `zenstory` index | claim id/text/status/scope/evidence；slot/blueprint；单一 index/coverage | 不做无 quote/span 的 claim；不把摘要当 quote |
-| Index/parts | `src/lunograph/writing_v3/writer_view.py` / `pack_from_claims.py`（历史，只借逻辑） | 复用 index/part 分组、oversize 保留、coverage 思路；输出新 `consume-index-v1` | 不把历史 writer view 当产品 path；不保留旧 schema |
+| Index/parts | `src/facet_studio/writing_v3/writer_view.py` / `pack_from_claims.py`（历史，只借逻辑） | 复用 index/part 分组、oversize 保留、coverage 思路；输出新 `consume-index-v1` | 不把历史 writer view 当产品 path；不保留旧 schema |
 | 证据读取 | `light_context.py` / `edited_transcript.py` / `bind_article.py` / `quote_hygiene.py`（substrate v1） | 直接复用；writing 层只适配/包装 | 不重写 substrate；不改 frozen 接口 |
-| Harness | `src/lunograph/writing_v3/trace.py` + `runtime/{artifact,tools,task_plan,decision,memory}.py` | `TraceRecorder` 收据；RunStore 不可变写/哈希；ToolSpec/Registry；TaskPlan；DecisionRecord；SemanticMemoryRef | 不新写大而全 Scheduler/Memory |
+| Harness | `src/facet_studio/writing_v3/trace.py` + `runtime/{artifact,tools,task_plan,decision,memory}.py` | `TraceRecorder` 收据；RunStore 不可变写/哈希；ToolSpec/Registry；TaskPlan；DecisionRecord；SemanticMemoryRef | 不新写大而全 Scheduler/Memory |
 | LLM/cache/budget | `providers/llm.py` 的 `DeepSeekLLM`/`CachedLLM`；`runtime/budget.py`；`core/hashing.py`；`core/tokens.py` | 直接用；已有 prompt hash/raw/usage/latency/缓存/预算 | 不新写 provider/cache |
 | Schema | Pydantic 2（已装） | contracts 用 Pydantic model 或 dict+schema；已有 evidence/runtime 用 Pydantic | 不新写序列化框架 |
 | CLI/tests | argparse + pytest（项目惯例） | 新 CLI 用 argparse；测试用 pytest | 不引入新 CLI/测试框架 |
@@ -43,18 +46,18 @@
 
 ### 2.1 直接复用（substrate v1，已冻结）
 
-- `src/lunograph/writing_v3/transcript.py`：units → sentences/passages。
-- `src/lunograph/writing_v3/light_context.py`：light context + edited text。
-- `src/lunograph/writing_v3/edited_transcript.py`：text + source_map（full/anchored）。
-- `src/lunograph/writing_v3/bind_article.py`：fact/quote/paragraph/input-scope。
-- `src/lunograph/writing_v3/quote_hygiene.py`：非精确引号去引号。
-- `src/lunograph/writing_v3/trace.py`：stage receipt/trace。
+- `src/facet_studio/writing_v3/transcript.py`：units → sentences/passages。
+- `src/facet_studio/writing_v3/light_context.py`：light context + edited text。
+- `src/facet_studio/writing_v3/edited_transcript.py`：text + source_map（full/anchored）。
+- `src/facet_studio/writing_v3/bind_article.py`：fact/quote/paragraph/input-scope。
+- `src/facet_studio/writing_v3/quote_hygiene.py`：非精确引号去引号。
+- `src/facet_studio/writing_v3/trace.py`：stage receipt/trace。
 
 ### 2.2 可选/按需复用（claim path）
 
-- `src/lunograph/writing_v3/claim_extract.py`：claims（supported/bounded/scope/quote）。
-- `src/lunograph/writing_v3/pack_from_claims.py`：pack/selection/provenance。
-- `src/lunograph/writing_v3/writer_view.py`：index/parts/oversize/coverage 思路；**只借逻辑，不把旧 schema 当产品**。
+- `src/facet_studio/writing_v3/claim_extract.py`：claims（supported/bounded/scope/quote）。
+- `src/facet_studio/writing_v3/pack_from_claims.py`：pack/selection/provenance。
+- `src/facet_studio/writing_v3/writer_view.py`：index/parts/oversize/coverage 思路；**只借逻辑，不把旧 schema 当产品**。
 
 ### 2.3 Harness 复用
 
@@ -75,7 +78,7 @@
 
 ### 2.5 明确不复用
 
-- `src/lunograph/writing_v2/` 整条链、body/validator/gate。
+- `src/facet_studio/writing_v2/` 整条链、body/validator/gate。
 - 旧占位 skill（已删除）。
 - 与 evidence-first 冲突的全文注入/多阶段 waterfall/摘要链。
 

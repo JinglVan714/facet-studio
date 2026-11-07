@@ -7,8 +7,8 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
-from lunograph.media.planner import _validate, plan_visuals
-from lunograph.media.render import (
+from facet_studio.media.planner import _validate, plan_visuals
+from facet_studio.media.render import (
     _caption,
     _chart_svg,
     _flow_svg,
@@ -20,7 +20,7 @@ from lunograph.media.render import (
     _wrap_text,
     render_visual_plan,
 )
-from lunograph.media.sections import join_article, split_article
+from facet_studio.media.sections import join_article, split_article
 
 ARTICLE = (
     "# 标题\n\n开头。\n\n"

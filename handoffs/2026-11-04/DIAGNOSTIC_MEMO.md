@@ -14,7 +14,7 @@
 
 1. **内容层没有坏，last-mile 控制环坏了。** 三篇交付的 prose、结构、证据链、边界都在；没有 red line、没有 critical/high；每篇只差 1 个 blocking 的 material medium（BV1AC 另有 1 个非 blocking 的 consistency medium）。真正反复失败的是“检测→修复→验收→交付”这一段：**repair 会删掉合法的引语和归属，会改标题，会把一个 finding 换成另一个 finding；post-audit 只比数量，不比 identity；默认状态在结构上永远是 partial。**
 2. **最具体、最可复现的 bug 是 quote binding 的 pack/sentence 作用域。** BV1yb writer 有 29 条引语，22 条 bound、7 条 `unbound_long`；这 7 条全部 `in_input`（在 writer 看到的 edited text 里），其中至少 3 条精确出现在 edited text 但不在任何单条 pack sentence 里（另 2 条是标点归一化变体），`bind_article` 逐句查，所以判 unbound。validation 因此 partial；repair 按“unbound → 去引号改写”处理，最后把 **63 个引号对删到 3 个（正文 0 个）**，同时把于谦从 12 次降到 4 次、把“对话里”从 2 次升到 9 次。**22 条合法引语被牺牲，只为修 7 条 false negative。** 这不是“写作不好”，是 deterministic binding 和 repair 合同一起把文章变平。
-3. **repair 没有“最小修改”合同。** `REPAIR_INSTRUCTION`（`src/lunograph/writing/prompt.py:34-68`）只说“只修 listed problems”，但没有任何 protected span 概念；`_repair_diff_guard`（`pipeline.py:186-207`）只查 H2 数量和图片数量，不查 H1/title、不查引语、不查 source line。BV1AC 的 repair 在没有 title finding 的情况下把 H1 从 brief 的问题句改成陈述句（`BV1AC_workflow_v14/writer/article.md:1` vs `output/reader.md:1`；brief 的 chosen title 是“DeepSeek Harness 的四种模式，为什么是四份插件清单？”）。这是可见的 P4 回归，但 final verifier 的 `title_cta` 没抓到。
+3. **repair 没有“最小修改”合同。** `REPAIR_INSTRUCTION`（`src/facet_studio/writing/prompt.py:34-68`）只说“只修 listed problems”，但没有任何 protected span 概念；`_repair_diff_guard`（`pipeline.py:186-207`）只查 H2 数量和图片数量，不查 H1/title、不查引语、不查 source line。BV1AC 的 repair 在没有 title finding 的情况下把 H1 从 brief 的问题句改成陈述句（`BV1AC_workflow_v14/writer/article.md:1` vs `output/reader.md:1`；brief 的 chosen title 是“DeepSeek Harness 的四种模式，为什么是四份插件清单？”）。这是可见的 P4 回归，但 final verifier 的 `title_cta` 没抓到。
 4. **repair 的验收是 count-based，不是 finding-based。** `pipeline.py:613-627` 只比较 critical/high/material_medium 的数量；BV1AC 修前 4 findings（1 material medium），修后 5 findings（1 material medium），数量不变就 accepted；但修后多了一个新的 medium claim_scope（“差别集中在两处”），还多了一个 source low（“成熟”）。**修好一个 source medium，换来一个新的 claim_scope medium，系统认为“没变差”。**
 5. **来源行仍然会错，而且 contract 和 verifier 都不拦。** BV1AC 的 source line 说“标题、发布日期与链接未提供、未核实”（`BV1AC_workflow_v14/output/reader.md:113`），但 brief/source_map 明明有标题 `Agent和Harness到底是什么？一个动画彻底搞懂！` 和日期 `2026-05-15`（frame OCR，未核实；`brief/brief.json:234-263`）。`contract._undisclosed_missing`（`contract.py:47-63`）只检查“missing 字段有没有披露”，不检查“known 字段有没有被说成 missing”；final verifier 也拿到了 source_block，却没抓。BV17 的 source line 为了修一个 finding，把 `EmbeddingGemma 2` 从全文删掉（`BV17_workflow_v7/output/reader.md:97`），现在读者不知道要用什么工具；post-audit 反而来要这个名字。
 6. **派生视觉（SVG diagram）没有语义审计，会和正文打架。** BV1yb 的 `diagram_01.svg` 节点写“五周年新装：魔法杖”，正文说“这套设计和五周年的关系并没有被确认”（`reader.md:17`）；`diagram_04.svg` 节点写“真去问恩西马”，正文说“她说去问问他们”（`reader.md:81`、`:107`）。final verifier 对 BV1yb 的 `visual_status` 是 `not_provided`（没有 real frame），`visual_manifest` 虽然在 payload 里，但 prompt 的 visual axis 是“if images are provided”，所以 diagram spec 实际没被检查。同时 BV17 正文说“视频给了一张真实结果做的图”（`reader.md:25`），文章里放的却是派生示意图，真正的 2D 结果帧没进来。
@@ -27,7 +27,7 @@
 
 ### 1.1 实际数据流（代码事实）
 
-`src/lunograph/writing/pipeline.py` 的实际顺序：
+`src/facet_studio/writing/pipeline.py` 的实际顺序：
 
 1. `load_request` + `load_skill` + index/edited_text/pack/sentences/source_map（`:273-279`）。
 2. `build_working_context`（`:281-284`）：profile 由 request/长度决定；`full_text` 是默认；`sectioned`/`multi_source` 返回 `unsupported_profile`（`context.py:335-353`），但 pipeline **不检查 status**，继续调 writer；`prompt.build_user_prompt` 对 `index_parts` 直接 `raise ValueError`（`prompt.py:172-175`）。这是长视频边界上的硬失败，不是 graceful status。

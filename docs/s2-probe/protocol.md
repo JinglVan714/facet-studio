@@ -26,7 +26,7 @@ substrate 的 claim/evidence/view 层是否值得它的体积和调用成本。�
 | BV1AC | 11,553 | 5,589 | 15,861 |
 | BV17 | 5,331 | 2,500 | 9,753 |
 
-渲染规则（[probe.py](../../src/lunograph/writing_v3/probe.py)）：
+渲染规则（[probe.py](../../src/facet_studio/writing_v3/probe.py)）：
 
 - **A raw ASR**：`units.jsonl` 每行一个 unit，格式 `[start-end s] 原文`；保留 raw 单元边界和时间码；不含 segment label/claim/evidence/frame。
 - **B merged text**：`passages.json` 每个 passage 一行，格式 `[passage_id start-end s] 合并原文`；segment 之间空行；不含 claim/evidence/quote/frame。
@@ -61,7 +61,7 @@ substrate 的 claim/evidence/view 层是否值得它的体积和调用成本。�
 BV1AC 的 C 使用新合同 claims；BV17 仍是旧合同。为保证两 case 同合同，先跑：
 
 ```bash
-PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m lunograph.writing_v3.claim_extract \
+PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m facet_studio.writing_v3.claim_extract \
   --passages runs/v3_poc/BV17_transcript/passages.json \
   --out-dir runs/s2_probe/BV17_claims
 ```
@@ -69,7 +69,7 @@ PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m lunograph.writing_v3.cla
 然后确定性重建 BV17 pack + views（不调用模型）：
 
 ```bash
-PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m lunograph.writing_v3.pack_from_claims \
+PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m facet_studio.writing_v3.pack_from_claims \
   --claims runs/s2_probe/BV17_claims/claims.json \
   --passages runs/v3_poc/BV17_transcript/passages.json \
   --sentences runs/v3_poc/BV17_transcript/sentences.json \
@@ -88,7 +88,7 @@ PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m lunograph.writing_v3.pac
 
 ```bash
 # BV1AC
-PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m lunograph.writing_v3.probe \
+PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m facet_studio.writing_v3.probe \
   --case-id BV1AC \
   --units data/BV1ACbi6DEvC/substrate/units.jsonl \
   --passages runs/v3_poc/BV1AC_transcript/passages.json \
@@ -97,7 +97,7 @@ PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m lunograph.writing_v3.pro
   --out-dir runs/s2_probe/dry_run/BV1AC
 
 # BV17（重跑 claims 后用新 writer view）
-PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m lunograph.writing_v3.probe \
+PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m facet_studio.writing_v3.probe \
   --case-id BV17 \
   --units data/BV17DHC6CELr/substrate/units.jsonl \
   --passages runs/v3_poc/BV17_transcript/passages.json \
@@ -112,7 +112,7 @@ Dry-run 只写 rendered/prompts/manifest，不写 response、不写 llm_calls。
 
 ```bash
 # BV1AC
-PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m lunograph.writing_v3.probe \
+PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m facet_studio.writing_v3.probe \
   --case-id BV1AC \
   --units data/BV1ACbi6DEvC/substrate/units.jsonl \
   --passages runs/v3_poc/BV1AC_transcript/passages.json \
@@ -122,7 +122,7 @@ PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m lunograph.writing_v3.pro
   --run
 
 # BV17
-PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m lunograph.writing_v3.probe \
+PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m facet_studio.writing_v3.probe \
   --case-id BV17 \
   --units data/BV17DHC6CELr/substrate/units.jsonl \
   --passages runs/v3_poc/BV17_transcript/passages.json \
@@ -149,7 +149,7 @@ frame 题评分：**有帧证据且答对 = 2；没有帧证据但诚实说“�
 
 ```bash
 # BV1AC v2
-PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m lunograph.writing_v3.probe \
+PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m facet_studio.writing_v3.probe \
   --case-id BV1AC \
   --units data/BV1ACbi6DEvC/substrate/units.jsonl \
   --passages runs/v3_poc/BV1AC_transcript/passages.json \
@@ -158,7 +158,7 @@ PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m lunograph.writing_v3.pro
   --out-dir runs/s2_probe/run_v2/BV1AC --run
 
 # BV17 v2
-PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m lunograph.writing_v3.probe \
+PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m facet_studio.writing_v3.probe \
   --case-id BV17 \
   --units data/BV17DHC6CELr/substrate/units.jsonl \
   --passages runs/v3_poc/BV17_transcript/passages.json \
@@ -174,7 +174,7 @@ PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m lunograph.writing_v3.pro
 `--variant merged_text_frames`：合并转写 + 每段 frame captions（与 lean view 同一批 80-char caption），**不含 claims/IDs/evidence/context JSON**。用于拆出“帧值多少、claims 值多少”。
 
 ```bash
-PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m lunograph.writing_v3.probe \
+PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m facet_studio.writing_v3.probe \
   --case-id BV1AC \
   --passages runs/v3_poc/BV1AC_transcript/passages.json \
   --writer-view runs/s1_view/after/BV1AC_new/writer_view.json \

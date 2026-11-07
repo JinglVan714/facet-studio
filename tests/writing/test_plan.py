@@ -5,9 +5,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from lunograph.writing.planner import plan_article
-from lunograph.writing.prompt import build_repair_user, build_user_prompt
-from lunograph.writing.request import validate_request
+from facet_studio.writing.planner import plan_article
+from facet_studio.writing.prompt import build_repair_user, build_user_prompt
+from facet_studio.writing.request import validate_request
 
 REQUEST = {
     "schema_version": "writing-request-v1",

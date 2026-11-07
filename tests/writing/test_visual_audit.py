@@ -6,7 +6,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from lunograph.media.audit import load_article_frame_images
+from facet_studio.media.audit import load_article_frame_images
 
 
 def test_load_article_frame_images_downscales_and_keeps_caption(tmp_path: Path) -> None:

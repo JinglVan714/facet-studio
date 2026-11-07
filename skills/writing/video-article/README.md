@@ -1,5 +1,7 @@
 # video-article skill
 
+> **2026-11-06 说明**：这是写作引擎的 skill 说明；**SKILL.md 是 active**。文中的“一致性 pass”是旧 article pipeline，不是当前 `writing_v4` writer 的默认后处理；当前写作引擎见 [docs/writing-v5-architecture.md](../../../docs/writing-v5-architecture.md)，产品/架构见 [docs/product-v1-chat-studio.md](../../../docs/product-v1-chat-studio.md) / [architecture.md](../../../architecture.md)。skill 里不要出现具体视频/产品/人物。
+
 把一份关于某个主题的完整内容稿写成一篇独立文章。读者没接触过原始内容，读完应获得接近亲自了解过的理解与体验。
 
 ## 核心方法
@@ -24,7 +26,7 @@
 
 这是本 skill 的硬边界：
 
-- **素材层**：`src/lunograph/writing_v4/content_manuscript.py` 把 substrate 编成 `content.md` + `figures/fig-XX.jpg`。它负责转写、分段、选帧、复制图示、去掉标题/UP 主/时长/链接/时间码/ID/帧号/出处。
+- **素材层**：`src/facet_studio/writing_v4/content_manuscript.py` 把 substrate 编成 `content.md` + `figures/fig-XX.jpg`。它负责转写、分段、选帧、复制图示、去掉标题/UP 主/时长/链接/时间码/ID/帧号/出处。
 - **写作层**：Writer 只读 `content.md` + `SKILL.md`。它不知道有视频、素材包、claim 表或任何管线。正文里不出现“内容稿/素材/原文/转写/视频里/视频中/这条视频/本期视频/UP 主”。
 - **出处**：文章写成后由 `run.py` 按 `source.json` 补一行；Writer 不写。
 - **图示**：素材层复制并重命名为 `figures/fig-XX.jpg`；Writer 只看到“图示 N”和路径，不知道它是视频帧。
@@ -63,7 +65,7 @@
 
 ## 地板检查
 
-`src/lunograph/writing_v4/article_checks.py` 检查：正文里不能出现“内容稿/素材/原文/转写/证据/视频里/UP 主”等泄漏词、不能有时间码；图示路径必须存在；标题和一行出处必须在。地板检查不等于质量评判。
+`src/facet_studio/writing_v4/article_checks.py` 检查：正文里不能出现“内容稿/素材/原文/转写/证据/视频里/UP 主”等泄漏词、不能有时间码；图示路径必须存在；标题和一行出处必须在。地板检查不等于质量评判。
 
 ## 边界
 

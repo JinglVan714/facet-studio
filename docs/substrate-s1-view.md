@@ -6,7 +6,7 @@
 
 ## 1. 实现
 
-- [writer_view.py](../src/lunograph/writing_v3/writer_view.py)：
+- [writer_view.py](../src/facet_studio/writing_v3/writer_view.py)：
   - A：`build_writer_view(pack)` → lean single view（schema `writer-view-v1`）。
     - quote 唯一命中 context 时写 `span:[start,end]`；否则 `quote` fallback。
     - 去 `segment_id`/`kind`/gap severity；caption ≤80；保留 full claim/evidence/frame IDs。
@@ -15,7 +15,7 @@
     - parts：默认一 segment 一 part；`max_chars_per_part` 可合并连续 segments；单 segment 超预算保留并标记 oversize。
     - manifest：`parts_count`、part 文件/char/claim 数、segments/claims 总数、oversize、note。
   - D：writer view/index/parts 不含 provenance/selection/coverage/truncation；full pack 仍是 audit。
-- [pack_from_claims.py](../src/lunograph/writing_v3/pack_from_claims.py)：
+- [pack_from_claims.py](../src/facet_studio/writing_v3/pack_from_claims.py)：
   - `--writer-out` 写 lean view。
   - `--writer-bundle-dir` 写 `writer_index.json`、`manifest.json`、`writer_parts/part_XX.json`。
   - `--writer-part-max-chars` 控制 part 合并预算。

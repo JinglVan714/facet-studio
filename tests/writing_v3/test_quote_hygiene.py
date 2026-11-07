@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from lunograph.writing_v3 import quote_hygiene
+from facet_studio.writing_v3 import quote_hygiene
 
 
 def test_exact_quote_is_kept() -> None:

@@ -2,7 +2,7 @@ import xml.etree.ElementTree as ET
 
 import pytest
 
-from lunograph.writing_v4.svg_pass import (
+from facet_studio.writing_v4.svg_pass import (
     PLACEHOLDER,
     SpecError,
     normalize_spec,

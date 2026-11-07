@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from lunograph.providers.llm import CachedLLM, LLMResponse, LLMUsage
+from facet_studio.providers.llm import CachedLLM, LLMResponse, LLMUsage
 
 
 class FakeLLM:

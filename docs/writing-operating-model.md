@@ -1,6 +1,8 @@
 # Writing Operating Model（2026-11-03）
 
-> **2026-11-04 历史状态：写作层进入干净重做。本文件是旧 v1 operating model，不是当前基线；不要按它改。当前方法/认知见 [writing-rebuild-brief.md](writing-rebuild-brief.md) + [NEXT_SESSION_PROMPT.md](../handoffs/2026-11-03/NEXT_SESSION_PROMPT.md)。**
+> **2026-11-05 session 2**：已由 [writing-v5-architecture.md](writing-v5-architecture.md) 取代；本文件是历史工作模型，不是当前基线。开发纪律/好 writing 以 [writing-rebuild-brief.md](writing-rebuild-brief.md) §2/§3 为准。
+
+> **2026-11-04 历史状态：写作层进入干净重做。本文件是旧 v1 operating model，不是当前基线；不要按它改。当前写作架构见 [writing-v5-architecture.md](writing-v5-architecture.md)；好 writing/开发纪律见 [writing-rebuild-brief.md](writing-rebuild-brief.md) §2/§3。**
 >
 > 状态：当前 writing 层的**工作模型 + 开发方法 + 评测方法**。不是已验收基线，不是 substrate 合同。
 > 上位：`AGENTS.md`（护栏）、`architecture.md`（高层设计事实源）、`docs/substrate-v1-freeze.md`（substrate v1）。
@@ -228,8 +230,8 @@ reader.md + assets + binding/citations/audit/validation/manifest
 
 ### 5.1 工具
 
-- **L1**：`lunograph.writing.validate` + `contract`；看 `validation.json`/`contract_report.json`。
-- **L2**：`lunograph.writing.verifier`；initial `verifier_report.json` + final `verifier_final_report.json`；manifest 的 `verifier`/`verifier_final` 块。
+- **L1**：`facet_studio.writing.validate` + `contract`；看 `validation.json`/`contract_report.json`。
+- **L2**：`facet_studio.writing.verifier`；initial `verifier_report.json` + final `verifier_final_report.json`；manifest 的 `verifier`/`verifier_final` 块。
 - **L3**：LLM-as-Judge；两份只读标准 + 匿名 A/B pack；5 persona × 6 篇 = 30 独立报告；团队权重 0.20/0.25/0.20/0.15/0.20；P5 红线；manual acceptance。
 - **L4**：真人 reader test（未做；未来可选；不能伪造）。
 
@@ -264,7 +266,7 @@ reader.md + assets + binding/citations/audit/validation/manifest
   - `runs/_diag/BV1yb_workflow_v1/`（final article；32k final verifier invalid；64k probe 6）
 - 旧 current：`runs/_brief_final3/`；旧链路：`runs/_final/`、`runs/_compare/bilibili_BV1yb/`、`runs/_planner_experiment/`。
 - judge v5 pack：`runs/_reader_test_2026-11-03/judge_v5/`；尚未跑。
-- 代码入口：`src/lunograph/writing/`（request/context/skill/source_map/brief/prompt/writer/validate/contract/verifier/polish/pipeline/cli）、`src/lunograph/media/`、`src/lunograph/evidence_access/`；skill：`skills/writing/reader_first_explainer/`。
+- 代码入口：`src/facet_studio/writing/`（request/context/skill/source_map/brief/prompt/writer/validate/contract/verifier/polish/pipeline/cli）、`src/facet_studio/media/`、`src/facet_studio/evidence_access/`；skill：`skills/writing/reader_first_explainer/`。
 - 未做：真人 reader test、holdout（BV13/BV1ix）、多文体复用、生成图、专家 review。
 
 **接手点不是保真的**：上一位 agent 的判断可能有误；先读代码/最新 `reader.md`/`manifest.json`/`verifier_final_report.json`，再决定保留/重写/删掉什么。

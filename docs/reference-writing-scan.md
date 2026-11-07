@@ -1,5 +1,8 @@
 # Writing / Agent Skill 参考扫描（2026-10-31）
 
+> **2026-11-05 session 2**：本文件是历史参考扫描，不是当前基线；当前架构见 [writing-v5-architecture.md](writing-v5-architecture.md)。
+> **2026-11-06**：当前复用栈见 [reuse-stack-2026-11.md](reuse-stack-2026-11.md)；本文件只作历史扫描。
+
 > 用途：给后续 session 的参考资料，不是 v3 基线。
 > 来源：本地 `参考素材/skills/` 17 个仓库 + `bilibili-render-pdf` 的只读扫描；web 的 STORM / WriteHERE / Agent Skills 官方材料。
 > 标注：**[verified]** = 直接读了文件/官方页；**[secondary]** = 搜索摘要，未逐代码核实；**[unclear]** = 仓库未说明。

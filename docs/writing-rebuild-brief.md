@@ -1,5 +1,9 @@
 # Writing layer brief（2026-11-04）
 
+> **2026-11-06 产品层重定义**：产品 v1 是**聊天式内容工作台**（用户给视频 + 写作要求，Agent 按需写一种形态，聊天内预览/修改/验收），见 [product-v1-chat-studio.md](product-v1-chat-studio.md)；目标架构见 [architecture.md](../architecture.md)；JD/评测口径见 [jd-mapping-2026-11.md](jd-mapping-2026-11.md)。**§2（什么是好 writing）和 §3（开发纪律）仍然是保留的方法/纪律，不要改。** 本文件其余章节是历史规划/旧 pipeline（§1/§4–§8），不是当前实现。bundle 是内部/调试产物，不是产品默认输出。
+
+> **2026-11-05 session 2**：**§2（什么是好 writing）和 §3（开发纪律）是保留的方法/纪律，不要改。** 本文件其余章节是历史规划/旧 pipeline（§1/§4–§8），不是当前实现。当前写作引擎见 [writing-v5-architecture.md](writing-v5-architecture.md)；当前快照见 `STATE.md` / `HANDOFF.md` / [SESSION_2_DIRECTION.md](../handoffs/2026-11-05/SESSION_2_DIRECTION.md)。旧 supervisor/demo/词表/P1 两段式已删除；`wechat-article` 旧稿被否。
+
 > 读者：接手写作层的新 session。
 > 上位：`AGENTS.md` 全局护栏；两份 reader_pack 标准只在评测时读。
 > 旧写作层（brief/verifier/repair/polish/source line/claim status + skill v1/v2）已归档；不要按旧链做，不要读旧 memo/runs/skill/judge。
@@ -9,6 +13,8 @@
 把一条视频的连续证据，写成一篇没看过视频的读者也能获得≈同等理解与体验的独立文章。
 
 当前阶段：**一个写作 skill 已经做到质量稳定、能拿出手**；3 篇可发布文章已经形成 articles-only 作品集。下一步不是预设的“继续加 stage”，也不是预设的“先 JD”或“先多 skill”；先认知，再判断。
+
+> 2026-11-05：上一轮 P1 社媒/编排实验（social-core、social-note、wechat-article、orchestrator 等）**不是基线**，可能整体重做。新 session 先按 [handoffs/2026-11-05/NEXT_SESSION_PROMPT.md](../handoffs/2026-11-05/NEXT_SESSION_PROMPT.md) 独立认知和判断。
 
 ## 2. 什么是好 writing
 
@@ -28,6 +34,7 @@
 - **核实与正文绝对分离**：“未证实”不是写作层的事。正文不写“视频称/未核实/待核”，不写成体检报告/论文/百科。验证/审计只能放在正文之外，或作为独立质量门。
 - **主语是内容，不是视频**：默认直接陈述；不要写“作者说/视频里/据内容介绍”，除非需要区分个人经验、主观判断或具体演示。出处只做正文外一行。
 - **Writer 是产品，检查是地板**：先写得好；不要用 validator、词表、规则怪谈、多 stage 去“保证”质量。
+- **只对写作逻辑负责**：写作层负责组织、表达、结构、范围、文风；不核实世界、不给素材挑毛病、不把源材料冲突写成纠错清单。允许围绕原文语义/结构做补充、重写、修饰、精简；不新增事实/机制/因果。
 - **Skill 优先**：角色/读者/方法/例子/self-review；规则少、例子多。
 - **严禁单例**：skill/文档/代码里不能出现某个视频/产品/人物的具体内容、标题、台词、claim；每条规则必须由 ≥2 视频/文体或通用写作原则支持。例子匿名。
 - ≥2 视频/文体才进通用层；不按单篇调参；不手改单篇文章。
@@ -54,8 +61,8 @@ substrate v1（冻结）
   deliverables/writing-skill/site/：articles-only HTML / PDF
 ```
 
-- substrate v1 在 `src/lunograph/writing_v3/` 的 substrate 链路；只读 substrate 相关文件，不要读同目录的旧写作实验。writing 层通过既有接口消费，不改 substrate。需要接口时只读 `docs/substrate-v1-freeze.md` 的相关部分。
-- 写作层代码在 `src/lunograph/writing_v4/`；skill 在 `skills/writing/video-article/`。
+- substrate v1 在 `src/facet_studio/writing_v3/` 的 substrate 链路；只读 substrate 相关文件，不要读同目录的旧写作实验。writing 层通过既有接口消费，不改 substrate。需要接口时只读 `docs/substrate-v1-freeze.md` 的相关部分。
+- 写作层代码在 `src/facet_studio/writing_v4/`；skill 在 `skills/writing/video-article/`。
 - 当前通路：`pipeline.py` = writer → consistency → SVG → checks。
 - 质量门独立于正文；不要把评审语言写进文章。
 - 判断下一步看 `architecture.md` 的机会地图：§6.5 多文体矩阵、§11 多文体产出、§13.1 JD 映射、§14 复用；§4.2–4.3、§6.3.1、§7–§10 是旧实现，不要当当前代码。
@@ -98,13 +105,15 @@ substrate v1（冻结）
 - 不伪造事实/数字/引语/说话人；不自动发布；不 commit/push 到用户没让你动的分支；不读 `data/cookies/`。
 - 不静默改 substrate/架构；发现真实阻塞先报告。
 
-## 9. 下一步怎么判断（不预设）
+## 9. 下一步怎么判断（2026-11-06 已定产品方向）
 
-先读、先看现有产出，再给用户 2–3 个方向，例如：
+**产品方向已由用户裁决**：聊天式内容工作台（LibreChat + MCP + LangGraph + 排版/导出），按需一种形态；见 [product-v1-chat-studio.md](product-v1-chat-studio.md) 和 [architecture.md](../architecture.md)。本文件 §9 不再作为方向来源。
 
-- 对照目标 JD/岗位要求补作品集（architecture §13.1 有 JD 映射，只作参考）；
-- 先扩 skill 适配更多文体（architecture §6.5 多文体矩阵 / §11 多文体产出，作为机会地图，不是现成实现）；
-- 先修已有展示/质量问题（排版、图片、PDF、移动端）；
-- 或者你看到的其他问题。
+判断任何下一步时：
+
+- 先看它是否服务“用户在聊天里舒服地生成/预览/修改/验收”；
+- 再看它是否有真实 consumer（不是为 JD 关键词造 demo）；
+- 再看它是否破坏“一个产物一次 writer / 不按单篇调参”；
+- 评测先预留，产品原型稳定后再做；不要用“跑通”代替质量。
 
 每个方向写：为什么、最小下一步、验收标准、需要几个 case 才能说明不是单例。不要直接开做；先让用户裁决。

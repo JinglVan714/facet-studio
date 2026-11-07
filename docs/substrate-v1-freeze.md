@@ -40,7 +40,7 @@ source/video
 命令示例：
 
 ```bash
-PYTHONPATH=src python -m lunograph.writing_v3.light_context \
+PYTHONPATH=src python -m facet_studio.writing_v3.light_context \
   --passages runs/v3_poc/<video>_transcript/passages.json \
   --sentences runs/v3_poc/<video>_transcript/sentences.json \
   --outline <temporal_outline.json> \

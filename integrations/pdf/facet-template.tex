@@ -1,0 +1,103 @@
+\documentclass[a4paper]{article}
+
+% Facet Studio long-form PDF template.
+% Based on the local bilibili-render-pdf notes-template.tex (ctex/tcolorbox),
+% adapted for a finished article instead of course notes.
+\usepackage[fontset=fandol]{ctex}
+\usepackage{indentfirst}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage[margin=2.4cm]{geometry}
+\usepackage[most]{tcolorbox}
+\usepackage{etoolbox}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{tikz}
+\IfFileExists{pgfplots.sty}{
+    \usepackage{pgfplots}
+    \pgfplotsset{compat=1.18}
+}{}
+
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\providecommand{\pandocbounded}[1]{#1}
+
+\newtcolorbox{importantbox}[1]{
+    enhanced, colback=orange!5!white, colframe=orange!70!black,
+    colbacktitle=orange!70!black, coltitle=white, fonttitle=\bfseries,
+    title=#1, sharp corners
+}
+\newtcolorbox{knowledgebox}[1]{
+    enhanced, colback=blue!4!white, colframe=blue!65!black,
+    colbacktitle=blue!65!black, coltitle=white, fonttitle=\bfseries,
+    title=#1, sharp corners
+}
+\newtcolorbox{warningbox}[1]{
+    enhanced, colback=red!4!white, colframe=red!65!black,
+    colbacktitle=red!65!black, coltitle=white, fonttitle=\bfseries,
+    title=#1, sharp corners
+}
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    captionpos=b
+}
+
+\newcommand{\notetitle}{@@TITLE@@}
+\newcommand{\noteauthors}{Facet Studio}
+\newcommand{\notedate}{@@DATE@@}
+\newcommand{\videosource}{@@SOURCE@@}
+\newcommand{\videocoverpath}{@@COVER@@}
+
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0.35em}
+\captionsetup{font=small,labelfont=bf}
+\hypersetup{colorlinks=true,linkcolor=orange!60!black,urlcolor=blue!50!black}
+
+\begin{document}
+
+% Pandoc emits \includegraphics without dimensions; keep every body image
+% inside the text block and below a safe page-height ceiling.
+\setkeys{Gin}{width=\linewidth,height=0.62\textheight,keepaspectratio}
+
+\begin{titlepage}
+\centering
+\vspace{1.2cm}
+{\huge\bfseries \notetitle\par}
+\vspace{0.7cm}
+{\large \noteauthors\par}
+\vspace{0.25cm}
+{\large \notedate\par}
+\vspace{1.1cm}
+
+\ifdefempty{\videocoverpath}{
+{\small 本文无封面图。\par}
+}{
+\includegraphics[width=0.86\textwidth,height=0.46\textheight,keepaspectratio]{\videocoverpath}\par
+}
+
+\vfill
+\begin{tcolorbox}[width=0.92\textwidth, colback=black!2!white, colframe=black!55, sharp corners]
+\textbf{来源}：\videosource\par
+\textbf{制作}：Facet Studio\par
+\end{tcolorbox}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+\pagestyle{plain}
+
+@@BODY@@
+
+\end{document}

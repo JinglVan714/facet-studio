@@ -75,7 +75,7 @@ Boundary：`status="bounded"` + `scope` 是显式限制；view 消费说明要�
 
 ### 3.3 mode 选择（advisory，不做硬门）
 
-渲染两个候选，用 [core/tokens.py](../src/lunograph/core/tokens.py) 的 offline 估计：
+渲染两个候选，用 [core/tokens.py](../src/facet_studio/core/tokens.py) 的 offline 估计：
 
 - 显式 `mode` → 用它；
 - 给 `budget_tokens` → `merged_est <= budget` 用 `merged_frames`，否则 `lean_cw0`；
@@ -88,7 +88,7 @@ Boundary：`status="bounded"` + `scope` 是显式限制；view 消费说明要�
 - 不硬截断：超预算只换 mode/记录，不删除 claims/context/frames。
 - `index+parts` 不默认：28min/8parts 宽窄题都不回本；只有 bundle 远大于 lean view、或 selector 能稳定只选 1–2 parts 时才考虑；需要更便宜的 selector 再评估。
 
-**实现（2026-11-01，未接 Writer/binding）**：[comprehension_view.py](../src/lunograph/writing_v3/comprehension_view.py)；5 tests。auto 在 3 个 case 上与 probe 预期一致：
+**实现（2026-11-01，未接 Writer/binding）**：[comprehension_view.py](../src/facet_studio/writing_v3/comprehension_view.py)；5 tests。auto 在 3 个 case 上与 probe 预期一致：
 
 | case | merged_frames est | lean_cw0 est | auto |
 |---|---:|---:|---|
@@ -129,7 +129,7 @@ builder 使用 pack 的完整 frame captions（不再加 80-char 截断）；旧
   {"passage_id":"seg7-p11","quote":"我可能帮不上你的大忙，但是我给你情感的一个认可。"}
   {"frame_id":"00012_000061061","caption":"看这里"}
   ```
-- **adapter 已实现**：[bind_merged_frames.py](../src/lunograph/writing_v3/bind_merged_frames.py)；确定性、不 fuzzy、不新增事实。
+- **adapter 已实现**：[bind_merged_frames.py](../src/facet_studio/writing_v3/bind_merged_frames.py)；确定性、不 fuzzy、不新增事实。
   - 文本：quote 必须 ∈ passage 文本；在 passage 的 sentence 范围内找包含该 quote 的 evidence；唯一 → `bound`；多个 → `ambiguous`（列出全部 candidates）；quote 覆盖多个 evidence → `partial`；quote 在 passage 但不在任何 evidence → `unbound`；passage 不存在/quote 不在 passage → `error`。
   - 视觉：`frame_id` 必须存在 → `frame_bound`；caption 只作 reader-facing 提示，不要求等于 VLM caption（记录 `caption_matches`）。
   - 报告：`status=complete|partial|failed` + counts（bound/partial/ambiguous/unbound/frame_bound/error/editorial）；不静默。
@@ -169,8 +169,8 @@ builder 使用 pack 的完整 frame captions（不再加 80-char 截断）；旧
 ## 8. 实施阶段
 
 1. **设计确认**（本文）：两层、两种 mode、advisory budget、grounding 方向已确认。
-2. **确定性 builder（已实现）**：[comprehension_view.py](../src/lunograph/writing_v3/comprehension_view.py)；两种 mode + auto/budget/explicit + 记录；5 tests；3 case auto 与 probe 预期一致；不改 Writer。
-3. **binding adapter（已实现）**：[bind_merged_frames.py](../src/lunograph/writing_v3/bind_merged_frames.py)；quote/passage/frame → full pack evidence/claim/timecode；6 tests；BV1yb 真实数据检查；Writer output 的 `grounding_ref` 还未接。
+2. **确定性 builder（已实现）**：[comprehension_view.py](../src/facet_studio/writing_v3/comprehension_view.py)；两种 mode + auto/budget/explicit + 记录；5 tests；3 case auto 与 probe 预期一致；不改 Writer。
+3. **binding adapter（已实现）**：[bind_merged_frames.py](../src/facet_studio/writing_v3/bind_merged_frames.py)；quote/passage/frame → full pack evidence/claim/timecode；6 tests；BV1yb 真实数据检查；Writer output 的 `grounding_ref` 还未接。
 4. **3 case 复验（部分）**：builder 的 mode/token 估计已复验；adapter 用 BV1yb 真实 quote/frame 检查；3 case 的结构化 Writer output 未跑。
 5. **Writer 接线（未开始，writing 阶段，需确认）**：短读 merged_frames，长读 lean_cw0；测真实 Writer tokens/质量；不跑 skill 验收。
 6. **之后**才更新 architecture.md、做 skill/reader test。

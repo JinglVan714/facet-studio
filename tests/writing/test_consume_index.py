@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from lunograph.evidence_access import (
+from facet_studio.evidence_access import (
     build_consume_index,
     get_part,
     lookup_claim,

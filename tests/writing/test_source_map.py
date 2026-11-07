@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from lunograph.writing.source_map import build_source_map
+from facet_studio.writing.source_map import build_source_map
 
 EDITED = (
     "## 开场\n\n"

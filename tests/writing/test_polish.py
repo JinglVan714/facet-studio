@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from lunograph.writing.polish import run_polish
+from facet_studio.writing.polish import run_polish
 
 ARTICLE = "# 标题\n\n正文第一段。\n\n正文第二段。"
 SOURCE = "视频里说，正文。"

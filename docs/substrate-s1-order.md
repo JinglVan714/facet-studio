@@ -6,7 +6,7 @@
 
 ## 1. 改了什么
 
-- [pack_from_claims.py](../src/lunograph/writing_v3/pack_from_claims.py)：
+- [pack_from_claims.py](../src/facet_studio/writing_v3/pack_from_claims.py)：
   - `claims` 与 `segments[].claim_ids` 统一按 `segment → passage → sentence → time → claim_id` 排序，不再用 hash/选择顺序。
   - `passage_coverage` 按 passage 顺序输出。
   - segment label 解析改为 **outline 优先，contract fallback**；两者都空时记 `selection.labels.warnings`，不再静默输出空字符串。

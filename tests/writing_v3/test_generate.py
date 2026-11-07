@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from lunograph.writing_v3 import generate
+from facet_studio.writing_v3 import generate
 
 PACK = {
     "pack_id": "p1",

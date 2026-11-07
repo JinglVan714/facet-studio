@@ -1,6 +1,9 @@
 # 多文体路线（2026-11-05）
 
-> 当前方向：**先做多种社媒（小红书 + 公众号），再做视频脚本；md 内容先过关；HTML 后续；PDF 暂不做；完全体之后加简易前后端 demo。**
+> **状态：上一轮提案/实验，非基线。** 2026-11-05 session 2 已由 [writing-v5-architecture.md](writing-v5-architecture.md) 取代；本文件只作历史/调研参考，不要当方向。可信基线 commit `2f8faea` 也不是已验收好基线。
+> **2026-11-06**：产品 v1 已重定义为聊天式内容工作台（[product-v1-chat-studio.md](product-v1-chat-studio.md)）；本文件的“JD 表”是 pre-2026 研究，**评测/Function Calling/MCP/LangGraph 等映射已过时**，以 [jd-mapping-2026-11.md](jd-mapping-2026-11.md) 为准；本文件的“Consistency/Visual Editor”不是当前架构。
+>
+> 上一轮提案：**先做多种社媒（小红书 + 公众号），再做视频脚本；md 内容先过关；HTML 后续；PDF 暂不做；完全体之后加简易前后端 demo。**
 > 上位：`AGENTS.md` 全局护栏、`architecture.md` §6.5/§11（多文体机会）、§13.1（JD 能力）、§14（复用）。
 > 方法/纪律看 [writing-rebuild-brief.md](writing-rebuild-brief.md)；本文件只维护“做什么、为什么、验收”，不复制方法或状态。
 
@@ -44,6 +47,7 @@ Lead/Editor orchestrator（运行时决定）
 
 ## 3. JD 表（全部映射到核心；没有“未覆盖”行）
 
+> **历史 pre-2026 表，已过时。** 评测/Function Calling/MCP/LangGraph 等映射不要用；当前 JD 映射与评测口径见 [jd-mapping-2026-11.md](jd-mapping-2026-11.md)。
 > `待补/待接` = 有明确 consumer 和验收，排进路线；不是“不做”。每行都必须有真实 consumer，否则不建。
 
 | # | JD 能力 | 核心业务问题 | 真实落点（最小 artifact） | 消费者 | 验收/证据 | 现状 |
@@ -124,6 +128,7 @@ social/wechat/<video>/
 ## 6. 非目标 / 边界
 
 - **PDF 暂不做**；HTML 后置；排版/字体/插图大小等展示层等内容稳定后再调。
+- **写作层只对写作逻辑负责**：不核实世界、不给素材挑毛病、不把源材料冲突写成纠错清单；允许围绕原文语义/结构做补充、重写、修饰、精简；不新增事实/机制/因果。例子匿名；不按单篇/单个例子调参。
 - 不重跑 5 persona × N 篇的 30 judge；官方 30 只作历史证据。
 - 不为每个文体加 per-form pipeline/validator/gate；文体差异放 skill/platform 层。
 - 不做聊天式 multi-agent、50 subagent、无限 repair；orchestration 有界、可停、可 trace。
@@ -133,6 +138,7 @@ social/wechat/<video>/
 
 ## 7. 当前状态（2026-11-05）
 
-- 已有：`skills/writing/social-note/`、`skills/writing/video-script/`、`src/lunograph/writing_v4/skill_runner.py`、`form_checks.py`；`tests/writing_v4` 34 passed；全 suite 560 passed。
-- 4 个草稿在 `runs/writing_rebuild_2026-11-04/multiform/`：社媒 2 篇过 floor；脚本 2 篇结构可用但 floor 未过（figures 未复制、素材说明出现“内容稿”）；**均不作为最终产物**。
-- P0 调研已落 [social-writing-reuse-map.md](social-writing-reuse-map.md)；取舍已确认（emoji 可用不强制；不设硬长度；标题候选可；**P1 直接 B：LeadPlan + Platform Editor**；真实帧优先；md 先、HTML 后、PDF 不做）。下一步 P1。
+- 已有：`skills/writing/social-core/`、`social-note/`、`wechat-article/`、`video-script/`；`src/facet_studio/writing_v4/` 的 `skill_runner`、`form_checks`、`orchestrator`、`package`、`view_retriever`；`tests/writing_v4` 55 passed；全 suite 581 passed。
+- P1 首轮：LeadPlan → writer → platform editor → visual → package → checks 已跑通；xhs 2 篇（BV1ix/BV17）+ 公众号 2 篇（BV1ix/BV17）草稿在 `runs/.../multiform/v2*`；**不按单篇调参，草稿不作最终产物**。
+- P0 调研已落 [social-writing-reuse-map.md](social-writing-reuse-map.md)；取舍已确认（emoji 可用不强制；不设硬长度；标题候选可；**P1 直接 B：LeadPlan + Platform Editor**；真实帧优先；md 先、HTML 后、PDF 不做）。
+- 下一步：人工 acceptance 4 个发布包 → 按通用层修写作逻辑（≥2 视频/文体）→ P3 HTML 作品集；不按单篇/单例调参。

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from lunograph.writing.contract import audit_contract
+from facet_studio.writing.contract import audit_contract
 
 ARTICLE = (
     "# 最高分只有 0.756：为什么 0.8 会筛空\n\n"

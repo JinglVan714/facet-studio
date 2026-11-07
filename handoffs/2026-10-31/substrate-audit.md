@@ -70,7 +70,7 @@ units.jsonl (385)
 
 ### 3.1 句子合并（已实现，无模型）
 
-`src/lunograph/writing_v3/transcript.py`：
+`src/facet_studio/writing_v3/transcript.py`：
 
 - 合并条件：同 segment、间隔 ≤2s、上一 unit 以句末标点结束、单句 ≤180 字。
 - BV1AC 结果：385 units → **116 sentences**（中位 38 字）。
@@ -121,7 +121,7 @@ units.jsonl (385)
 
 当前已实现：
 
-- `src/lunograph/writing_v3/trace.py`：TraceRecorder。
+- `src/facet_studio/writing_v3/trace.py`：TraceRecorder。
 - `examples/BV1AC_transcript_receipt.json`：385→116→32 的完整 receipt（input/output hashes、counts、boundary reasons、samples）。
 
 下一步要补：

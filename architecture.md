@@ -1,58 +1,147 @@
-# LunoGraph v3 架构书：证据编译器 + 写作 Skill
+# Facet Studio 架构（产品 v1，2026-11-07）
 
-> 状态：v3 架构事实来源（只读为主）
-> 本文件记录 v3 的设计与早期实现假设；当前状态/任务/历史分别见 `STATE.md`、`HANDOFF.md`、`handoffs/`。
-> **2026-11-04 writing rebuild**：写作层已按 writer-first 重做。本文件是“产品/机会地图 + 早期实现假设”的混合体；**先看 §0.1 阅读地图**。§4.2–4.3、§6.3.1、§7–§10 的 Editorial Brief / Verifier / repair / 30 份 judge 是历史实现，**不是当前代码**；但 §6.5 多文体矩阵、§11 多文体产出、§13 JD 映射仍是判断下一步的机会地图。当前写作层以 [docs/writing-rebuild-brief.md](docs/writing-rebuild-brief.md) + `src/lunograph/writing_v4/` 为准。
+> 状态：**目标产品架构**。2026-11-06 已确认产品形态：聊天式内容工作台（LibreChat + MCP + LangGraph + 排版/导出 + 人工验收）。
+> 当前代码：substrate v1 + writing_v4 写作引擎 + **P1/P2 产品原型**（LibreChat + MCP + preview + review + 公众号 HTML / 小红书图集 / PDF）；LangGraph/评测未接。本文 §4–§5 区分“已有”与“目标”。
+> 产品定义/UX：[docs/product-v1-chat-studio.md](docs/product-v1-chat-studio.md)；UI：[docs/ui-design-2026-11.md](docs/ui-design-2026-11.md)；写作引擎：[docs/writing-v5-architecture.md](docs/writing-v5-architecture.md)；JD：[docs/jd-mapping-2026-11.md](docs/jd-mapping-2026-11.md)；复用栈：[docs/reuse-stack-2026-11.md](docs/reuse-stack-2026-11.md)。
+> 方法/纪律：[docs/writing-rebuild-brief.md](docs/writing-rebuild-brief.md) §2/§3 + [AGENTS.md](AGENTS.md)。§5 开发纪律不要改。
+> 旧的 v3 机会地图保留在文末附录，**不是当前实现**。
+
+## 0. 一屏
+
+一条视频 → 一份连续内容稿 + figures → 用户在聊天里说“写什么形态/给谁看/多长/什么语气” → Lead Planner 规划 → 一个 writer 一次写完 → 排版成阅读 HTML / 公众号 HTML / 小红书卡片 / PDF → 聊天内预览 → 用户修改/验收。多形态是能力，不是默认 bundle。
+
+**产品壳**：LibreChat（聊天、Agents、MCP、Artifacts、Trace Viewer、Token 统计）。
+**写作服务**：Python MCP server + LangGraph 工作流 + writing_v4 引擎 + 确定性排版。
+**数据分层**：产品内只展示本次 run 的 trace/成本/状态；评测数据在独立 dev dashboard；简历数据只取评测报告。
+
+## 1. 目标架构
+
+```text
+LibreChat（chat UI / Agents / MCP client / Artifacts / Trace Viewer）
+        │  MCP（stdio 或 HTTP）
+        ▼
+Facet Studio service（Python / FastAPI / MCP server）
+  ├─ LangGraph workflow:
+  │    intake → resolve_source → compile → plan → write → typeset → review
+  │    （checkpoint / stream / interrupt）
+  ├─ Tools:
+  │    resolve_source / compile_content / plan_article / write_form /
+  │    typeset / evaluate / review_artifact
+  ├─ Memory:
+  │    user profile + style + content hash + artifact versions + skill versions
+  └─ Observability:
+       spans / tokens / cost / errors → LibreChat + optional Langfuse
+        │
+        ▼
+Artifacts: 阅读 HTML / 公众号 HTML / 小红书卡片 / PDF / Markdown
+```
+
+## 2. 组件
+
+| 组件 | 职责 | 不做什么 |
+|---|---|---|
+| **LibreChat** | chat、Agents、MCP client、Artifacts、Trace Viewer、Token 统计 | 不承载写作逻辑；不直接读 run 目录 |
+| **Facet Studio MCP server** | 暴露 `resolve_source` / `compile_content` / `plan_article` / `write_form` / `typeset` / `review_artifact` 等工具；ToolSpec/超时/权限/回执 | 不写 chat UI；不自动发布 |
+| **LangGraph workflow** | intake → compile → plan → write → typeset → review；状态/checkpoint/stream/interrupt | 不重写 writing_v4 领域对象；不恢复 supervisor/editor |
+| **writing_v4 engine** | content manuscript → planner → 一次 writer → figures/SVG → artifacts | 不知道产品壳；不核验世界 |
+| **typesetter** | Markdown → 阅读 HTML / 公众号 HTML / 小红书卡片 / PDF | 不新增事实；不让模型写 HTML/LaTeX |
+| **eval harness** | 数据集、指标、judge 校准、回归、pass@k/pass^k | 不进产品 UI；不伪造真人 reader test |
+| **memory** | 用户画像/风格、最近 runs、content hash、artifact/skill 版本 | 不是向量库全栈；不做无关的长期记忆 |
+| **observability** | trace/span/token/cost/latency/error；run 面板 | 不把评测分数塞进产品 |
+
+## 3. 数据流
+
+```text
+用户聊天：来源 + 形态 + 读者 + 长度 + 风格 + must include/avoid
+  → resolve_source（BV/本地/缓存；现阶段不重跑视频）
+  → compile_content（content.md + figures + content_sha256）
+  → plan_article（Lead Planner；一次调用；JSON plan）
+  → write_form（一次 writer；只写当前形态）
+  → typeset（确定性：HTML/PDF/公众号/卡片）
+  → review（用户验收；publish_review.json）
+  → artifact + run trace（llm_calls/tool_calls/decisions/usage）
+```
+
+- 一个产物一次 writer；没有 editor/checker/草稿阶段。
+- 修改 = 新请求 + 新 writer 调用；不是 editor 改稿。
+- 多种形态 = 多次请求；不默认一次生成 bundle。
+- 失败 partial/failed 显式；单产物失败不影响其他请求。
+
+## 4. 当前代码（已有）
+
+| 模块 | 现状 |
+|---|---|
+| substrate v1 | `src/facet_studio/writing_v3/`（transcript/sentences/frames/OCR → content manuscript）；冻结 |
+| 写作引擎 | `src/facet_studio/writing_v4/`：`planner.py`、`orchestrator.py`、`writer.py`、`skills.py`、`tools.py`、`run_bundle.py`、`run_form.py` |
+| skills | `skills/writing/video-article/`（long_article core）、`wechat-article/`（extends core）、`xiaohongshu-note/`、`bundle-planner/` |
+| runtime | `src/facet_studio/runtime/`：RunStore、TaskPlan、ToolRegistry/Executor、WorkingMemory、ArtifactBoard、Decision、Trace |
+| 产物 | `runs/writing_v5/bundle_BV17_social_05/`、`bundle_BV1ix_social_04/`；P1/P2 产物在 `runs/product_v1/` |
+| P1/P2 产品原型 | `src/facet_studio/mcp_server.py`（FastMCP：list/resolve/plan/write/typeset/get_run/review）、`src/facet_studio/preview_server.py`（FastAPI reader 预览）、`integrations/librechat/`（LibreChat 配置/说明）、`integrations/xhs/`（Playwright 卡片）、`integrations/pdf/`（Tectonic 模板） |
+| 测试 | **570 passed**（2026-11-07；含 MCP server / 排版 / PDF / 验收状态 / 视觉模板测试） |
+| 未接 | LangGraph workflow、eval harness、视频转录、完整模型配置 UI；LibreChat/MCP/HITL/排版导出已有 P1/P2 原型 |
+
+## 5. 当前 vs 目标
+
+| 能力 | 当前 | 目标 |
+|---|---|---|
+| 产品入口 | CLI `run_bundle` / `run_form` | LibreChat chat + Agents（**P1 原型已跑通**） |
+| 生成方式 | 固定 bundle（可 `--forms`） | 按需一种形态；多形态 = 多次请求（**P1 已按需**） |
+| 编排 | 固定 orchestrator + TaskPlan 记录 | LangGraph StateGraph + checkpoint/stream/interrupt（未接） |
+| 工具 | orchestrator 调 ToolRegistry | 聊天 agent 用 function calling 调 MCP 工具（**P1 已跑通**） |
+| 预览/导出 | Markdown + 旧 articles-only site | 阅读 HTML（P1）；公众号复制 HTML、小红书 3:4 图集 + 导入包、PDF（**P2 已接原型**） |
+| 观测 | JSONL/run manifest | LibreChat tool calls + `get_run` summary（**P1 部分**）；Trace Viewer/Token 统计待接 |
+| 评测 | smoke tests | 数据集/指标/judge 校准/回归/pass^k（先预留） |
+| 发布 | 无 | 人工验收 `publish_review.json`（**P1 已跑通**） |
+
+## 6. 数据分层
+
+| 层 | 给谁 | 内容 | 位置 |
+|---|---|---|---|
+| 用户实时可观测 | 产品用户 | run 状态、来源、模型、calls、tokens、时延、成本、工具调用、计划、错误、验收 | 聊天执行过程面板 |
+| 开发评测 | 开发/面试 | 数据集、指标、回归、judge 校准、A/B、bad case | 独立 eval report/dashboard |
+| 简历数据 | 面试官 | task success、pass@1/pass^k、事实保真、平台适配、baseline 胜率、时延/成本 | eval report |
+
+## 7. 非目标
+
+- 不做 bundle 营销；不默认一次生成所有形态。
+- 不在产品导航放架构页/评测页；它们是 dev/面试材料。
+- 不做 editor/checker/草稿阶段；不恢复 supervisor/词表/P1 两段式。
+- 不跑 30 judge；不伪造 reader test/A-B/线上数据。
+- 不做向量数据库全栈/RAG 全链路；内容稿就是上下文。
+- 不做 MCP 生态/K8s/多租户/微调；有真实 consumer 才加。
+- 不自动发布；不 commit/push。
+
+## 8. 路线
+
+| 阶段 | 内容 | 验收 |
+|---|---|---|
+| P0 | 文档收口（本文件 + product + UI + reuse + jd）**已完成 2026-11-06** | 后续 session 不再把 bundle 当产品 |
+| P1 | LibreChat + MCP 工具服务原型：缓存内容 → 聊天 → 计划卡 → 一次 writer → 聊天内预览 **已完成原型 2026-11-06** | 一条 BV 走完；run 数据可见；不自动发布 |
+| P2 | 排版/导出：阅读 HTML + PDF；公众号 HTML；小红书卡片 **已完成原型 2026-11-07** | 成品可读/可复制/可下载；移动端可用 |
+| P3 | LangGraph workflow + HITL + 观测 | 可暂停/恢复/验收；trace/token/cost 可查 |
+| P4 | 评测（先预留） | 可复跑报告；不伪造真人 reader test |
+| P5 | 视频转录接入 | 用户提供新视频后可跑通 |
+
+## 9. JD 映射
+
+完整表见 [docs/jd-mapping-2026-11.md](docs/jd-mapping-2026-11.md)。摘要：
+
+- 多 Agent：聊天 agent + Lead Planner + writer/typesetter；一个产物一次 writer。
+- Function Calling / MCP：聊天 agent 调 MCP 工具；LibreChat 连接；外部 agent 可复用。
+- LangGraph：StateGraph/checkpoint/stream/interrupt；不是只写文档。
+- Memory：用户画像/风格 + 历史 + content hash + skill 版本。
+- Observability：LibreChat Trace Viewer + Token 统计 + run 面板。
+- Evaluation：数据集/指标/judge 校准/trajectory/回归/pass^k；不是 30 judge。
+- HITL：验收门；不自动发布。
+- RAG：不是核心；内容稿就是上下文；目标 JD 要求时再加。
 
 ---
 
-## 0. 文档定位
-
-本文件是 v3 的唯一架构入口。它回答：
-
-- 视频如何变成可复用的证据；
-- 证据如何组织、如何被多种文体复用；
-- 写作如何用尽可能少的模型调用完成；
-- Skill、Writer、一致性编辑、确定性校验各自负责什么；
-- 多文体（深度解析、讲义、社媒、企业知识、视频脚本、二创、生图提示词）如何共用一套底座；
-- JD 能力在新架构中的落点，以及哪些只做“小号”、哪些后置。
-
-本文件保留 v3 的产品设计与早期实现假设；历史部分见 §0.1，不作为当前实现依据。
-
-### 0.1 2026-11-04 阅读地图（先看这个）
-
-这份架构书是“产品/机会地图 + 早期实现假设”的混合体。按下面分层读：
-
-**当前仍有效的产品/机会地图**
-
-- §1 产品定义：一次证据编译，多文体写作。
-- §2.1 / §2.3 成功标准：读者等价、TOC、视觉优先、证据可复用。
-- §4.1 分层：接入 / 编排 / 证据 / 写作 / 校验 / 发布 / 观测。
-- §5 substrate：视频 → units / sentences / passages → 证据。
-- §6.1 / §6.2 / §6.5：skill 本质、包结构、多文体矩阵（View/Skill 是设计语言；当前实现是 content.md + video-article skill，不要照搬 View/claims 层）。
-- §11 多文体产出：深度解析 / 讲义 / 社媒 / 企业知识 / 视频脚本 / 二创 / 生图（看文体机会，不要当现成实现）。
-- §12 关键帧与视觉。
-- §13.1 JD 映射：能力 → 最小 artifact（表中的 Writer plan_header/Verifier 等具体实现词按当前 writer-first 理解，不要照抄）；§13.3 不追求大而全。
-- §14 复用 / 二开开源。
-
-**历史实现，不要当当前代码**
-
-- §2.2 调用预算、§2.4 质量门（5 persona × 6 篇、30 报告）。
-- §4.2–4.3 Brief / Verifier / repair / polish 数据流。
-- §6.3.1 Editorial Brief。
-- §7–§10 Writer / Verifier / contract / quality gate 的 JSON/span-level 细节。
-- §13.2 小号 Harness 的 Writer plan_header/verifier 细节。
-
-**当前写作层**
-
-- `docs/writing-rebuild-brief.md` §4–§6 + `src/lunograph/writing_v4/`。
-- 一句话：SKILL + 一次 writer → 有界 consistency review/edit → SVG pass → 地板检查；不是 Brief / Verifier / repair 链。
-
-**判断下一步时，优先看机会地图**：§6.5 / §11（多文体）、§13.1（JD 能力）、§14（复用）。不要因为实现细节旧，就把这些机会一起跳过。
-
----
+> **以下为 v3 机会地图 / 早期实现假设（历史，不是当前实现）。** 保留用于产品机会、JD 能力、复用思路；具体实现以当前代码和 [docs/writing-v5-architecture.md](docs/writing-v5-architecture.md) 为准。旧文中的 Writer plan_header / Verifier / repair / polish / 30 judge 等都不是当前实现。
 
 ## 1. 产品定义
+
+> **历史 v3 产品定义，不是当前产品。** 当前产品见 [docs/product-v1-chat-studio.md](docs/product-v1-chat-studio.md)；本附录只保留机会地图。
 
 **一次证据编译，多文体写作。**
 
@@ -119,6 +208,8 @@
 - 证据/技能/输出版本化；旧 artifact 可 replay。
 
 ### 2.4 质量门
+
+> **历史 v3 质量门，已过时。** 当前评测口径见 [docs/jd-mapping-2026-11.md](docs/jd-mapping-2026-11.md) §4；不要按 30 judge/5 persona 做。
 
 - L1 确定性：structure/reader hygiene/quote hygiene/binding/contract；技术 complete 不等于 reader pass。
 - L2 semantic verifier：initial 驱动至多 1 次 repair；final 只读审计交付稿；residual findings 保留为 partial/known risk，不自动二次 repair。
@@ -761,6 +852,8 @@ Writer 看不到：
 ## 13. JD 对应与小号 Harness
 
 ### 13.1 JD 映射
+
+> **历史 v3 表，已过时。** 评测/Function Calling/MCP/LangGraph 等映射不要用；当前 JD 映射与评测口径见 [docs/jd-mapping-2026-11.md](docs/jd-mapping-2026-11.md)。
 
 | JD 能力 | v3 落点 | 最小证据 | 优先级 |
 |---|---|---|---|

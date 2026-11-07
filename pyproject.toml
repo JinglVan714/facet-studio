@@ -1,11 +1,16 @@
 [project]
-name = "lunograph"
+name = "facet-studio"
 version = "0.1.0"
 description = "Evidence-driven video understanding and multi-form writing"
 requires-python = ">=3.11"
 dependencies = [
   "pydantic>=2.12",
   "openai>=1.109",
+  "fastapi>=0.124",
+  "uvicorn>=0.38",
+  "mcp>=1.27",
+  "markdown-it-py>=4.0",
+  "pypdf>=6.21",
 ]
 
 [tool.pytest.ini_options]

@@ -1,6 +1,8 @@
 # Writing Layer Contracts（完整设计 v1.0 + EditorialBrief 增补）
 
-> **2026-11-03 历史状态**：这是早期契约设计，不是当前实现契约。当前 writing 方法/契约/评测以 [writing-operating-model.md](writing-operating-model.md) + 当前代码 + 最新 runs 为准；本文件只作设计历史/假设，冲突时不采用。
+> **2026-11-05 session 2**：已由 [writing-v5-architecture.md](writing-v5-architecture.md) 取代；本文件是历史契约设计，不是当前实现契约。
+
+> **2026-11-03 历史状态**：这是早期契约设计，不是当前实现契约。当前写作架构以 [writing-v5-architecture.md](writing-v5-architecture.md) 为准；本文件只作设计历史/假设，冲突时不采用。
 >
 > 状态：完整契约，供实现使用；**不是 architecture 事实源，不修改 substrate**。
 > 上位：[docs/writing-layer-map.md](writing-layer-map.md)；substrate 合同：[docs/substrate-v1-freeze.md](substrate-v1-freeze.md)。
@@ -976,7 +978,7 @@ runs/<run_id>/
 
 ## 16. 文件/目录约定
 
-- 代码：`src/lunograph/writing/`、`src/lunograph/evidence_access/`、`src/lunograph/media/`；不修改 `writing_v3`。
+- 代码：`src/facet_studio/writing/`、`src/facet_studio/evidence_access/`、`src/facet_studio/media/`；不修改 `writing_v3`。
 - Skill：`skills/writing/<skill_id>/`；新 skill 目录；占位已删除。
 - 评测：`evals/writing/requests/`、`evals/writing/cases/`、`evals/writing/protocols/`。
 - 运行产物：`runs/<run_id>/`（git ignored）。

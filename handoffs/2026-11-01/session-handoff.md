@@ -92,7 +92,7 @@
 
 ## 5. 产物 / 测试
 
-- 代码：`src/lunograph/writing_v3/{claim_extract,pack_from_claims,writer_view,probe,probe_parts,comprehension_view,bind_merged_frames,one_call_writer}.py`。
+- 代码：`src/facet_studio/writing_v3/{claim_extract,pack_from_claims,writer_view,probe,probe_parts,comprehension_view,bind_merged_frames,one_call_writer}.py`。
 - 分析：`runs/s2_probe/run/analysis.md`、`run_v2/analysis.md`、`run_b_frames/analysis.md`、`run/BV1yb/analysis.md`、`runs/s3_boundary/analysis.md`、`runs/s2_probe/binding_check.md`。
 - Writer 实跑：`runs/s3_boundary/writer/{BV1AC,BV17,BV1yb}/`。
 - 测试：**375 passed**（v3 71）。

@@ -1,6 +1,8 @@
 # Writing Planner 的定位：从章节大纲到一页编辑 brief
 
-> **2026-11-03 历史状态**：这是 brief 定位的早期设计笔记，不是当前完整契约；当前两层 brief（短编辑 brief + knowledge ledger）、pipeline、评测以 [writing-operating-model.md](writing-operating-model.md) + 当前代码为准。本文件保留“Planner 是角色不是 section schema”的定位，冲突时以 operating model 为准。
+> **2026-11-05 session 2**：已由 [writing-v5-architecture.md](writing-v5-architecture.md) 取代；本文件是历史定位笔记，不是当前契约。
+
+> **2026-11-03 历史状态**：这是 brief 定位的早期设计笔记，不是当前完整契约；当前写作架构以 [writing-v5-architecture.md](writing-v5-architecture.md) 为准。本文件保留“Planner 是角色不是 section schema”的定位，冲突时以当前架构为准。
 >
 > 状态：设计/契约（2026-11-02），先于代码。
 > 实现：2026-11-02 已接 `source_map.py` → `brief.py` → Writer；`planner.py`/`writing-plan-v1` 仅 legacy；3 个 dev case 的 brief runs 在 `runs/_brief_final3/`；487 tests。

@@ -1,6 +1,8 @@
 # Writing Skill Study（完整设计 v1.0，skill v1.1）
 
-> **2026-11-03 历史状态**：这是 skill 学习/设计笔记，不是当前 writing 方法。当前 reader profile/term policy/评测/开发习惯以 [writing-operating-model.md](writing-operating-model.md) + 当前 `skills/writing/reader_first_explainer/` + 最新 runs 为准；本文件只作参考学习历史。
+> **2026-11-05 session 2**：已由 [writing-v5-architecture.md](writing-v5-architecture.md) 取代；本文件是历史学习/设计笔记，不是当前方法。
+
+> **2026-11-03 历史状态**：这是 skill 学习/设计笔记，不是当前 writing 方法。当前写作架构以 [writing-v5-architecture.md](writing-v5-architecture.md) 为准；本文件只作参考学习历史。
 >
 > 状态：学习/设计笔记；完整 skill v1.1 已落在 `skills/writing/reader_first_explainer/`（含 planning/structure/visuals/evidence references），视觉层已接进 pipeline；EditorialBrief 契约见 [writing-planner-position.md](writing-planner-position.md)。早期草稿的 BV1yb developer read 不通过；完整版加入 TOC 标题 / video-equivalent 体验 / visual-first / 简洁 / model knowledge explanatory。**未做 reader test/A-B，不是已验收基线。**
 > 日期：2026-11-01（2026-11-02 增补 planner/brief）

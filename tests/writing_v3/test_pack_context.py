@@ -8,7 +8,7 @@ anchors are reported rather than silently dropped.
 
 from __future__ import annotations
 
-from lunograph.writing_v3.pack_from_claims import build_pack
+from facet_studio.writing_v3.pack_from_claims import build_pack
 
 
 def _sentence(sentence_id: str, text: str, start_ms: int, end_ms: int) -> dict:

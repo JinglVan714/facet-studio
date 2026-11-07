@@ -1,6 +1,6 @@
 # 新 session 启动：先认知，再决定（2026-11-04）
 
-你接手的是 LunoGraph 的写作层。当前不是“从零重做”，也不是“继续修旧链”：一个写作 skill 已经做到质量稳定、能拿出手；下一步做什么，需要你先认知，再自己判断。
+你接手的是 Facet Studio 的写作层。当前不是“从零重做”，也不是“继续修旧链”：一个写作 skill 已经做到质量稳定、能拿出手；下一步做什么，需要你先认知，再自己判断。
 
 **先不要改代码，也不要预设“先 JD”或“先多 skill”。** 读完之后，给出你看到的 2–3 个方向、依据和最小下一步，再让用户裁决。
 
@@ -69,7 +69,7 @@ substrate v1（冻结）
 关键边界：
 
 - substrate v1 已冻结；非必要不改。需要接口时只读 `docs/substrate-v1-freeze.md` 的相关部分。
-- 写作层代码在 `src/lunograph/writing_v4/`；skill 在 `skills/writing/video-article/`。
+- 写作层代码在 `src/facet_studio/writing_v4/`；skill 在 `skills/writing/video-article/`。
 - 多文体机会：`architecture.md` §6.5/§11（教程、社媒、企业知识、脚本、二创等）；是机会地图，不是现成实现。
 - JD 能力：`architecture.md` §13.1（多 Agent、工具、记忆、评测、作品等）；是能力地图，不是现成实现。
 - 质量门是独立于正文的评审/人工 acceptance；不要把评审语言写进文章。

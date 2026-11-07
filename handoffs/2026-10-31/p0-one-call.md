@@ -61,7 +61,7 @@
 第一轮 Writer 出现 25 个 `quote not in text`。原因不是内容错，是 `quote` 语义没写清：它是**证据绑定/审计 quote**，正文可以改写；只有正文直接引用时才要求逐字一致。已修：
 
 - `SKILL.md`：quote 是 audit binding，可在正文改写；直接引用才需逐字。
-- `src/lunograph/writing_v3/one_call_writer.py`：只校验 quote 是 bound evidence 子串，不再要求出现在 text。
+- `src/facet_studio/writing_v3/one_call_writer.py`：只校验 quote 是 bound evidence 子串，不再要求出现在 text。
 - 重跑 validate-only：`status=complete`，0 issues。
 - 没有重跑 Writer；同一输出直接重新校验。
 

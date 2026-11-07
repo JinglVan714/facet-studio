@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from lunograph.writing_v3 import prose_writer_probe
+from facet_studio.writing_v3 import prose_writer_probe
 
 
 def test_prose_system_replaces_json_and_id_contract() -> None:

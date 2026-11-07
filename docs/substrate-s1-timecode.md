@@ -6,7 +6,7 @@
 
 ## 1. 改了什么
 
-- [pack_from_claims.py](../src/lunograph/writing_v3/pack_from_claims.py)：
+- [pack_from_claims.py](../src/facet_studio/writing_v3/pack_from_claims.py)：
   - evidence 的 `t_start_ms`/`t_end_ms` 改为 anchor sentence 时间并集，不再是整个 passage 的时间。
   - evidence 的 `sentence_ids` 改为 anchor sentence IDs（真正包含 quote 的最小连续 slice）。
   - 校验 `quote ∈ ''.join(anchor sentence texts)`；不满足时在 `selection.context.quote_not_in_sentence_text` 记录，不静默。

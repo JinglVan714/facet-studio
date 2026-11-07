@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from lunograph.writing_v3 import bind_article
+from facet_studio.writing_v3 import bind_article
 
 PACK = {
     "pack_id": "p1",

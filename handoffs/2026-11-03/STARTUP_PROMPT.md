@@ -32,7 +32,7 @@
    - `runs/_reader_test_2026-11-03/reader_pack/5个persona.md`
    - `runs/_reader_test_2026-11-03/reader_pack/评价方法.md`
 8. `skills/writing/reader_first_explainer/SKILL.md` + `references/` + `examples.md`。
-9. 当前代码：`src/lunograph/writing/`（request/context/skill/source_map/brief/prompt/writer/validate/contract/verifier/polish/pipeline/cli）、`src/lunograph/media/`、`src/lunograph/evidence_access/`。
+9. 当前代码：`src/facet_studio/writing/`（request/context/skill/source_map/brief/prompt/writer/validate/contract/verifier/polish/pipeline/cli）、`src/facet_studio/media/`、`src/facet_studio/evidence_access/`。
 10. 最新 runs：`runs/_diag/BV17_workflow_v5/`、`runs/_diag/BV1AC_workflow_v10/`、`runs/_diag/BV1yb_workflow_v1/`；直接读 `reader.md`、`assets/`、`manifest.json`、`verifier_final_report.json`，不要只读 summary。
 11. 历史评测（只作证据，不作当前分数）：`runs/_reader_test_2026-11-03/llm_judge/summary.md`、`problems.md`、`method_conflicts.md`、`manual_acceptance.md`。
 12. 新的 judge v5 pack：`runs/_reader_test_2026-11-03/judge_v5/`；`STARTUP_PROMPT.md` 是给评测 session 的。**不要提前读 `_hidden_mapping.json`**；v5 的 30 份报告尚未跑，不要编造分数。

@@ -1,4 +1,4 @@
-from lunograph.writing_v4.consistency_pass import split_source_line
+from facet_studio.writing_v4.consistency_pass import split_source_line
 
 
 def test_source_line_is_split_from_body() -> None:

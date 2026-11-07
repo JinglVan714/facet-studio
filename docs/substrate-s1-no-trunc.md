@@ -32,7 +32,7 @@
 命令：
 
 ```bash
-python -m lunograph.writing_v3.claim_extract \
+python -m facet_studio.writing_v3.claim_extract \
   --passages runs/v3_poc/BV1AC_transcript/passages.json \
   --out-dir runs/s1_claim_verify/BV1AC \
   --cache-dir runs/_cache/llm

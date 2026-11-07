@@ -1,5 +1,8 @@
 # 社媒写作 reuse map（2026-11-05）
 
+> **状态：上一轮调研记录，非基线。** 2026-11-05 session 2 已由 [writing-v5-architecture.md](writing-v5-architecture.md) 取代；本文件的平台矩阵/来源可作调研历史，不要当方向或质量依据。可信基线 commit `2f8faea` 也不是已验收好基线。
+> **2026-11-06**：当前复用栈（LibreChat/MCP/LangGraph/Pandoc/md2wechat/卡片）见 [reuse-stack-2026-11.md](reuse-stack-2026-11.md)；本文件的平台调研只作历史。
+>
 > P0 调研：本地 + GitHub，只读，不写代码。范围：小红书 + 公众号。
 > 目的：在开写前决定“借什么、不借什么”，让社媒是现有 video-article 核心的**平台层**，不是另一套方法论。
 > 结论：社媒 = 现有“理解 → 组织 → 表达 → 自审”核心 + 平台 shape/reader/format；优先借结构、rubric、beats/grounding、多平台改写原则；不借账号 voice、强制 emoji/网络梗、engagement bait、发布管线。

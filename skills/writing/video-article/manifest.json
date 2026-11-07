@@ -1,5 +1,10 @@
 {
   "id": "video-article",
+  "form": "long_article",
+  "name": "深度文章",
+  "description": "把一件事的完整内容写成独立深度文章：一个控制性 idea、机制/论证链、具体例子、诚实边界；适合愿意读 5–10 分钟的读者。",
+  "role": "longform_writer",
+  "kind": "form",
   "version": "0.1.0",
   "forms": ["article"],
   "skill": "SKILL.md",

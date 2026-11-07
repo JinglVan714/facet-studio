@@ -6,7 +6,7 @@ import hashlib
 
 import pytest
 
-from lunograph.writing_v3 import edited_transcript
+from facet_studio.writing_v3 import edited_transcript
 
 PACK = {
     "claims": [

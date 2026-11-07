@@ -6,14 +6,14 @@
 
 ## 1. 改了什么
 
-- [provenance.py](../src/lunograph/writing_v3/provenance.py)：写作 claim → snapshot 原子 claim/evidence 的确定性 join（sentence → unit → assertion → snapshot claim/evidence）。
+- [provenance.py](../src/facet_studio/writing_v3/provenance.py)：写作 claim → snapshot 原子 claim/evidence 的确定性 join（sentence → unit → assertion → snapshot claim/evidence）。
   - 只在 full pack 的 `provenance` 块出现，audit-only；不进 writer view。
   - 记录 `source_claim_ids` / `source_evidence_ids`；`support_statuses`/`stances` 只在非默认时逐条写；`rights_scopes` 只在全局不唯一时逐条写；summary 记 counts 与 `asr_correction_count`。
-- [writer_view.py](../src/lunograph/writing_v3/writer_view.py)：lean writer-facing View。
+- [writer_view.py](../src/facet_studio/writing_v3/writer_view.py)：lean writer-facing View。
   - 只保留 `segments`（claim_id/text/kind/status/scope/evidence_id/quote/context/frame_id/caption）与 `gaps`/`conflicts` 的 description/severity。
   - 去掉 `pack_id`/`selection`/`provenance`/`budget`/`truncation`/IDs/times/passage_id/sentence_id/file/strategy 等审计字段。
   - CLI 新增 `--writer-out`；writer view 从 **untruncated** pack 构建，audit 字段不能挤掉写作上下文。
-- [pack_from_claims.py](../src/lunograph/writing_v3/pack_from_claims.py)：新增 `selection.coverage`（passages total/with extracted/with selected/without extracted/dropped by selection；zero-claim segments）；`truncation.context_sentences_before/after`；full pack 超预算后记 `pack_over_budget_after_metadata`。
+- [pack_from_claims.py](../src/facet_studio/writing_v3/pack_from_claims.py)：新增 `selection.coverage`（passages total/with extracted/with selected/without extracted/dropped by selection；zero-claim segments）；`truncation.context_sentences_before/after`；full pack 超预算后记 `pack_over_budget_after_metadata`。
 - 测试：新增 coverage/provenance/writer view 测试；`tests/writing_v3` 21 passed，全量 **325 passed**。
 
 ## 2. Provenance（audit-only）

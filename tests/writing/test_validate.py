@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from lunograph.writing.validate import render_bundle, validate_article
+from facet_studio.writing.validate import render_bundle, validate_article
 
 EDITED = "原文。0.756。"
 ARTICLE = "# 标题\n\n这是第一段，数字 0.756。\n\n这是第二段，引用“原文。0.756。”。"

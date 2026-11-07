@@ -1,0 +1,17 @@
+{
+  "id": "wechat-article",
+  "form": "wechat_article",
+  "name": "公众号文章",
+  "description": "把一件事的完整内容写成公众号文章：结论先行、短段、默认 2–4 个 H2、真实图示/SVG、一个控制性 idea；不写成材料报告或摘要。",
+  "version": "0.2.0",
+  "kind": "form",
+  "extends": "../video-article",
+  "skill": "SKILL.md",
+  "examples": "references/examples.md",
+  "prompt": "prompts/user.md",
+  "source_line": "article",
+  "output_name": "article.md",
+  "max_tokens": 65536,
+  "temperature": 0.5,
+  "role": "wechat_writer"
+}

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from lunograph.writing_v3.writer_view import (
+from facet_studio.writing_v3.writer_view import (
     build_writer_bundle,
     build_writer_index,
     build_writer_view,

@@ -6,7 +6,7 @@
 
 ## 1. 改了什么
 
-- [pack_from_claims.py](../src/lunograph/writing_v3/pack_from_claims.py)：
+- [pack_from_claims.py](../src/facet_studio/writing_v3/pack_from_claims.py)：
   - `_claim_anchor_ids`：为每条 selected claim 找包含其 quote 的最小连续 sentence slice。优先级：claim `sentence_ids` → passage `sentence_ids` → segment sentences → claim sentence_ids fallback；来源写进 pack。
   - `build_pack`：先把所有 anchor sentence 放进 pack，再按 `context_window`（默认 2）补最近邻；`max_sentences_per_segment` 是总上下文预算，anchor 不被它挤掉；超预算的 segment 记入 `over_cap_segments`。
   - `_trim_sentences`：只删非 anchor 句；anchor 永不删；删了哪些句写进 `truncation.dropped_sentence_ids`；如果只剩 anchor 仍超预算，记 `anchors_exceed_budget`。

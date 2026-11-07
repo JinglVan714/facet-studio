@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from lunograph.writing.verifier import run_verifier
+from facet_studio.writing.verifier import run_verifier
 
 ARTICLE = "# 标题\n\n正文提到 Google 昨晚开源了某个模型。"
 SOURCE = "视频里说，Google 昨晚开源了某个模型。"

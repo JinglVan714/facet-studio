@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from lunograph.writing_v3 import edited_transcript, light_context
+from facet_studio.writing_v3 import edited_transcript, light_context
 
 PASSAGES = [
     {

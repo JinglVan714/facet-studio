@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from lunograph.writing_v3 import comprehension_view
+from facet_studio.writing_v3 import comprehension_view
 
 PACK = {
     "claims": [

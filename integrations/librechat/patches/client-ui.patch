@@ -1,0 +1,213 @@
+diff --git a/client/index.html b/client/index.html
+index ca68ab0..70c1407 100644
+--- a/client/index.html
++++ b/client/index.html
+@@ -1,17 +1,17 @@
+ <!doctype html>
+-<html lang="en-US">
++<html lang="zh-CN">
+   <head>
+     <meta charset="utf-8" />
+     <base href="/" />
+-    <meta name="theme-color" content="#171717" />
++    <meta name="theme-color" content="#f4f3ee" />
+     <meta name="mobile-web-app-capable" content="yes" />
+     <meta name="apple-mobile-web-app-capable" content="yes" />
+     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+     <meta
+       name="description"
+-      content="LibreChat - An open source chat application with support for multiple AI models"
++      content="Facet Studio — 把一条视频变成可发布的文章/笔记。"
+     />
+-    <title>LibreChat</title>
++    <title>Facet Studio</title>
+     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png" />
+     <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png" />
+     <link rel="apple-touch-icon" href="assets/apple-touch-icon-180x180.png" />
+diff --git a/client/src/components/Chat/Input/ConversationStarters.tsx b/client/src/components/Chat/Input/ConversationStarters.tsx
+index d6d4604..3691947 100644
+--- a/client/src/components/Chat/Input/ConversationStarters.tsx
++++ b/client/src/components/Chat/Input/ConversationStarters.tsx
+@@ -9,6 +9,44 @@ import { useChatContext, useAgentsMapContext, useAssistantsMapContext } from '~/
+ import { getIconEndpoint, getEntity, getModelSpec } from '~/utils';
+ import { useSubmitMessage } from '~/hooks';
+ 
++const FACET_GUIDES = [
++  {
++    title: '输入视频',
++    detail: '本地视频地址 · BV 号 · B 站视频链接',
++  },
++  {
++    title: '选择内容',
++    detail: '深度总结 · 公众号文章 · 小红书帖子',
++  },
++  {
++    title: '告诉我偏好',
++    detail: '技术认知 · 字数多少 · 是否小白 · 文风',
++  },
++];
++
++function FacetGuidance() {
++  return (
++    <div className="mt-2 mb-8 grid w-full max-w-3xl grid-cols-1 gap-3 px-4 sm:grid-cols-3">
++      {FACET_GUIDES.map((guide, index) => (
++        <div
++          key={guide.title}
++          className="bg-surface-secondary border-border-light flex flex-col gap-2 rounded-2xl border p-4 text-left"
++        >
++          <span className="text-text-tertiary text-xs font-semibold tracking-widest">
++            0{index + 1}
++          </span>
++          <span className="text-text-primary text-sm font-semibold">{guide.title}</span>
++          <span className="text-text-secondary text-xs leading-relaxed">{guide.detail}</span>
++        </div>
++      ))}
++      <div className="text-text-tertiary col-span-full text-center text-xs">
++        首次使用？先在 <code>.env</code> 配置模型（DEEPSEEK_API_KEY / DEEPSEEK_MODEL），
++        详见 integrations/librechat/README.md。
++      </div>
++    </div>
++  );
++}
++
+ const ConversationStarters = () => {
+   const { conversation } = useChatContext();
+   const agentsMap = useAgentsMapContext();
+@@ -67,6 +105,10 @@ const ConversationStarters = () => {
+     [submitMessage],
+   );
+ 
++  if (entity?.name === 'Facet Studio') {
++    return <FacetGuidance />;
++  }
++
+   if (!conversation_starters.length) {
+     return null;
+   }
+diff --git a/client/src/components/Chat/Messages/Content/ToolCall.tsx b/client/src/components/Chat/Messages/Content/ToolCall.tsx
+index e467390..def870d 100644
+--- a/client/src/components/Chat/Messages/Content/ToolCall.tsx
++++ b/client/src/components/Chat/Messages/Content/ToolCall.tsx
+@@ -21,7 +21,7 @@ import {
+ import type { TAttachment, PartMetadata } from 'librechat-data-provider';
+ import { useLocalize, useProgress, useExpandCollapse, useLazyCollapseBody } from '~/hooks';
+ import { ToolIcon, getToolIconType, isError, hasRenderableOutput } from './ToolOutput';
+-import { cn, getToolDisplayLabel, logger, openInNewTab } from '~/utils';
++import { cn, getToolDisplayLabel, getMCPToolDisplayLabel, logger, openInNewTab } from '~/utils';
+ import { isToolCallPreparing, useToolPreparation } from './preparation';
+ import { useMCPIconMap, useMCPServerNames } from '~/hooks/MCP';
+ import { resolveToolCallPhase } from '~/utils/toolCallPhase';
+@@ -133,11 +133,15 @@ export default function ToolCall({
+        *  above, so re-parsing it would classify an MCP function that happens to
+        *  share a built-in's name (`read_file`, `set_memory`) as that native
+        *  tool and show, and announce, an unrelated label. */
+-      isMCPToolCall ? function_name : getToolDisplayLabel(function_name, localize, mcpServerNames),
++      isMCPToolCall
++        ? getMCPToolDisplayLabel(function_name)
++        : getToolDisplayLabel(function_name, localize, mcpServerNames),
+     [function_name, isMCPToolCall, localize, mcpServerNames],
+   );
+   const mcpIconMap = useMCPIconMap();
+   const mcpIconUrl = isMCPToolCall ? mcpIconMap.get(mcpServerName) : undefined;
++  const displayMCPServerName =
++    mcpServerName === 'facet_studio' ? 'Facet Studio' : mcpServerName;
+ 
+   const actionId = useMemo(() => {
+     if (isMCPToolCall || !parsedAuthUrl) {
+@@ -337,13 +341,16 @@ export default function ToolCall({
+       return errorLine;
+     }
+     if (isMCPToolCall && mcpServerName) {
+-      return localize('com_ui_via_server', { 0: mcpServerName });
++      if (mcpServerName === 'facet_studio') {
++        return undefined;
++      }
++      return localize('com_ui_via_server', { 0: displayMCPServerName });
+     }
+     if (domain && domain.length !== Constants.ENCODED_DOMAIN_LENGTH) {
+       return localize('com_ui_via_server', { 0: domain });
+     }
+     return undefined;
+-  }, [phase, output, isMCPToolCall, mcpServerName, domain, localize]);
++  }, [phase, output, isMCPToolCall, mcpServerName, displayMCPServerName, domain, localize]);
+ 
+   /** Model-authored live label, streamed as the first args key (injected by
+    *  the `tool_intents` capability); persists as the settled label —
+diff --git a/client/src/locales/zh-Hans/translation.json b/client/src/locales/zh-Hans/translation.json
+index 3316633..720fe44 100644
+--- a/client/src/locales/zh-Hans/translation.json
++++ b/client/src/locales/zh-Hans/translation.json
+@@ -121,7 +121,7 @@
+   "com_assistants_code_interpreter_files": "以下文件仅适用于代码解释器：",
+   "com_assistants_code_interpreter_info": "代码解释器使助手能够编写和运行代码。该工具可以处理具有多种数据和格式的文件，并生成图表等文件。",
+   "com_assistants_completed_action": "与 {{0}} 聊天",
+-  "com_assistants_completed_function": "运行 {{0}}",
++  "com_assistants_completed_function": "完成 {{0}}",
+   "com_assistants_conversation_starters": "对话启动器",
+   "com_assistants_conversation_starters_placeholder": "输入对话启动器",
+   "com_assistants_create_error": "创建助手时出现错误。",
+@@ -298,7 +298,7 @@
+   "com_endpoint_instructions_assistants_placeholder": "覆盖助手的指令。这对于需要逐次修改行为非常有用。",
+   "com_endpoint_max_output_tokens": "最大输出词元数",
+   "com_endpoint_message": "发送消息给",
+-  "com_endpoint_message_new": "发送消息给 {{0}}",
++  "com_endpoint_message_new": "输入视频地址 / BV 号 / B 站链接，或直接说你想写什么…",
+   "com_endpoint_message_not_appendable": "编辑您的消息内容或重新生成。",
+   "com_endpoint_my_preset": "我的预设",
+   "com_endpoint_no_presets": "暂无预设，使用设置按钮创建一个",
+@@ -1445,5 +1445,18 @@
+   "com_ui_zoom_level": "缩放级别",
+   "com_ui_zoom_out": "缩小",
+   "com_user_message": "您",
+-  "com_ui_feedback_tag_other_issue": "其他问题"
++  "com_ui_feedback_tag_other_issue": "其他问题",
++  "com_ui_ran_n_actions": "执行过程 · {{0}} 步",
++  "com_ui_running_n_actions": "执行中 · {{0}} 步",
++  "com_ui_ran_n_agents": "执行 {{0}} 个步骤",
++  "com_ui_running_n_agents": "正在执行 {{0}} 个步骤",
++  "com_ui_via_server": "来自 {{0}}",
++  "com_ui_tool_preparing": "准备 {{0}}",
++  "com_ui_tool_calling": "调用 {{0}}",
++  "com_ui_tool_call_time": "工具调用",
++  "com_ui_tool_preparation_time": "准备",
++  "com_ui_duration_announced_seconds_one": "耗时 {{value}} 秒",
++  "com_ui_duration_announced_seconds_other": "耗时 {{value}} 秒",
++  "com_ui_duration_announced_minutes_one": "耗时 {{value}} 分钟",
++  "com_ui_duration_announced_minutes_other": "耗时 {{value}} 分钟"
+ }
+diff --git a/client/src/utils/toolLabels.ts b/client/src/utils/toolLabels.ts
+index 190df41..7553208 100644
+--- a/client/src/utils/toolLabels.ts
++++ b/client/src/utils/toolLabels.ts
+@@ -31,6 +31,22 @@ export const TOOL_FRIENDLY_NAME_KEYS: Record<string, TranslationKeys> = {
+   read_file: 'com_ui_tool_name_read_file',
+ };
+ 
++/** Facet Studio MCP tools → user-facing Chinese action names. */
++export const FACET_MCP_TOOL_LABELS: Record<string, string> = {
++  list_sources: '查看来源',
++  resolve_source: '读取视频',
++  compile_content: '编译内容',
++  plan_article: '规划',
++  write_form: '写作',
++  typeset_article: '排版',
++  get_run: '运行数据',
++  review_artifact: '验收',
++};
++
++export function getMCPToolDisplayLabel(toolName: string): string {
++  return FACET_MCP_TOOL_LABELS[toolName] ?? toolName.replaceAll('_', ' ');
++}
++
+ export interface ParsedToolName {
+   /** Original tool id (unchanged). */
+   raw: string;
+@@ -85,7 +101,7 @@ export function getToolDisplayLabel(
+   knownServerNames?: readonly string[],
+ ): string {
+   const parsed = parseToolName(rawName, knownServerNames);
+-  if (parsed.mcpServer) return parsed.mcpServer;
++  if (parsed.mcpServer) return getMCPToolDisplayLabel(parsed.toolName);
+   if (parsed.friendlyKey) return localize(parsed.friendlyKey);
+   return parsed.toolName;
+ }

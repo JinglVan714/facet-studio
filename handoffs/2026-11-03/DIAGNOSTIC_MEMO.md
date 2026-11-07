@@ -23,7 +23,7 @@
 
 ### 1.1 实际数据流（代码事实）
 
-`src/lunograph/writing/pipeline.py` 的实际顺序：
+`src/facet_studio/writing/pipeline.py` 的实际顺序：
 
 1. brief（full/mini；`pipeline.py:121-140`）
 2. Writer（1 次；`:142-153`）

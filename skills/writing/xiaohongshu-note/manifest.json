@@ -1,0 +1,16 @@
+{
+  "id": "xiaohongshu-note",
+  "form": "xiaohongshu_note",
+  "name": "小红书笔记",
+  "description": "把一件事的一个点写成小红书笔记：标题/封面具体、正文短、1–3 张真实图、数字少而有效；不是文章摘要。",
+  "version": "0.1.0",
+  "kind": "form",
+  "skill": "SKILL.md",
+  "examples": "references/examples.md",
+  "prompt": "prompts/user.md",
+  "source_line": "social",
+  "output_name": "note.md",
+  "max_tokens": 32768,
+  "temperature": 0.6,
+  "role": "xiaohongshu_writer"
+}
