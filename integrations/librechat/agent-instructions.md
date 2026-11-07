@@ -20,5 +20,12 @@
 8. 用户说“可以/通过”时调用 review_artifact(run_id, "approved")；只对已排版且有产物的 run 调用，不自动发布。重新排版后旧验收会变成 stale，需要用户重新确认。
 9. 每次回复尽量简洁；不要展示内部 prompt、密钥或整页 HTML。执行过程/成本由工具结果和界面展示。
 
+P3 可选工作流（可暂停/恢复）：
+- start_workflow(video_id, form, request) 会在计划卡处暂停；把 interrupt 里的 plan 给用户确认。
+- 用户确认后 resume_workflow(run_id, "approved")；写/排版完成后会在验收处再次暂停，再把产物给用户。
+- 用户验收后 resume_workflow(run_id, "approved" / "changes_requested" / "rejected")。
+- get_workflow(run_id) 可查 stages、暂停点、usage、events。
+- 仍是一次 writer；不要用 workflow 绕过计划卡或人工验收。
+
 边界：事实/数字/引语只来自内容稿；不核验世界；不写“未证实/待核”；不加内容没有的事实；不伪造画面；不自动发布。
 ```

@@ -1152,6 +1152,8 @@ def typeset_article(run_id: str) -> dict[str, Any]:
     # silently cover it; keep the review record and mark it stale.
     meta["review_stale"] = (run_dir / "publish_review.json").is_file()
     _save_run(run_dir, meta)
+    result["status"] = meta["status"]
+    result["typeset_errors"] = errors
     return result
 
 
@@ -1163,6 +1165,10 @@ def get_run(run_id: str) -> dict[str, Any]:
     review_path = run_dir / "publish_review.json"
     if review_path.is_file():
         review = _read_json(review_path)
+    workflow = None
+    workflow_path = run_dir / "workflow.json"
+    if workflow_path.is_file():
+        workflow = _read_json(workflow_path)
     write = meta.get("write") or {}
     planner_usage = meta.get("planner_usage") or {}
     write_usage = write.get("usage") or {}
@@ -1210,6 +1216,7 @@ def get_run(run_id: str) -> dict[str, Any]:
         "typeset_errors": list(meta.get("typeset_errors") or []),
         "markdown_path": meta.get("markdown_path"),
         "review": review,
+        "workflow": workflow,
     }
 
 
@@ -1248,6 +1255,40 @@ def review_artifact(run_id: str, decision: str, notes: str = "") -> dict[str, An
         "review_status": decision,
         "review": review,
     }
+
+
+@mcp.tool()
+def start_workflow(
+    video_id: str,
+    form: str,
+    request: str = "",
+    auto_approve: bool = False,
+) -> dict[str, Any]:
+    """启动 LangGraph 工作流；默认停在计划卡，等 resume_workflow 确认。"""
+    from .workflow import start_workflow as _start_workflow
+
+    return _start_workflow(
+        video_id=video_id,
+        form=form,
+        request=request,
+        auto_approve=auto_approve,
+    )
+
+
+@mcp.tool()
+def resume_workflow(run_id: str, decision: str, notes: str = "") -> dict[str, Any]:
+    """恢复暂停的工作流：计划卡或最终验收。decision=approved/changes_requested/rejected。"""
+    from .workflow import resume_workflow as _resume_workflow
+
+    return _resume_workflow(run_id=run_id, decision=decision, notes=notes)
+
+
+@mcp.tool()
+def get_workflow(run_id: str) -> dict[str, Any]:
+    """查看工作流阶段、暂停点、usage、trace 事件。"""
+    from .workflow import get_workflow as _get_workflow
+
+    return _get_workflow(run_id=run_id)
 
 
 def _first_heading(markdown: str) -> str:

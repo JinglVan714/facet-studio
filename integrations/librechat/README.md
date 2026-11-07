@@ -72,6 +72,9 @@ cd D:/luno_external/librechat && npm run backend
   - `typeset_article_mcp_facet_studio`
   - `get_run_mcp_facet_studio`
   - `review_artifact_mcp_facet_studio`
+  - `start_workflow_mcp_facet_studio`（P3：LangGraph 工作流，默认停在计划卡）
+  - `resume_workflow_mcp_facet_studio`（P3：确认计划卡/最终验收后恢复）
+  - `get_workflow_mcp_facet_studio`（P3：阶段、暂停点、usage、trace）
 - instructions: 见 [agent-instructions.md](agent-instructions.md)
 - conversation starters: 由外部 clone 的 `ConversationStarters.tsx` 在 agent name = `Facet Studio` 时替换为三张通用引导卡（输入视频 / 选择内容 / 告诉偏好）+ 模型配置提示，不使用某条具体 BV。
 
@@ -79,7 +82,7 @@ cd D:/luno_external/librechat && npm run backend
 
 LibreChat clone 里只改主题/展示层，不改核心 pipeline：
 
-- `client/src/utils/toolLabels.ts`：`FACET_MCP_TOOL_LABELS` 把 8 个 MCP 工具映射成中文动作名（查看来源/读取视频/规划/写作/排版/运行数据/验收）。
+- `client/src/utils/toolLabels.ts`：`FACET_MCP_TOOL_LABELS` 把 8 个 P1/P2 工具映射成中文动作名（查看来源/读取视频/规划/写作/排版/运行数据/验收）；P3 workflow 三个工具暂未加中文标签。
 - `client/src/components/Chat/Messages/Content/ToolCall.tsx`：使用中文动作名；Facet 工具不再显示“来自 facet_studio”。
 - `client/src/components/Chat/Input/ConversationStarters.tsx`：三张引导卡 + 模型配置提示。
 - `client/index.html`、`client/src/locales/zh-Hans/translation.json`：品牌/标题/中文 UI。
@@ -95,6 +98,16 @@ npm run frontend
 ```
 
 补丁只含 5 个展示层文件；`librechat.yaml` 主题/MCP 配置用 `librechat.yaml.example`，不放进 patch。
+
+## 4.2 P3 workflow（原型）
+
+`src/facet_studio/workflow.py` 用 LangGraph StateGraph 串 `intake → plan → approval → write → typeset → review`：
+
+- `start_workflow`：默认在计划卡处 `interrupt`，返回 `run_id` + `interrupt.plan`；`auto_approve=true` 时不暂停。
+- `resume_workflow(run_id, decision)`：计划卡/最终验收恢复；`decision=approved/changes_requested/rejected`。
+- `get_workflow(run_id)`：`workflow.json` 里的 `status/next/stages/events/usage/cost_estimate`。
+- checkpoint：`runs/product_v1/_workflow_checkpoints.sqlite`；run 目录写 `workflow.json`，`get_run` 也会带回。
+- 可选成本：`.env` 里填 `FACET_STUDIO_INPUT_COST_PER_MTOK` / `FACET_STUDIO_OUTPUT_COST_PER_MTOK`；未填时 `cost_estimate=null`。
 
 ## 5. P1/P2 验收
 

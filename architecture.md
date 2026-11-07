@@ -1,7 +1,7 @@
 # Facet Studio 架构（产品 v1，2026-11-07）
 
 > 状态：**目标产品架构**。2026-11-06 已确认产品形态：聊天式内容工作台（LibreChat + MCP + LangGraph + 排版/导出 + 人工验收）。
-> 当前代码：substrate v1 + writing_v4 写作引擎 + **P1/P2 产品原型**（LibreChat + MCP + preview + review + 公众号 HTML / 小红书图集 / PDF）；LangGraph/评测未接。本文 §4–§5 区分“已有”与“目标”。
+> 当前代码：substrate v1 + writing_v4 写作引擎 + **P1/P2 产品原型 + P3 workflow 原型**（LibreChat + MCP + preview + review + 公众号 HTML / 小红书图集 / PDF；LangGraph StateGraph + SQLite checkpoint + plan/review interrupt + trace）。评测未接。本文 §4–§5 区分“已有”与“目标”。
 > 产品定义/UX：[docs/product-v1-chat-studio.md](docs/product-v1-chat-studio.md)；UI：[docs/ui-design-2026-11.md](docs/ui-design-2026-11.md)；写作引擎：[docs/writing-v5-architecture.md](docs/writing-v5-architecture.md)；JD：[docs/jd-mapping-2026-11.md](docs/jd-mapping-2026-11.md)；复用栈：[docs/reuse-stack-2026-11.md](docs/reuse-stack-2026-11.md)。
 > 方法/纪律：[docs/writing-rebuild-brief.md](docs/writing-rebuild-brief.md) §2/§3 + [AGENTS.md](AGENTS.md)。§5 开发纪律不要改。
 > 旧的 v3 机会地图保留在文末附录，**不是当前实现**。
@@ -76,9 +76,9 @@ Artifacts: 阅读 HTML / 公众号 HTML / 小红书卡片 / PDF / Markdown
 | skills | `skills/writing/video-article/`（long_article core）、`wechat-article/`（extends core）、`xiaohongshu-note/`、`bundle-planner/` |
 | runtime | `src/facet_studio/runtime/`：RunStore、TaskPlan、ToolRegistry/Executor、WorkingMemory、ArtifactBoard、Decision、Trace |
 | 产物 | `runs/writing_v5/bundle_BV17_social_05/`、`bundle_BV1ix_social_04/`；P1/P2 产物在 `runs/product_v1/` |
-| P1/P2 产品原型 | `src/facet_studio/mcp_server.py`（FastMCP：list/resolve/plan/write/typeset/get_run/review）、`src/facet_studio/preview_server.py`（FastAPI reader 预览）、`integrations/librechat/`（LibreChat 配置/说明）、`integrations/xhs/`（Playwright 卡片）、`integrations/pdf/`（Tectonic 模板） |
-| 测试 | **570 passed**（2026-11-07；含 MCP server / 排版 / PDF / 验收状态 / 视觉模板测试） |
-| 未接 | LangGraph workflow、eval harness、视频转录、完整模型配置 UI；LibreChat/MCP/HITL/排版导出已有 P1/P2 原型 |
+| P1/P2 + P3 产品原型 | `src/facet_studio/mcp_server.py`（FastMCP：list/resolve/plan/write/typeset/get_run/review + start/resume/get_workflow）、`src/facet_studio/workflow.py`（LangGraph StateGraph + SQLite checkpoint + interrupt + trace）、`src/facet_studio/preview_server.py`（FastAPI reader 预览）、`integrations/librechat/`、`integrations/xhs/`（Playwright 卡片）、`integrations/pdf/`（Tectonic 模板） |
+| 测试 | **573 passed**（2026-11-07；含 MCP server / 排版 / PDF / 验收状态 / 视觉模板 / workflow 测试） |
+| 未接 | eval harness、视频转录、完整模型配置 UI；P3 workflow 是原型，尚未替换 LibreChat agent 的默认逐工具流程 |
 
 ## 5. 当前 vs 目标
 
@@ -86,7 +86,7 @@ Artifacts: 阅读 HTML / 公众号 HTML / 小红书卡片 / PDF / Markdown
 |---|---|---|
 | 产品入口 | CLI `run_bundle` / `run_form` | LibreChat chat + Agents（**P1 原型已跑通**） |
 | 生成方式 | 固定 bundle（可 `--forms`） | 按需一种形态；多形态 = 多次请求（**P1 已按需**） |
-| 编排 | 固定 orchestrator + TaskPlan 记录 | LangGraph StateGraph + checkpoint/stream/interrupt（未接） |
+| 编排 | P3 workflow 原型：LangGraph StateGraph + SQLite checkpoint + plan/review interrupt；P2 逐工具流程仍可用 | 完整 stream/cost 面板 + 默认迁移到 workflow |
 | 工具 | orchestrator 调 ToolRegistry | 聊天 agent 用 function calling 调 MCP 工具（**P1 已跑通**） |
 | 预览/导出 | Markdown + 旧 articles-only site | 阅读 HTML（P1）；公众号复制 HTML、小红书 3:4 图集 + 导入包、PDF（**P2 已接原型**） |
 | 观测 | JSONL/run manifest | LibreChat tool calls + `get_run` summary（**P1 部分**）；Trace Viewer/Token 统计待接 |

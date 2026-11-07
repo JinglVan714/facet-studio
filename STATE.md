@@ -5,7 +5,7 @@
 - **产品 v1 已定义（2026-11-06）**：聊天式内容工作台。用户给一条视频 + 写作要求，Agent 按需写一种形态（深度总结 / 公众号 / 小红书），聊天内预览/修改/验收。见 [docs/product-v1-chat-studio.md](docs/product-v1-chat-studio.md)。
 - **目标壳**：LibreChat（MIT）+ MCP + LangGraph + 排版/导出 + 人工验收。见 [architecture.md](architecture.md) §0–§9；复用见 [docs/reuse-stack-2026-11.md](docs/reuse-stack-2026-11.md)。
 - **项目名已统一为 Facet Studio**：包名 `src/facet_studio`，品牌/文档/环境变量前缀 `FACET_STUDIO_`。历史文档里的 LunoGraph 是旧名。
-- **当前代码**：writing_v4 写作引擎 + **P1/P2 产品原型**：`src/facet_studio/mcp_server.py`（FastMCP 8 tools）、`src/facet_studio/preview_server.py`（FastAPI reader 预览）、`integrations/librechat/`（外部 clone `D:/luno_external/librechat`）、`integrations/xhs/`、`integrations/pdf/`。LangGraph/评测**未接**。bundle 是内部/调试产物，不是产品默认输出。
+- **当前代码**：writing_v4 写作引擎 + **P1/P2 产品原型 + P3 workflow 原型**：`src/facet_studio/mcp_server.py`（FastMCP 11 tools：8 个 P1/P2 + 3 个 workflow）、`src/facet_studio/workflow.py`（LangGraph StateGraph + SQLite checkpoint + interrupt + trace）、`src/facet_studio/preview_server.py`、`integrations/librechat/`（外部 clone `D:/luno_external/librechat`）、`integrations/xhs/`、`integrations/pdf/`。评测**未接**。bundle 是内部/调试产物，不是产品默认输出。
 - 当前形态：`long_article`（深度总结）/ `wechat_article`（公众号）/ `xiaohongshu_note`（小红书）。短视频脚本暂不做。
 - **P1 原型（2026-11-06）已跑通**：LibreChat + MCP + 缓存内容 → 计划卡 → 一次 writer → 预览 URL → `review_artifact` 验收。
   - BV17 公众号：`runs/product_v1/20261106T131015Z_BV17DHC6CELr_wechat_article/`（2767 字 / 5 图；原 approved，2026-11-07 重排版后标 stale，需重新验收）。
@@ -26,10 +26,12 @@
   - 新视频按需验证：`runs/product_v1/20261107T080924Z_BV13EHX64EaY_wechat_article/`（公众号，2,734 字 / 3 图 / 2 次调用 / 31,157 tokens）。
   - 非单例验证：BV17 / BV1ix 两条小红书（6 图 / 3 图）、BV17 两篇长文（含代码块 / 不含代码块）均重新 typeset 通过。
   - 图片数量/水印/字幕/低信息素材属于 skill/素材层，本轮不按单篇修；渲染器只保证已有图完整、尺寸适配。
+  - 用户 2026-11-07 大致通过；BV13/BV17 公众号、BV17/BV1ix 小红书、smoke/第二篇长文 PDF 已记 approved（`runs/product_v1/**/publish_review.json`，不入库）。
+- **P3 workflow 原型（2026-11-07）**：`src/facet_studio/workflow.py`（LangGraph StateGraph：intake → plan → approval → write → typeset → review；SQLite checkpoint；plan/review interrupt）；MCP 新增 3 tools；`workflow.json` 记录 stages/events/usage；真实 auto run `runs/product_v1/20261107T123505Z_BV1B5411A7ax_xiaohongshu_note/`（2 calls / 13,019 tokens / 33.9s）。`cost_estimate` 在未配置费率时为 null。
 - **已知待改（内容层，不阻塞 P2 壳）**：
   - 小红书标题钩子偏弱/个别标题写成第一人称亲历（如“我让 AI…”），标题策略最后统一改，不按单篇调参。
   - 公众号正文数字偏多、图表不足；只做版式，不在本轮改写作认知。
-- 测试：**570 passed**（新增 MCP 解析/排版/PDF 缺失依赖/验收状态/视觉模板测试；旧 skill 断言已修）。
+- 测试：**573 passed**（新增 MCP 解析/排版/PDF 缺失依赖/验收状态/视觉模板/workflow 测试；旧 skill 断言已修）。
 - 文档收口（2026-11-07）：STATE/HANDOFF/architecture/product/UI/integrations 已同步 Facet Studio 与 P2 状态；历史文档保留旧名并标注。
 - JD：2026 评测口径见 [docs/jd-mapping-2026-11.md](docs/jd-mapping-2026-11.md) §4（数据集/指标/judge 校准/trajectory/回归/pass^k；先预留）。
 - 未做项：LangGraph workflow、eval harness、视频转录接入、完整模型配置 UI；后续内容/视觉待修见 [docs/backlog-2026-11.md](docs/backlog-2026-11.md)。

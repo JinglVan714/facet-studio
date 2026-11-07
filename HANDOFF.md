@@ -17,7 +17,7 @@
   - 公众号复制页：`wechat.html`（内联样式 + 复制正文）。
   - 深度总结 PDF：`runs/product_v1/smoke_long_pdf/long_article/article.pdf`（9 页；封面/目录/正文已人工检查）。
   - 首页引导、中文工具名、暖纸主题：已在本机 LibreChat clone 验证。
-- 测试：**570 passed**。
+- 测试：**573 passed**。
 - 文档收口：product / UI / architecture / JD / reuse / docs index / integrations 已更新；旧 roadmap/JD 表加历史标记。
 
 ## 接手先读（顺序）
@@ -33,14 +33,14 @@
 
 **P1 + P2 原型已完成（2026-11-07）**：LibreChat + MCP + 缓存内容 → 计划卡 → 一次 writer → 阅读预览 → 公众号 HTML / 小红书图集 / PDF → `review_artifact` 验收。
 
-**P2 收口（2026-11-07 本轮）**：已修公众号复制正文带 H1、`title_candidates` 的 ` / ` 分隔、typeset 失败落盘为 `partial` + `typeset_errors`、`get_run` 的 `review_status`（draft/stale/approved/草稿摘要）、`review_artifact` 的排版门槛、重新 typeset 后旧验收标 stale。视觉模板也收口：小红书卡片改为 3:4 图框 `contain`（不裁 16:9）、阅读页纵向复用导出卡；PDF 图片限制在正文版心 / 62% 页高、剥离正文来源行消除孤儿页、首行缩进、代码块用 `--listings`；公众号图片限高 520px。图片数量/水印/字幕/低信息素材属于 skill/素材层，本轮不按单篇修。测试 **570 passed**。等用户人工验收三种产物；验收通过后进入 P3（LangGraph + HITL + 观测）。
+**P2 收口（2026-11-07 本轮）**：已修公众号复制正文带 H1、`title_candidates` 的 ` / ` 分隔、typeset 失败落盘为 `partial` + `typeset_errors`、`get_run` 的 `review_status`（draft/stale/approved/草稿摘要）、`review_artifact` 的排版门槛、重新 typeset 后旧验收标 stale。视觉模板也收口：小红书卡片改为 3:4 图框 `contain`（不裁 16:9）、阅读页纵向复用导出卡；PDF 图片限制在正文版心 / 62% 页高、剥离正文来源行消除孤儿页、首行缩进、代码块用 `--listings`；公众号图片限高 520px。图片数量/水印/字幕/低信息素材属于 skill/素材层，本轮不按单篇修。测试 **573 passed**。用户 2026-11-07 大致通过；BV13/BV17 公众号、BV17/BV1ix 小红书、smoke/第二篇长文 PDF 已记 approved（`runs/product_v1/**/publish_review.json`，不入库）。下一步进入 P3（LangGraph + HITL + 观测）。
 **后续待修（本轮不修）**：[docs/backlog-2026-11.md](docs/backlog-2026-11.md)（选图/造图、正文调整、标题/图注/短标题、视觉审查剩余 P1/P2）。
 
 下一步按优先级：
 
-1. **P2 收尾**：用户人工验收新小红书/PDF 产物；把首页模型配置提示换成真正的配置入口（当前是 `.env` 提示）。
-2. **内容层待改**：小红书标题钩子（用户明确说最后改，不按单篇调）；公众号数字过多/缺图表（只记录，不在排版层解决）。
-3. **P3**：LangGraph workflow + checkpoint + streaming + interrupt/HITL；把 MCP 工具编排迁进去。
+1. **P2 收尾（已验收 2026-11-07）**：公众号/小红书/PDF 已按用户“大致通过”记 approved；剩首页模型配置入口（用户说先留口子，后置）。
+2. **内容层待改**：见 [docs/backlog-2026-11.md](docs/backlog-2026-11.md)；不按单篇调。
+3. **P3（原型已接，当前进行中）**：`workflow.py` 用 LangGraph StateGraph + SQLite checkpoint + plan/review interrupt；MCP 增加 `start_workflow` / `resume_workflow` / `get_workflow`；真实 auto run（BV1B 小红书，2 calls / 13,019 tokens）已写 `workflow.json`。待做：LibreChat agent 默认迁移到 workflow、cost 面板（当前 rates 未配置时 `cost_estimate=null`）、完整 stream UI。
 4. **P4**：评测 harness（capability/regression、deterministic checks、trajectory、judge 校准、pass@k/pass^k）；不要 30 judge。
 5. **P5**：视频转录接入（最后）。
 
