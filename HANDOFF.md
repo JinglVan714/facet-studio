@@ -34,6 +34,7 @@
 **P1 + P2 原型已完成（2026-11-07）**：LibreChat + MCP + 缓存内容 → 计划卡 → 一次 writer → 阅读预览 → 公众号 HTML / 小红书图集 / PDF → `review_artifact` 验收。
 
 **P2 收口（2026-11-07 本轮）**：已修公众号复制正文带 H1、`title_candidates` 的 ` / ` 分隔、typeset 失败落盘为 `partial` + `typeset_errors`、`get_run` 的 `review_status`（draft/stale/approved/草稿摘要）、`review_artifact` 的排版门槛、重新 typeset 后旧验收标 stale。视觉模板也收口：小红书卡片改为 3:4 图框 `contain`（不裁 16:9）、阅读页纵向复用导出卡；PDF 图片限制在正文版心 / 62% 页高、剥离正文来源行消除孤儿页、首行缩进、代码块用 `--listings`；公众号图片限高 520px。图片数量/水印/字幕/低信息素材属于 skill/素材层，本轮不按单篇修。测试 **570 passed**。等用户人工验收三种产物；验收通过后进入 P3（LangGraph + HITL + 观测）。
+**后续待修（本轮不修）**：[docs/backlog-2026-11.md](docs/backlog-2026-11.md)（选图/造图、正文调整、标题/图注/短标题、视觉审查剩余 P1/P2）。
 
 下一步按优先级：
 

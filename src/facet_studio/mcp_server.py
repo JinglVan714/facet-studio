@@ -86,6 +86,55 @@ def _normalize_form(form: str) -> str:
 
 IMAGE_RE = re.compile(r"!\[([^\]]*)\]\((figures/[^)\s]+)\)")
 
+COPY_IMAGE_SCRIPT = """
+<script>
+async function copyImage(src) {
+  try {
+    if (!navigator.clipboard || !window.ClipboardItem) {
+      throw new Error('当前浏览器不支持复制图片');
+    }
+    const resp = await fetch(src, {cache: 'no-store'});
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    let blob = await resp.blob();
+    if (blob.type !== 'image/png') {
+      const bitmap = await createImageBitmap(blob);
+      const canvas = document.createElement('canvas');
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
+      canvas.getContext('2d').drawImage(bitmap, 0, 0);
+      blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+    }
+    await navigator.clipboard.write([new ClipboardItem({'image/png': blob})]);
+    alert('图片已复制，可粘贴到手机传输助手或编辑器');
+  } catch (err) {
+    alert('复制失败：' + err);
+  }
+}
+function bindCopyButtons() {
+  document.querySelectorAll('.copy-image-btn').forEach((btn) => {
+    if (btn.dataset.bound) return;
+    btn.dataset.bound = '1';
+    btn.addEventListener('click', () => copyImage(btn.dataset.src));
+  });
+}
+bindCopyButtons();
+</script>
+"""
+
+COPY_NOTE_SCRIPT = """
+<script>
+document.getElementById('copy-note-btn').addEventListener('click', async () => {
+  const text = document.getElementById('note-text').innerText.trim();
+  try {
+    await navigator.clipboard.writeText(text);
+    alert('已复制标题、正文和标签');
+  } catch (err) {
+    alert('复制失败：' + err);
+  }
+});
+</script>
+"""
+
 
 def _settings():
     return get_settings()
@@ -519,10 +568,13 @@ def _render_wechat(markdown: str, form_dir: Path, title: str) -> str:
 {body}
 </main>
 </div>
+{COPY_IMAGE_SCRIPT}
 <script>
 function copyWechat() {{
   const el = document.getElementById('wechat-article');
-  const html = el.innerHTML;
+  const clone = el.cloneNode(true);
+  clone.querySelectorAll('.copy-ui').forEach((node) => node.remove());
+  const html = clone.innerHTML;
   if (navigator.clipboard && window.ClipboardItem) {{
     navigator.clipboard.write([new ClipboardItem({{'text/html': new Blob([html], {{type:'text/html'}})}})]).then(()=>alert('已复制，去公众号编辑器粘贴'));
   }} else {{
@@ -531,6 +583,29 @@ function copyWechat() {{
     document.execCommand('copy'); alert('已选中，按 Ctrl+C 复制');
   }}
 }}
+function enhanceWechatImages() {{
+  const el = document.getElementById('wechat-article');
+  el.querySelectorAll('img').forEach((img, index) => {{
+    const bar = document.createElement('div');
+    bar.className = 'copy-ui';
+    bar.style.cssText = 'display:flex;gap:8px;justify-content:flex-end;margin:-8px 0 18px;';
+    const copy = document.createElement('button');
+    copy.type = 'button';
+    copy.className = 'copy-image-btn';
+    copy.dataset.src = img.currentSrc || img.src;
+    copy.textContent = '复制图片';
+    copy.style.cssText = 'font:inherit;font-size:12px;color:#5a554e;background:#eeede6;border:1px solid #d8d3c8;border-radius:999px;padding:4px 10px;cursor:pointer;';
+    const dl = document.createElement('a');
+    dl.href = img.currentSrc || img.src;
+    dl.download = 'image-' + (index + 1) + '.jpg';
+    dl.textContent = '下载';
+    dl.style.cssText = 'font-size:12px;color:#5a554e;background:#eeede6;border:1px solid #d8d3c8;border-radius:999px;padding:4px 10px;text-decoration:none;';
+    bar.append(copy, dl);
+    img.insertAdjacentElement('afterend', bar);
+  }});
+  bindCopyButtons();
+}}
+enhanceWechatImages();
 </script>
 <button onclick="copyWechat()" style="position:fixed;right:24px;bottom:24px;padding:10px 16px;border-radius:999px;border:1px solid #d8d3c8;background:#191817;color:#fff;cursor:pointer;">复制正文</button>
 </body></html>"""
@@ -693,11 +768,22 @@ def _render_xhs(
     md.enable("table")
     body = md.render(parsed["body_markdown"])
 
+    def image_actions(src: str) -> str:
+        src_attr = _html_escape(src)
+        return (
+            '<div class="card-actions">'
+            f'<button type="button" class="copy-image-btn" '
+            f'data-src="{src_attr}">复制图片</button>'
+            f'<a class="download-link" href="{src_attr}" download>下载</a>'
+            "</div>"
+        )
+
     cards: list[str] = []
     for item in card_images or []:
         if (form_dir / item).is_file():
             cards.append(
-                f'<figure class="card"><img src="{_html_escape(item)}" alt=""></figure>'
+                f'<figure class="card"><img src="{_html_escape(item)}" alt="">'
+                f"{image_actions(item)}</figure>"
             )
     if not cards:
         for index, (src, caption) in enumerate(parsed["gallery"]):
@@ -710,7 +796,8 @@ def _render_xhs(
                 '<figure class="card fallback">'
                 f'<div class="card-box"><img src="{_html_escape(src)}" '
                 f'alt="{_html_escape(caption)}"></div>'
-                f'<figcaption>{_html_escape(overlay)}</figcaption></figure>'
+                f'<figcaption>{_html_escape(overlay)}</figcaption>'
+                f"{image_actions(src)}</figure>"
             )
     if not cards and parsed["cover_text"]:
         cards.append(
@@ -743,8 +830,13 @@ font-family:system-ui,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;line
 main{{max-width:680px;margin:0 auto;padding:22px 22px 80px}}
 .cards{{margin:0 0 30px}}
 .cards-head{{font-size:13px;color:var(--muted);margin:0 0 12px}}
+.reader-actions{{display:flex;justify-content:flex-end;margin:0 0 12px}}
+.reader-actions button,.card-actions button,.card-actions a{{font:inherit;font-size:12px;color:var(--muted);
+background:#eeede6;border:1px solid var(--line);border-radius:999px;padding:4px 10px;cursor:pointer;
+text-decoration:none}}
 .card-list{{display:flex;flex-direction:column;gap:16px;align-items:center}}
 .card{{margin:0;width:min(100%,420px)}}
+.card-actions{{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}}
 .card img{{width:100%;height:auto;display:block;border-radius:18px;border:1px solid var(--line);background:#fff}}
 .card.fallback .card-box{{width:100%;aspect-ratio:3/4;background:#fff;border:1px solid var(--line);
 border-radius:18px;display:flex;align-items:center;justify-content:center;overflow:hidden}}
@@ -766,11 +858,17 @@ a{{color:var(--accent)}}
 </head>
 <body>
 <main class="content">
+<div class="reader-actions"><button id="copy-note-btn" type="button">复制标题+正文+标签</button></div>
 {cards_html}
+<div id="note-text">
 <h1>{_html_escape(title)}</h1>
 {body}
 {f'<div class="tags">{tags_html}</div>' if tags_html else ''}
-</main></body></html>"""
+</div>
+</main>
+{COPY_IMAGE_SCRIPT}
+{COPY_NOTE_SCRIPT}
+</body></html>"""
 
 
 def _html_escape(text: str) -> str:

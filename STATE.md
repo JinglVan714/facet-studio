@@ -32,5 +32,5 @@
 - 测试：**570 passed**（新增 MCP 解析/排版/PDF 缺失依赖/验收状态/视觉模板测试；旧 skill 断言已修）。
 - 文档收口（2026-11-07）：STATE/HANDOFF/architecture/product/UI/integrations 已同步 Facet Studio 与 P2 状态；历史文档保留旧名并标注。
 - JD：2026 评测口径见 [docs/jd-mapping-2026-11.md](docs/jd-mapping-2026-11.md) §4（数据集/指标/judge 校准/trajectory/回归/pass^k；先预留）。
-- 未做项：LangGraph workflow、eval harness、视频转录接入、完整模型配置 UI。
+- 未做项：LangGraph workflow、eval harness、视频转录接入、完整模型配置 UI；后续内容/视觉待修见 [docs/backlog-2026-11.md](docs/backlog-2026-11.md)。
 - substrate v1 未改；`data/cookies/` 未读；未 commit/push。

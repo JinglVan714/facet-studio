@@ -107,7 +107,7 @@ npm run frontend
 - 深度总结 → PDF：`runs/product_v1/smoke_long_pdf/long_article/article.pdf`（9 页；封面/目录/正文已人工检查）。
 - 工具调用：`resolve_source → plan_article → write_form → typeset_article → get_run`；人工 `review_artifact` 写 `publish_review.json`。
 - 预览：`http://127.0.0.1:8765/runs/<run_id>/<form>/reader.html`。
-- 公众号复制页：`.../wechat.html`（“复制正文”不含 H1 标题）；小红书导入包：`.../xhs_export/`；PDF：`.../article.pdf`。
+- 公众号复制页：`.../wechat.html`（“复制正文”不含 H1 标题；每张图有“复制图片/下载”）；小红书导入包：`.../xhs_export/`（阅读页可复制标题/正文/标签和每张卡）；PDF：`.../article.pdf`。
 - P2 收口（2026-11-07）：`get_run` 返回 `review_status`（draft/stale/approved）；未验收显示“草稿”；typeset 失败返回 `typeset_errors` 且状态 `partial`；重新 typeset 会把旧验收标 stale。
 
 ## 6. 已知问题

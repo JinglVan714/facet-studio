@@ -85,6 +85,9 @@ def test_render_xhs_uses_gallery_not_sidecar_paths(tmp_path: Path) -> None:
     assert "看动作" in html
     assert "## 配图" not in html
     assert "#测试" in html
+    assert "copy-image-btn" in html
+    assert "copy-note-btn" in html
+    assert 'id="note-text"' in html
 
 
 def test_render_xhs_text_only_cover_when_no_figures(tmp_path: Path) -> None:
@@ -140,6 +143,9 @@ def test_render_wechat_inlines_styles_and_copy_button(tmp_path: Path) -> None:
     assert 'style="font-size:16px' in html
     assert "copyWechat()" in html
     assert "复制正文" in html
+    assert "enhanceWechatImages" in html
+    assert "copy-image-btn" in html
+    assert "clone.querySelectorAll('.copy-ui')" in html
 
 
 def test_export_pdf_reports_missing_binary(tmp_path: Path, monkeypatch) -> None:
