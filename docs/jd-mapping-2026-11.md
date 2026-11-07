@@ -41,7 +41,7 @@
 | 5 | LangGraph | StateGraph、checkpoint、streaming、interrupt、memory | 写作工作流图；可暂停/恢复/人工审批；stream 执行过程 | **P3 原型**：StateGraph + SQLite checkpoint + plan/review interrupt + stream events；完整 stream UI 未接 |
 | 6 | Memory | working / episodic / semantic / procedural；用户画像、偏好、历史 | 用户风格/画像、最近 runs、content hash、skill 版本、artifact 版本 | 当前只有 content hash/figure catalog/skill 库 + LibreChat 会话；用户画像未做 |
 | 7 | Observability | 端到端 trace、span、token/cost/latency/error；OTel/Langfuse | LibreChat Trace Viewer + Token 统计；我们的 run 面板/span | **P1 + P3 部分**：`workflow.json` stages/events/usage；`cost_estimate` 未配费率时为 null；Trace Viewer/OTel 未接 |
-| 8 | Evaluation | 数据集、指标、judge 校准、trajectory、回归门禁、pass@k/pass^k、线上闭环 | eval harness + 独立 dashboard；产品不显示分数 | **P4 原型**：`evals/product_v1/` deterministic harness + 报告；judge 校准/trajectory 扩展/回归门禁未做 |
+| 8 | Evaluation | 数据集、指标、trajectory、回归门禁、pass@k/pass^k、线上闭环；writing 质量不做自动评分 | runtime/grounding eval harness + 独立报告；产品不显示分数 | **P4 原型**：deterministic harness + grounding candidate audit；不做 writing 质量 judge；trajectory 扩展/回归门禁未做 |
 | 9 | HITL | draft-and-approve、interrupt、review queue | 导出/发布前验收；LangGraph `interrupt()`；LibreChat tool approval | **P1 + P3**：`review_artifact` + workflow 的 plan/review interrupt；LibreChat tool approval 未接 |
 | 10 | Guardrails | 输入/输出校验、prompt injection、PII、工具权限、结构化输出 | 源内容按不可信输入；工具权限；输出 schema；不自动发布 | 当前有部分 schema/失败状态；guardrails 未系统化 |
 | 11 | RAG | hybrid retrieval + rerank + faithfulness | **不是核心**：内容稿就是上下文；如目标 JD 要求，再加 style/reference 检索并做 retrieval eval | 当前 deterministic content/figure view；不是向量库 |
@@ -58,7 +58,7 @@
 - run 证据：`lead_plan.json`、`task_plan.json`、`llm_calls.jsonl`、`tool_calls.jsonl`、`decision_records.jsonl`、`working_memory.json`、`artifact_board.json`、`semantic_memory.json`、`bundle_manifest.json`。
 - 成本样例：BV17 3 calls / 35,905 tokens；BV1ix 3 calls / 35,453 tokens；墙钟约 1 分钟；无 repair loop。
 - P1 产品原型（2026-11-06）：LibreChat + MCP + preview server；BV17 公众号 2767 字/5 图/approved；BV1ix 小红书 999 字/3 图；证据在 `runs/product_v1/`；配置见 [integrations/librechat/README.md](../integrations/librechat/README.md)。
-- 测试：**576 passed**（含 MCP server / 排版 / PDF / 验收状态 / 视觉模板 / workflow 测试；旧 skill 断言已修）。
+- 测试：**578 passed**（含 MCP server / 排版 / PDF / 验收状态 / 视觉模板 / workflow / grounding 测试；旧 skill 断言已修）。
 
 ## 4. 评测（先预留，产品原型稳定后做）
 
