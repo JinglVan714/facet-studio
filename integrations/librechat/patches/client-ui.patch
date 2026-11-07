@@ -176,16 +176,17 @@ index 3316633..720fe44 100644
 +  "com_ui_duration_announced_minutes_other": "耗时 {{value}} 分钟"
  }
 diff --git a/client/src/utils/toolLabels.ts b/client/src/utils/toolLabels.ts
-index 190df41..b486ed9 100644
+index 190df41..cc6d964 100644
 --- a/client/src/utils/toolLabels.ts
 +++ b/client/src/utils/toolLabels.ts
-@@ -31,6 +31,25 @@ export const TOOL_FRIENDLY_NAME_KEYS: Record<string, TranslationKeys> = {
+@@ -31,6 +31,26 @@ export const TOOL_FRIENDLY_NAME_KEYS: Record<string, TranslationKeys> = {
    read_file: 'com_ui_tool_name_read_file',
  };
  
 +/** Facet Studio MCP tools → user-facing Chinese action names. */
 +export const FACET_MCP_TOOL_LABELS: Record<string, string> = {
 +  list_sources: '查看来源',
++  ingest_source: '接入新视频',
 +  resolve_source: '读取视频',
 +  compile_content: '编译内容',
 +  plan_article: '规划',
@@ -205,7 +206,7 @@ index 190df41..b486ed9 100644
  export interface ParsedToolName {
    /** Original tool id (unchanged). */
    raw: string;
-@@ -85,7 +104,7 @@ export function getToolDisplayLabel(
+@@ -85,7 +105,7 @@ export function getToolDisplayLabel(
    knownServerNames?: readonly string[],
  ): string {
    const parsed = parseToolName(rawName, knownServerNames);

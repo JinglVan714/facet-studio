@@ -50,3 +50,6 @@ skills/methods/
 tests/writing_v2/
 AB/
 portfolio/
+
+# P5 视频接入：外部证据层原始备份（不入库；集成代码在 src/facet_studio/evidence_layer）
+vendor/

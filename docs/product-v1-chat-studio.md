@@ -186,7 +186,7 @@ Markdown 是编辑源；HTML/PDF/卡片是成品。最终排版复用开源，�
 | P2 | 排版/导出：阅读 HTML + PDF；公众号 HTML；小红书卡片 **已完成原型 2026-11-07**（见 [xhs](../integrations/xhs/README.md) / [pdf](../integrations/pdf/README.md)） | 成品可读/可复制/可下载；移动端可用 |
 | P3 | LangGraph 工作流 + HITL + 观测：状态/checkpoint/stream/interrupt；trace/token/cost **原型已接 2026-11-07** | 可暂停/恢复/验收；run 数据可查 |
 | P4 | 评测（先预留）：runtime/grounding 指标、回归/pass^k **deterministic + grounding harness 已接 2026-11-07** | 有可复跑报告；不评 writing 质量、不伪造真人 reader test |
-| P5 | 视频转录接入 | 用户提供新视频后可跑通 |
+| P5 | 视频转录接入 **证据层已迁移 2026-11-07** | 用户提供新视频后可跑通；真实网络/API 验收待做 |
 
 ## 9.1 已知内容层待改（不阻塞 P2 壳）
 

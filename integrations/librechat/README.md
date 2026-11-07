@@ -64,6 +64,7 @@ cd D:/luno_external/librechat && npm run backend
 - model: `deepseek-flash`
 - artifacts: `default`
 - tools（MCP `facet_studio`）：
+  - `ingest_source_mcp_facet_studio`（P5：新 BV/本地视频接入证据层）
   - `list_sources_mcp_facet_studio`
   - `resolve_source_mcp_facet_studio`
   - `compile_content_mcp_facet_studio`
@@ -82,7 +83,7 @@ cd D:/luno_external/librechat && npm run backend
 
 LibreChat clone 里只改主题/展示层，不改核心 pipeline：
 
-- `client/src/utils/toolLabels.ts`：`FACET_MCP_TOOL_LABELS` 把 11 个工具映射成中文动作名（查看来源/读取视频/规划/写作/排版/运行数据/验收/启动工作流/继续工作流/工作流状态）。
+- `client/src/utils/toolLabels.ts`：`FACET_MCP_TOOL_LABELS` 把 12 个工具映射成中文动作名（接入新视频/查看来源/读取视频/规划/写作/排版/运行数据/验收/启动工作流/继续工作流/工作流状态）。
 - `client/src/components/Chat/Messages/Content/ToolCall.tsx`：使用中文动作名；Facet 工具不再显示“来自 facet_studio”。
 - `client/src/components/Chat/Input/ConversationStarters.tsx`：三张引导卡 + 模型配置提示。
 - `client/index.html`、`client/src/locales/zh-Hans/translation.json`：品牌/标题/中文 UI。
@@ -108,6 +109,14 @@ npm run frontend
 - `get_workflow(run_id)`：`workflow.json` 里的 `status/next/stages/events/usage/cost_estimate`。
 - checkpoint：`runs/product_v1/_workflow_checkpoints.sqlite`；run 目录写 `workflow.json`，`get_run` 也会带回。
 - 可选成本：`.env` 里填 `FACET_STUDIO_INPUT_COST_PER_MTOK` / `FACET_STUDIO_OUTPUT_COST_PER_MTOK`；未填时 `cost_estimate=null`。
+
+## 4.3 P5 视频接入（证据层）
+
+- 证据层代码：`src/facet_studio/evidence_layer/`（从 `知识底稿核心-clean` 迁移）；入口 `facet_studio.ingest.ingest_source`。
+- 链路：`ingest_source(target)` → yt-dlp/本地登记 → 抽帧 + ASR → VLM + substrate → `content_manuscript` → `runs/writing_rebuild_2026-11-04/<vid>/content_final_v3/content.md + figures`。
+- 依赖：`yt-dlp`、`DASHSCOPE_API_KEY`（ASR/VLM）、`DEEPSEEK_API_KEY`（L1）；cookie 可选，路径 `data/cookies/bilibili.txt`（不读内容、不提交）。
+- 设计：新视频接入后立即复用现有 `list_sources → resolve_source → workflow`，写作层不感知视频/证据层。
+- 验证：迁移备份的 17 个证据层测试通过；`evidence_mcp --selftest` 对现有 `data/` 通过；`content_manuscript` 从 `data/BV17DHC6CELr` 重建 4,213 字 / 10 图。
 
 ## 5. P1/P2 验收
 

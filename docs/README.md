@@ -17,6 +17,8 @@
 | [integrations/librechat/](../integrations/librechat/README.md) | P1/P2 LibreChat + MCP + preview server 配置/启动/验收；外部 clone 主题/工具名补丁 |
 | [integrations/xhs/](../integrations/xhs/README.md) | 小红书 3:4 卡片 + App 导入包（Playwright） |
 | [integrations/pdf/](../integrations/pdf/README.md) | 深度总结 PDF（Pandoc + Tectonic + ctex 模板） |
+| [evidence-layer-2026-11.md](evidence-layer-2026-11.md) | P5 视频证据层迁移：下载/抽帧/ASR/VLM/substrate → content.md；配置/验证/未验证 |
+| [evals/product_v1/](../evals/product_v1/README.md) | P4 deterministic + grounding audit 数据集/报告/协议 |
 | [writing-rebuild-brief.md](writing-rebuild-brief.md) §2/§3 | 好 writing / 开发纪律；§4–§9 是历史/写作引擎背景 |
 | [substrate-v1-freeze.md](substrate-v1-freeze.md) | substrate v1 接口（冻结，只读） |
 
@@ -39,7 +41,7 @@
 | [social-writing-reuse-map.md](social-writing-reuse-map.md) | 2026-11-05 社媒调研；当前复用栈见 [reuse-stack-2026-11.md](reuse-stack-2026-11.md) |
 | [writing-reuse-map.md](writing-reuse-map.md) | 旧复用决策；当前复用栈见 [reuse-stack-2026-11.md](reuse-stack-2026-11.md) |
 | [reference-writing-scan.md](reference-writing-scan.md) | 2026-10-31 参考扫描；历史 |
-| [evals/writing/](../evals/writing/) | 旧 request 模板；eval harness 尚未实现 |
+| [evals/writing/](../evals/writing/) | 旧 request 模板；不是当前 eval；当前见 [evals/product_v1/](../evals/product_v1/README.md) |
 | [writing-layer-map.md](writing-layer-map.md) | v1 写作层设计；历史 |
 | [writing-layer-contracts.md](writing-layer-contracts.md) | v1 契约设计；历史 |
 | [writing-operating-model.md](writing-operating-model.md) | v1 operating model；历史 |

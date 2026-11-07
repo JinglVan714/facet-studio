@@ -1,0 +1,74 @@
+{
+  "_doc": "层 0 的可调参数登记表。凡『为某类素材设的习惯』都记在这里，不当常量写死（见 docs/knowledge-draft-form-and-downstream.md §4 的『素材预设』口径）。",
+  "layer0": {
+    "frame_interval_s": {
+      "value": 30.0,
+      "kind": "素材预设",
+      "why": "屏幕录制类素材场景切分失效（实测：22.9min 只切出 3 段），固定间隔是这类素材的基线",
+      "measured": "10s/30s/60s → 138/46/23 帧（BV1qoHe6mEx6）"
+    },
+    "scene_threshold": {
+      "value": 27.0,
+      "kind": "素材预设",
+      "why": "实拍类素材用场景切分更合适（实测中位 1.64s 一段，阈值 8）；屏幕录制类需要更低阈值但收益有限",
+      "measured": "阈值 8/12/18/27 → 23/19/5/3 段（屏幕录制）、112/95/88/75 段（实拍）"
+    },
+    "min_scene_len_s": {
+      "value": 2.5,
+      "kind": "客观阈值",
+      "why": "过短场景对『可回链』没有价值，且会放大误切（鼠标指针/PPT 动画）"
+    },
+    "frame_height": {
+      "value": 720,
+      "kind": "客观阈值",
+      "why": "480p 源上采到 720p 高，保证小字仍可读；再高只增加体积"
+    },
+    "phash_distance": {
+      "value": 8,
+      "kind": "客观阈值",
+      "why": "只用于标记疑似重复，不删帧；实测相邻帧距离 12–28，阈值 8 下约 37% 被标记",
+      "measured": "phash 阈值 4/8/12 → 保留 37/29/12 帧（46 帧样本）"
+    },
+    "max_scenes": {
+      "value": 400,
+      "kind": "客观阈值",
+      "why": "场景切分失效时的上限保护，被截断会写进索引"
+    },
+    "asr_model": {
+      "value": "qwen-audio-3.0-asr-flash-streaming",
+      "kind": "外部依赖",
+      "why": "百炼当前可用且支持字级时间戳（enable_words=True）",
+      "measured": "rtf 0.273–0.278，字级时间戳可用，150s 与 1373s 表现一致"
+    },
+    "frame_batch_concurrency": {
+      "value": 3,
+      "kind": "外部依赖",
+      "why": "帧转录的批级并发数；效果是省墙钟时间，不改变结果内容",
+      "measured": "46 帧 3 批：串行 446.3s → 并发2 234.4s(1.91×) → 并发3 123.6s(2.6×)；三档均 3/3 成功、零缺帧、无失败码",
+      "note": "并发 3 时单批耗时反而更低（合计 321s vs 串行 446s），说明瓶颈在服务端排队"
+    },
+    "frame_batch_size": {
+      "value": 16,
+      "kind": "素材预设",
+      "why": "批太小则判不出帧间重复（批4/8 实测重复检出为 0），批大则单帧成本更低",
+      "measured": "批4 20.0s/帧、批8 14.5s/帧、批16 9.6s/帧；重复检出 0/0/6"
+    },
+    "frame_window_tolerance_ms": {
+      "value": 20000,
+      "kind": "素材预设",
+      "why": "帧引用与音频锚点允许的最大偏差（画面常比口播滞后）；偏差一律记入 frame_offsets_ms",
+      "measured": "实测 2 例越窗为 +18.1s / +5.3s（幻灯片滚动滞后），20s 覆盖该现象"
+    },
+    "quote_hit_policy": {
+      "value": "exact → normalized 两级",
+      "kind": "客观阈值",
+      "why": "模型会把弯引号统一成直角引号，文字本身逐字正确；仅标点差异不应判失败",
+      "measured": "短视频 16 条被判失败中，全部因引号字形差异（归一化后命中）"
+    }
+  },
+  "not_implemented": {
+    "vlm_frame_refine": "D9 的消费期精炼（用 VLM 挑高价值帧）：保留全部原始帧，精炼只在消费期做，等层 1 定消费方式",
+    "ocr_frame_text": "D6：本层不产出画面文字，帧只保证全留",
+    "audio_scan_ocr": "视觉通道全量 OCR 未做，未安装 PaddleOCR/RapidOCR"
+  }
+}

@@ -17,7 +17,7 @@
   - 公众号复制页：`wechat.html`（内联样式 + 复制正文）。
   - 深度总结 PDF：`runs/product_v1/smoke_long_pdf/long_article/article.pdf`（9 页；封面/目录/正文已人工检查）。
   - 首页引导、中文工具名、暖纸主题：已在本机 LibreChat clone 验证。
-- 测试：**578 passed**。
+- 测试：**580 passed**。
 - 文档收口：product / UI / architecture / JD / reuse / docs index / integrations 已更新；旧 roadmap/JD 表加历史标记。
 
 ## 接手先读（顺序）
@@ -33,7 +33,7 @@
 
 **P1 + P2 原型已完成（2026-11-07）**：LibreChat + MCP + 缓存内容 → 计划卡 → 一次 writer → 阅读预览 → 公众号 HTML / 小红书图集 / PDF → `review_artifact` 验收。
 
-**P2 收口（2026-11-07 本轮）**：已修公众号复制正文带 H1、`title_candidates` 的 ` / ` 分隔、typeset 失败落盘为 `partial` + `typeset_errors`、`get_run` 的 `review_status`（draft/stale/approved/草稿摘要）、`review_artifact` 的排版门槛、重新 typeset 后旧验收标 stale。视觉模板也收口：小红书卡片改为 3:4 图框 `contain`（不裁 16:9）、阅读页纵向复用导出卡；PDF 图片限制在正文版心 / 62% 页高、剥离正文来源行消除孤儿页、首行缩进、代码块用 `--listings`；公众号图片限高 520px。图片数量/水印/字幕/低信息素材属于 skill/素材层，本轮不按单篇修。测试 **578 passed**。用户 2026-11-07 大致通过；BV13/BV17 公众号、BV17/BV1ix 小红书、smoke/第二篇长文 PDF 已记 approved（`runs/product_v1/**/publish_review.json`，不入库）。下一步进入 P3（LangGraph + HITL + 观测）。
+**P2 收口（2026-11-07 本轮）**：已修公众号复制正文带 H1、`title_candidates` 的 ` / ` 分隔、typeset 失败落盘为 `partial` + `typeset_errors`、`get_run` 的 `review_status`（draft/stale/approved/草稿摘要）、`review_artifact` 的排版门槛、重新 typeset 后旧验收标 stale。视觉模板也收口：小红书卡片改为 3:4 图框 `contain`（不裁 16:9）、阅读页纵向复用导出卡；PDF 图片限制在正文版心 / 62% 页高、剥离正文来源行消除孤儿页、首行缩进、代码块用 `--listings`；公众号图片限高 520px。图片数量/水印/字幕/低信息素材属于 skill/素材层，本轮不按单篇修。测试 **580 passed**。用户 2026-11-07 大致通过；BV13/BV17 公众号、BV17/BV1ix 小红书、smoke/第二篇长文 PDF 已记 approved（`runs/product_v1/**/publish_review.json`，不入库）。下一步进入 P3（LangGraph + HITL + 观测）。
 **后续待修（本轮不修）**：[docs/backlog-2026-11.md](docs/backlog-2026-11.md)（选图/造图、正文调整、标题/图注/短标题、视觉审查剩余 P1/P2）。
 
 下一步按优先级：
@@ -42,7 +42,7 @@
 2. **内容层待改**：见 [docs/backlog-2026-11.md](docs/backlog-2026-11.md)；不按单篇调。
 3. **P3（原型已跑通 2026-11-07）**：`workflow.py` 用 LangGraph StateGraph + SQLite checkpoint + plan/review interrupt；MCP 增加 `start_workflow` / `resume_workflow` / `get_workflow`；真实 auto run（BV1B 小红书，2 calls / 13,019 tokens）已写 `workflow.json`；真实 manual plan gate（`20261107T124434Z_BV1B5411A7ax_wechat_article`）已验证暂停→changes_requested、未写正文。LibreChat 后端已加载 11 tools；agent instructions 已改为 workflow 默认（P1/P2 为 fallback）；`client-ui.patch` 增加 3 个中文动作名，frontend 已重建。真实 UI E2E 已跑通：会话 `19e3aeb3-0854-549b-b18e-a37df12e8812` → run `20261107T132341Z_BV1B5411A7ax_xiaohongshu_note`（计划卡暂停→approved→写/排版→验收 approved；2 calls / 17,327 tokens；标签“启动工作流/继续工作流/运行数据”可见）。待做：cost 面板（当前 rates 未配置时 `cost_estimate=null`）、完整 stream UI。
 4. **P4（deterministic + grounding harness 已接 2026-11-07）**：`evals/product_v1/cases.json` + `src/facet_studio/evals/product.py`、`grounding.py`；当前 7/9 cases 有 artifact（BV1ix long/wechat missing），deterministic 7/7、manual 7/7、planner trace 4/7；grounding audit 6 artifacts / 17 candidate flags（不是幻觉率、不评 writing 质量）。报告在 `evals/product_v1/reports/`。待做：补 2 个 capability cases、人工 adjudicate flags（可选，仅事实判定）、trajectory 扩展、回归门禁、pass@k。
-5. **P5**：视频转录接入（最后）。
+5. **P5（证据层已迁移 2026-11-07）**：`src/facet_studio/evidence_layer/` + `src/facet_studio/ingest.py`，MCP 新增 `ingest_source`；链路为下载/本地 → 抽帧/ASR → VLM/substrate → `content_manuscript` → `content_final_v3/content.md + figures`。验证：17 个证据层测试、evidence_mcp selftest、BV17 content 重建 4,213 字/10 图。待真实新视频端到端验收（需网络 + DASHSCOPE key）。
 
 ## 边界
 

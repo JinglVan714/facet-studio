@@ -896,6 +896,22 @@ def _html_escape(text: str) -> str:
 
 
 @mcp.tool()
+def ingest_source(
+    target: str,
+    profile: str = "quality",
+    force: bool = False,
+) -> dict[str, Any]:
+    """接入新视频：B 站 URL 或本地路径 → 证据层 → content.md + figures。"""
+    from .ingest import ingest_source as _ingest_source
+
+    return _ingest_source(
+        target,
+        profile=profile,
+        force=force,
+    )
+
+
+@mcp.tool()
 def list_sources() -> dict[str, Any]:
     """列出可用的缓存视频内容稿（P1 不重跑视频）。"""
     items = _list_cached_sources()

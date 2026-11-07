@@ -1,0 +1,23 @@
+{
+  "_doc": "模型单价表（USD / 1M tokens）。**有出处、有取数时间、有版本号**——依据 research/17 §1.4 的纪律：给定价表打 pricing_version 并定期对账。缺哪个模型的单价就留空：报告里显示『未知单价（N 次调用）』，**绝不猜一个数**（无出处数字不写）。",
+  "pricing_version": "2026-10-16",
+  "source": "https://api-docs.deepseek.com/quick_start/pricing",
+  "retrieved_at": "2026-10-16",
+  "source_note": "官方定价页原表列头：MODEL / 1M INPUT TOKENS (CACHE HIT) / 1M INPUT TOKENS (CACHE MISS) / 1M OUTPUT TOKENS / OFF-PEAK / PEAK。原文：\"Off-peak rates are half of the peak rates.\"；\"Peak hours are 01:00 - 04:00 and 06:00 - 10:00 UTC, Monday through Friday, excluding Chinese public holidays. All other hours are off-peak, including weekends and Chinese public holidays in full.\"（本轮两次独立抓取，数字一致）",
+  "currency": "USD",
+  "unit": "per_1m_tokens",
+  "peak_windows_utc": [["01:00", "04:00"], ["06:00", "10:00"]],
+  "peak_weekdays_only": true,
+  "models": {
+    "deepseek-flash": {
+      "off_peak": { "input_cache_hit": 0.003, "input_cache_miss": 0.15, "output": 0.6 },
+      "peak": { "input_cache_hit": 0.006, "input_cache_miss": 0.3, "output": 1.2 }
+    },
+    "deepseek-v4-pro": {
+      "off_peak": { "input_cache_hit": 0.022, "input_cache_miss": 0.66, "output": 1.98 },
+      "peak": { "input_cache_hit": 0.044, "input_cache_miss": 1.32, "output": 3.96 }
+    }
+  },
+  "_not_covered": "frame_transcribe（读图 qwen3.7-flash）与 ASR（qwen-audio-3.0-asr-flash-streaming）走的是第三方 MaaS 端点（maas.qianwenaiapi.com），**该端点没有公开价目**，因此这两条通道不在本表的计量范围内——报告里会单列『未计量通道』，而不是把它们当 0 算进总成本。",
+  "_how_peak_is_used": "按每次调用的 UTC 时间与星期判断档位（周末与中国法定节假日**不做**日历判断，一律按周末规则处理；中国节假日表未入库，报告里会标出该口径）。"
+}

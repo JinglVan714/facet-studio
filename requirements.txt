@@ -39,3 +39,6 @@ numpy==2.4.4
 # ---- 可选：观测后端（默认不装，本机带不动 Langfuse 自托管）----
 # arize-phoenix          # 一条命令起 + SQLite；许可证 ELv2（非 OSI 开源）
 # langfuse               # 上云用；自托管需 Docker + ≥16 GiB
+
+# ---- P5 视频接入：B 站下载 ----
+yt-dlp==2026.7.4
