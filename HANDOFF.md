@@ -40,7 +40,7 @@
 
 1. **P2 收尾（已验收 2026-11-07）**：公众号/小红书/PDF 已按用户“大致通过”记 approved；剩首页模型配置入口（用户说先留口子，后置）。
 2. **内容层待改**：见 [docs/backlog-2026-11.md](docs/backlog-2026-11.md)；不按单篇调。
-3. **P3（原型已接，当前进行中）**：`workflow.py` 用 LangGraph StateGraph + SQLite checkpoint + plan/review interrupt；MCP 增加 `start_workflow` / `resume_workflow` / `get_workflow`；真实 auto run（BV1B 小红书，2 calls / 13,019 tokens）已写 `workflow.json`；真实 manual plan gate（`20261107T124434Z_BV1B5411A7ax_wechat_article`）已验证暂停→changes_requested、未写正文。LibreChat 后端已加载 11 tools；agent instructions 已改为 workflow 默认（P1/P2 为 fallback）；`client-ui.patch` 增加 3 个中文动作名，frontend 已重建。待做：cost 面板（当前 rates 未配置时 `cost_estimate=null`）、完整 stream UI。
+3. **P3（原型已接，当前进行中）**：`workflow.py` 用 LangGraph StateGraph + SQLite checkpoint + plan/review interrupt；MCP 增加 `start_workflow` / `resume_workflow` / `get_workflow`；真实 auto run（BV1B 小红书，2 calls / 13,019 tokens）已写 `workflow.json`；真实 manual plan gate（`20261107T124434Z_BV1B5411A7ax_wechat_article`）已验证暂停→changes_requested、未写正文。LibreChat 后端已加载 11 tools；agent instructions 已改为 workflow 默认（P1/P2 为 fallback）；`client-ui.patch` 增加 3 个中文动作名，frontend 已重建。真实 UI E2E 已跑通：会话 `19e3aeb3-0854-549b-b18e-a37df12e8812` → run `20261107T132341Z_BV1B5411A7ax_xiaohongshu_note`（计划卡暂停→approved→写/排版→验收 approved；2 calls / 17,327 tokens；标签“启动工作流/继续工作流/运行数据”可见）。待做：cost 面板（当前 rates 未配置时 `cost_estimate=null`）、完整 stream UI。
 4. **P4**：评测 harness（capability/regression、deterministic checks、trajectory、judge 校准、pass@k/pass^k）；不要 30 judge。
 5. **P5**：视频转录接入（最后）。
 
