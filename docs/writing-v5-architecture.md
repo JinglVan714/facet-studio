@@ -235,7 +235,7 @@ skills/writing/bundle-planner/      # 编排 skill：输出 JSON plan，不写�
 - 方法：deterministic checks + trajectory checks + 窄 rubric LLM judge；judge 用人工标注校准；2 次聚合。
 - 回归：固定 cases + snapshot/replay；prompt/skill/model/tool schema 改动跑回归；capability vs regression 分开。
 - 用户人工验收是唯一发布门；不跑 30 judge；不伪造 reader test / 线上 A/B。
-- 评测先预留，产品原型稳定后再做。
+- P4 deterministic harness（2026-11-07）：`evals/product_v1/`，只读 run artifacts，输出可复跑报告；judge 校准/回归门禁/pass@k 后续，不伪造。
 
 ### 8.4 Replay
 

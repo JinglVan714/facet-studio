@@ -1,0 +1,121 @@
+{
+  "schema_version": "product-eval-cases-v1",
+  "dataset": "product_v1",
+  "notes": "Capability set = 2 videos x 3 forms; missing cases are explicit, not fabricated. Regression cases reuse approved artifacts for previously broken PDF/copy paths.",
+  "cases": [
+    {
+      "case_id": "cap_bv17_long",
+      "kind": "capability",
+      "video_id": "BV17DHC6CELr",
+      "form": "long_article",
+      "run_id": "20261106T130634Z_BV17DHC6CELr_long_article",
+      "require_approval": true,
+      "min_body_chars": 1500,
+      "max_body_chars": 10000,
+      "min_figures": 2,
+      "must_include": ["768", "0.756", "256", "95%"],
+      "min_pages": 3,
+      "max_pages": 10
+    },
+    {
+      "case_id": "cap_bv17_wechat",
+      "kind": "capability",
+      "video_id": "BV17DHC6CELr",
+      "form": "wechat_article",
+      "run_id": "20261106T131015Z_BV17DHC6CELr_wechat_article",
+      "require_approval": true,
+      "min_body_chars": 1500,
+      "max_body_chars": 6000,
+      "min_figures": 2,
+      "min_images": 2,
+      "must_include": ["768", "0.756", "256"]
+    },
+    {
+      "case_id": "cap_bv17_xhs",
+      "kind": "capability",
+      "video_id": "BV17DHC6CELr",
+      "form": "xiaohongshu_note",
+      "run_id": "20261107T032530Z_BV17DHC6CELr_xiaohongshu_note",
+      "require_approval": true,
+      "min_body_chars": 500,
+      "max_body_chars": 3000,
+      "min_figures": 3,
+      "min_cards": 3,
+      "must_include": ["768", "0.756"]
+    },
+    {
+      "case_id": "cap_bv1ix_long",
+      "kind": "capability",
+      "video_id": "BV1ixpd6GENc",
+      "form": "long_article",
+      "run_id": null,
+      "require_approval": true,
+      "notes": "not generated yet; report as missing, not scored"
+    },
+    {
+      "case_id": "cap_bv1ix_wechat",
+      "kind": "capability",
+      "video_id": "BV1ixpd6GENc",
+      "form": "wechat_article",
+      "run_id": null,
+      "require_approval": true,
+      "notes": "not generated yet; report as missing, not scored"
+    },
+    {
+      "case_id": "cap_bv1ix_xhs",
+      "kind": "capability",
+      "video_id": "BV1ixpd6GENc",
+      "form": "xiaohongshu_note",
+      "run_id": "20261106T132229Z_BV1ixpd6GENc_xiaohongshu_note",
+      "require_approval": true,
+      "min_body_chars": 300,
+      "max_body_chars": 2500,
+      "min_figures": 2,
+      "min_cards": 2,
+      "must_include": ["160", "210"]
+    },
+    {
+      "case_id": "reg_pdf_code_block",
+      "kind": "regression",
+      "video_id": "BV17DHC6CELr",
+      "form": "long_article",
+      "run_id": "20261106T130634Z_BV17DHC6CELr_long_article",
+      "require_approval": true,
+      "min_body_chars": 1500,
+      "max_body_chars": 10000,
+      "min_figures": 2,
+      "must_include": ["768", "0.756", "256"],
+      "min_pages": 3,
+      "max_pages": 10,
+      "notes": "Regression for PDF with code blocks: --listings must render, no Shaded error, source line absent from body."
+    },
+    {
+      "case_id": "reg_wechat_copy",
+      "kind": "regression",
+      "video_id": "BV13EHX64EaY",
+      "form": "wechat_article",
+      "run_id": "20261107T080924Z_BV13EHX64EaY_wechat_article",
+      "require_approval": true,
+      "min_body_chars": 1000,
+      "max_body_chars": 6000,
+      "min_figures": 2,
+      "min_images": 2,
+      "must_include": ["清洁", "保湿", "防晒"],
+      "notes": "Regression for WeChat copy body without H1 and per-image copy buttons."
+    },
+    {
+      "case_id": "reg_xhs_copy_cards",
+      "kind": "regression",
+      "video_id": "BV1B5411A7ax",
+      "form": "xiaohongshu_note",
+      "run_id": "20261107T132341Z_BV1B5411A7ax_xiaohongshu_note",
+      "require_approval": true,
+      "min_body_chars": 300,
+      "max_body_chars": 3000,
+      "min_figures": 2,
+      "min_cards": 2,
+      "must_include": ["狸花", "橘猫", "狮子猫"],
+      "notes": "Regression for XHS contain cards, vertical reader and copy controls; also the real UI workflow run."
+    }
+  ]
+}

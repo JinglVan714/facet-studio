@@ -77,8 +77,8 @@ Artifacts: 阅读 HTML / 公众号 HTML / 小红书卡片 / PDF / Markdown
 | runtime | `src/facet_studio/runtime/`：RunStore、TaskPlan、ToolRegistry/Executor、WorkingMemory、ArtifactBoard、Decision、Trace |
 | 产物 | `runs/writing_v5/bundle_BV17_social_05/`、`bundle_BV1ix_social_04/`；P1/P2 产物在 `runs/product_v1/` |
 | P1/P2 + P3 产品原型 | `src/facet_studio/mcp_server.py`（FastMCP：list/resolve/plan/write/typeset/get_run/review + start/resume/get_workflow）、`src/facet_studio/workflow.py`（LangGraph StateGraph + SQLite checkpoint + interrupt + trace）、`src/facet_studio/preview_server.py`（FastAPI reader 预览）、`integrations/librechat/`、`integrations/xhs/`（Playwright 卡片）、`integrations/pdf/`（Tectonic 模板） |
-| 测试 | **573 passed**（2026-11-07；含 MCP server / 排版 / PDF / 验收状态 / 视觉模板 / workflow 测试） |
-| 未接 | eval harness、视频转录、完整模型配置 UI；P3 workflow 是原型，尚未替换 LibreChat agent 的默认逐工具流程 |
+| 测试 | **576 passed**（2026-11-07；含 MCP server / 排版 / PDF / 验收状态 / 视觉模板 / workflow / eval 测试） |
+| 未接 | eval judge/校准/回归门禁、视频转录、完整模型配置 UI；P4 deterministic harness 已接原型 |
 
 ## 5. 当前 vs 目标
 
@@ -90,7 +90,7 @@ Artifacts: 阅读 HTML / 公众号 HTML / 小红书卡片 / PDF / Markdown
 | 工具 | orchestrator 调 ToolRegistry | 聊天 agent 用 function calling 调 MCP 工具（**P1 已跑通**） |
 | 预览/导出 | Markdown + 旧 articles-only site | 阅读 HTML（P1）；公众号复制 HTML、小红书 3:4 图集 + 导入包、PDF（**P2 已接原型**） |
 | 观测 | JSONL/run manifest | LibreChat tool calls + `get_run` summary（**P1 部分**）；Trace Viewer/Token 统计待接 |
-| 评测 | smoke tests | 数据集/指标/judge 校准/回归/pass^k（先预留） |
+| 评测 | P4 deterministic harness + `evals/product_v1/reports` | 数据集/指标/judge 校准/回归/pass^k；不伪造真人 reader test |
 | 发布 | 无 | 人工验收 `publish_review.json`（**P1 已跑通**） |
 
 ## 6. 数据分层
@@ -119,7 +119,7 @@ Artifacts: 阅读 HTML / 公众号 HTML / 小红书卡片 / PDF / Markdown
 | P1 | LibreChat + MCP 工具服务原型：缓存内容 → 聊天 → 计划卡 → 一次 writer → 聊天内预览 **已完成原型 2026-11-06** | 一条 BV 走完；run 数据可见；不自动发布 |
 | P2 | 排版/导出：阅读 HTML + PDF；公众号 HTML；小红书卡片 **已完成原型 2026-11-07** | 成品可读/可复制/可下载；移动端可用 |
 | P3 | LangGraph workflow + HITL + 观测 **原型已接 2026-11-07** | 可暂停/恢复/验收；trace/token/cost 可查 |
-| P4 | 评测（先预留） | 可复跑报告；不伪造真人 reader test |
+| P4 | 评测：deterministic harness **已接 2026-11-07**；judge/校准/回归门禁后续 | 可复跑报告；不伪造真人 reader test |
 | P5 | 视频转录接入 | 用户提供新视频后可跑通 |
 
 ## 9. JD 映射
