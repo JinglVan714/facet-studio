@@ -1,151 +1,167 @@
-# Facet Studio — 聊天式视频内容工作台
+# Facet Studio
 
-把一条视频变成可发布的文章/笔记：用户在聊天框里给视频和写作要求，Agent 按需写一种形态（深度总结 / 公众号 / 小红书），在聊天里预览、修改、人工验收。
+**把一条视频，写成可发布的成品。**
 
-**不是**一次生成所有形态的 bundle 工厂，也不是“视频转写 + 摘要”工具；产物是独立文章/笔记，不是 coverage dump。
+给一条视频和写作要求，Agent 按需写成**深度总结 / 公众号 / 小红书**，在聊天里预览、修改、验收；成品是排版后的页面、卡片或 PDF，不是一段裸文本。
 
-| 聊天里的单张运行卡 | 排版后的成品 | 运行数据 / Trace |
+<p>
+  <img alt="license" src="https://img.shields.io/badge/license-MIT-green">
+  <img alt="python" src="https://img.shields.io/badge/python-3.11%20%7C%203.12-blue">
+</p>
+
+| 运行中：聊天里一张运行卡 | 成品：右侧预览 | 运行后：Trace 可下钻 |
 |---|---|---|
-| <img src="docs/assets/chat-run-card.png" width="360"> | <img src="docs/assets/demo-reader.png" width="360"> | <img src="docs/assets/run-overview.png" width="360"> |
+| <img src="docs/assets/run-live-7.png" width="360"> | <img src="docs/assets/ui-preview-drawer.png" width="360"> | <img src="docs/assets/run-trace-new.png" width="360"> |
 
-> 截图来自开发机；聊天卡为较早 UI 示例（697 字），最新 793 字样本见 [examples/demo/](examples/demo/README.md)。运行数据页的“延迟”是 6 次 LLM 调用合计 44.6s，不是 51.2s 墙钟；具体数字以 `evals/product_v1/reports/` 和 [runtime evidence](docs/runtime-evidence-2026-11-09.md) 为准。
+> 截图来自开发机的最新验证 run（公众号，926 字，等待验收；4 个候选帧 0 通过，所以 0 图）。运行数据页的“延迟”是 LLM 调用合计，不是墙钟；该 run 不在固定评测集里，所以“检查”显示为 —。
 
-## 30 秒版
+## 它解决什么问题
 
-- **输入**：一条 B 站视频（新视频走证据层：下载/抽帧/ASR/VLM → `content.md`）或缓存内容 + 写作要求（读者/长度/语气/must include/avoid）。
-- **链路**：LibreChat 聊天 → MCP 13 tools → LangGraph `intake → plan → approval → write → typeset → review`（后台 run + 消息级运行卡）→ reader HTML / 公众号富文本 / 小红书 3:4 卡片 / PDF。
-- **约束**：一个产物一次 writer；Lead Planner 只编排；没有 editor/checker；Writer 只读内容稿、不知道来源；人工验收是唯一发布门。
-- **证据**：P4 deterministic + grounding harness：10 cases / 9 unique runs，contract 10/10、trajectory 30/30、error 0、manual 9/10；`--gate` 可复跑。**这不是写作质量分，pass@k = null**。
-- **限制**：本地 demo，不是生产部署；没有真实用户、线上 A/B、幻觉率或 writing quality 分数。
+内容团队和创作者经常有一条视频，但没时间把它变成公众号、小红书和长文。常见做法是“转写 → 让模型总结 → 手工排版”，得到的是**一段概括**，不是能直接发出去的成品。
 
-## 架构
+Facet Studio 把这条链路做成一个工作台：
+
+| 输入 | 过程 | 输出 |
+|---|---|---|
+| 一条视频 + 读者/长度/语气/必须包含或避免的要求 | 一次内容编译 → 规划 → 一次 writer 成稿 → 确定性排版 | 阅读页 HTML / 公众号富文本 / 小红书 3:4 卡片 / PDF |
+
+**核心是把同一份内容稿写成不同平台可发布的形态，而不是每个形态重新处理一遍。**
+
+适合：有视频素材、需要公众号/小红书/长文多平台内容的创作者和小团队。
+不适合：纯影视/音乐等 ASR 稀疏内容，或需要大量外部事实核查的严肃报道。
+
+## 为什么是“工作台”，不是一次性生成
+
+- **同一份内容稿复用**：视频只编译一次，得到 `content.md + figures + content_sha256`；三种形态共享同一份内容和图，不为每个形态重新看视频。
+- **每个形态一次 writer**：Lead Planner 只决定“写什么、给谁、什么角度”，正文由一个 writer 一次写完；没有 editor/checker 多轮改稿。
+- **Writer 不知道来源**：只拿到“这件事的完整内容”，正文不出现“视频里说/本视频”这类工作痕迹；内容稿保留结构、数字、例子和边界。
+- **成品优先**：默认给排版后的页面/卡片/PDF；Markdown 只是可编辑源，不是最终交付。
+- **人工验收是唯一发布门**：不自动发布；每次 run 都能看到读了什么、花了多少、卡在哪。
+
+## 一条内容稿，三种形态
 
 ```mermaid
 flowchart LR
-  U[用户] -->|BV 链接 + 写作要求| LC[LibreChat 聊天壳]
-  LC -->|MCP tools| MCP[Facet Studio MCP<br/>13 tools]
-  MCP --> WF[LangGraph workflow]
-  WF --> I[intake] --> P[plan] --> A[approval] --> W[write] --> T[typeset] --> R[review]
-  W --> W4[writing_v4<br/>planner + one writer + skills]
-  W4 --> T
-  T --> ART[reader HTML / 公众号 HTML / 小红书卡片 / PDF]
-  ART --> LC
-  WF --> TR[trace<br/>stages / LLM calls / tool spans / decisions]
-  TR --> DASH[/runs 看板 + Run Detail]
-  R -->|人工验收| PUB[publish_review.json]
+  V[视频] --> E[证据层<br/>下载 / 抽帧 / ASR / VLM]
+  E --> C[content.md + figures<br/>content_sha256]
+  C --> P[Lead Planner<br/>只编排]
+  P --> W1[writer · 深度总结]
+  P --> W2[writer · 公众号]
+  P --> W3[writer · 小红书]
+  W1 --> T[确定性排版]
+  W2 --> T
+  W3 --> T
+  T --> A[阅读页 / 公众号 HTML / 3:4 卡片 / PDF]
 ```
 
-- **产品壳**：LibreChat（MIT，外部 clone，不 vendored）。
-- **写作服务**：Python MCP server + LangGraph + writing_v4 + 确定性排版。
-- **数据分层**：产品内只展示本次 run 的 trace/状态；评测数据在独立 `evals/`；简历数据只取评测报告。
+同一份内容稿可以复用到多次请求：第二次写另一种形态时，只跑 plan + writer + typeset，不重读视频。
+
+## 视觉不是“多放几张图”
+
+这个项目的视觉策略是**克制**：
+
+- **关键帧默认 0，最多 1**：只有不可替代、画面干净、与段落严格对应、权利清楚的帧才用；水印/UI/人物/信息价值低都会被拒绝。
+- **先表格、代码、清单、SVG**：结构、流程、对比、数字优先用可读的载体；Writer 只写一句关系，SVG 由本地确定性渲染，不让模型写 HTML/LaTeX。
+- **没有合格素材就不放图**：降级为文字/表格/卡片，不硬塞视频截图。
+- **图注默认不加**：需要“看哪里/说明什么”时写进正文或图内标注。
+
+<img src="docs/assets/demo-reader-visual.png" width="720" alt="公众号成品：SVG 关系图 + 表格">
+
+> 另一个已验收 run 的成品：SVG 关系图 + 2 张表格，不是视频帧。最新验证 run 是 **926 字 + 0 图**——4 个候选帧都没通过视觉审计，系统选择不放图；公开 demo 是 793 字 + 1 张文字封面。
+
+## 可观测：每次请求都能复盘
+
+每次用户请求是一个独立 run：
+
+- 聊天里只显示一张**运行卡**：阶段轨、当前步骤、计划、视觉审计结论、字数/卡片/关键帧、验收状态。
+- `/runs` 看板：最近 runs、p50/p95、tokens、error、checks、grounding candidates。
+- `/runs/<run_id>`：Live SSE / Trace / Stats；Trace 可下钻到 stage、LLM call、tool span、decision、token/latency，以及原始调用字段。
+- 人工验收写入 `publish_review.json`；未验收的产物标记为草稿，不静默变成 approved。
+
+评测只测**运行数据、产物合同、workflow 轨迹、grounding candidates**，不评写作质量；`pass@1 / pass@k = null`。详见 [evals/product_v1](evals/product_v1/README.md)。
 
 ## 3 分钟跑起来
 
 ```bash
-# 1) Python 依赖（Python 3.11/3.12）
+# 1) Python 依赖（3.11/3.12）
 pip install -r requirements.txt
-# P5 证据层（下载/ASR/VLM/抽帧）另装：
-# pip install -r requirements-evidence.txt
 
 # 2) 配置
 cp .env.example .env
-# 填入 DEEPSEEK_API_KEY / DASHSCOPE_API_KEY（不跑新视频可只填 DeepSeek）
+# 填入 DEEPSEEK_API_KEY；跑新视频再加 DASHSCOPE_API_KEY
 
-# 3) 测试（不依赖 data/ 或 runs/）
+# 3) 测试（不依赖 data/、runs/ 或 API key）
 PYTHONPATH=src PYTHONUTF8=1 python -m pytest tests
 
 # 4) 预览 / 运行数据
 PYTHONPATH=src python -m facet_studio.preview_server
 # http://127.0.0.1:8765/runs
+```
 
-# 5) 完整聊天壳（LibreChat + Mongo + preview）
-# 见 integrations/librechat/README.md；Windows: scripts/start_p1.ps1
+完整聊天壳（LibreChat + Mongo + preview）见 [integrations/librechat](integrations/librechat/README.md)。新视频接入：
+
+```bash
+pip install -r requirements-evidence.txt
+PYTHONPATH=src python -c "from facet_studio.ingest import ingest_source; print(ingest_source('https://www.bilibili.com/video/BV...', profile='fast'))"
 ```
 
 ## Demo 与样本
 
-- [examples/demo/](examples/demo/README.md)：一份真实本地 run 的公开样本——793 字小红书 + 1 张文字封面卡 + 脱敏 run/trace 摘要；**不含任何视频帧**。
-- [docs/demo-script.md](docs/demo-script.md)：3 分钟 demo 分镜（截图版；不录架构页）。
-- P4 最小 fixture：[evals/product_v1/fixtures/](evals/product_v1/fixtures/)；clone 后不需要本地 `runs/` 也能跑 gate：
+- [examples/demo](examples/demo/README.md)：一份真实本地 run 的公开样本——793 字小红书 + 1 张文字封面卡 + 脱敏 run/trace 摘要；**不含任何视频帧**。
+- [docs/demo-script.md](docs/demo-script.md)：3 分钟 demo 分镜（截图版，不录架构页）。
+- 更多截图：[初始界面](docs/assets/ui-initial-agent.png) · [Live/SSE](docs/assets/run-overview-new.png) · [Stats](docs/assets/run-stats-new.png) · [完成卡片](docs/assets/run-card-done.png) · [已验收 Trace 15/15](docs/assets/run-trace-detail.png) · [决策](docs/assets/run-decision.png)。
 
-```bash
-PYTHONPATH=src PYTHONUTF8=1 python -m facet_studio.evals.product \
-  --cases evals/product_v1/cases.fixture.json \
-  --runs-root evals/product_v1/fixtures/runs_root \
-  --out /tmp/facet_fixture_report --gate
-```
+## 评测（不是写作质量分）
 
-## 评测
+固定 10 cases / 9 unique runs：
 
-```bash
-# P4 deterministic + trajectory（需要本地 runs/）
-PYTHONPATH=src PYTHONUTF8=1 python -m facet_studio.evals.product \
-  --cases evals/product_v1/cases.json --out evals/product_v1/reports --gate
+| 指标 | 结果 | 说明 |
+|---|---:|---|
+| contract | 10/10 | 产物合同 + 机器检查 |
+| trajectory | 30/30 | 阶段/顺序/HITL/usage 等过程断言 |
+| error | 0 | 固定 cases 的 failed/partial |
+| manual acceptance | 9/10 | 用户验收；不是质量分 |
+| p50 / p95 | 52.4s / 92.7s | plan+write，不含视觉审计/排版/排队 |
+| pass@k | null | 没有 judged trials，不伪造 |
 
-# Grounding / hallucination candidates
-PYTHONPATH=src PYTHONUTF8=1 python -m facet_studio.evals.grounding \
-  --cases evals/product_v1/cases.json --out evals/product_v1/reports
+`grounding` 是 candidate flags（9 artifacts / 16 candidates），不是幻觉率。人工验收是唯一发布门；未验收 run 不自动 approved。
 
-# 单 run report
-PYTHONPATH=src PYTHONUTF8=1 python -m facet_studio.evals.run_report \
-  --run-id <run_id> --out evals/product_v1/reports
-```
+## 设计取舍
 
-口径：
+| 决策 | 为什么 |
+|---|---|
+| planner-executor，不是 supervisor | Planner 只决定“做什么”；writer 一次写完，避免第二作者改稿和上下文漂移 |
+| 一个产物一次 writer | 减少 loop、保持文风一致；修改 = 新请求 + 新 writer，不是 editor 改稿 |
+| Writer 不知道来源 | 正文不为“解释视频”服务，而为读者理解服务；来源只在需要时自然出现 |
+| 关键帧极紧 | 视频帧常有水印/UI/人物/版权问题；没有合格帧就用表格/SVG/文字 |
+| MCP + LangGraph | 工具是产品接口，LibreChat 和外部 agent 都能复用；状态/checkpoint/interrupt 是产品需要的 |
+| 不做 RAG/向量库 | 内容稿就是上下文；没有真实检索 consumer，不硬造 |
 
-- 只测运行数据、产物合同、workflow 轨迹、grounding candidates；**不评 writing 质量**。
-- `grounding` 是 candidate flags，不是幻觉率；需要人工判定才能报 precision。
-- 人工验收是唯一发布门；未验收 run 不自动 approved。
-- `pass@1 / pass@k` 保持 `null`，没有 judged trials 就不伪造。
+## 代码结构
 
-## 当前代码
-
-- `src/facet_studio/writing_v3/`：substrate v1（冻结）：transcript / sentences / frames / OCR / content manuscript。
-- `src/facet_studio/writing_v4/`：content manuscript、skill loader、一次 writer、planner/orchestrator、SVG、bundle、`visual_audit.py`。
-- `src/facet_studio/runtime/`：RunStore / TaskPlan / ToolRegistry / WorkingMemory / ArtifactBoard / Decision / Trace / Eval。
-- `src/facet_studio/mcp_server.py`：FastMCP **13 tools**（ingest / list / resolve / compile / plan / write / typeset / get_run / review / start_workflow / wait_workflow / resume_workflow / get_workflow）。
-- `src/facet_studio/workflow.py`：LangGraph StateGraph（intake → plan → approval → write → typeset → review）+ SQLite checkpoint + interrupt + `workflow.json` trace；`start_workflow(background=True)` 立即返回 run_id，聊天卡轮询 `/api/card`，`wait_workflow` 只返回人类可读摘要。
-- `src/facet_studio/preview_server.py`：FastAPI preview + `/runs` 看板（127.0.0.1:8765）。
-- `src/facet_studio/evidence_layer/`：下载/抽帧/ASR/VLM/substrate；`src/facet_studio/ingest.py`：新视频 → `content.md + figures`。
-- `src/facet_studio/evals/`：deterministic product checks + grounding candidate audit。
-- `integrations/librechat/`、`integrations/xhs/`、`integrations/pdf/`：产品壳配置、3:4 卡片、Pandoc/Tectonic PDF。
-- `skills/writing/`：video-article（long_article core）、wechat-article（extends core）、xiaohongshu-note、bundle-planner。
-
-## 新视频接入（P5）
-
-```bash
-PYTHONPATH=src python -c "from facet_studio.ingest import ingest_source; print(ingest_source('https://www.bilibili.com/video/BV...', profile='fast'))"
-# 默认 content-only：抽帧/ASR/VLM → content.md；不跑 contract/L1。
-# 长视频先用 CLI；MCP ingest 是同步调用，LibreChat 默认 300s timeout，没有后台任务。
-# ASR：DashScope qwen-audio-3.1-asr-flash-streaming；VLM：qwen3.8-27b。
-```
+- `src/facet_studio/mcp_server.py` — MCP 工具层
+- `src/facet_studio/workflow.py` — LangGraph 六阶段工作流 + checkpoint + interrupt
+- `src/facet_studio/writing_v4/` — planner / writer / skills / visual audit
+- `src/facet_studio/observability.py` + `observability_ui.py` — trace / 运行卡 / `/runs`
+- `src/facet_studio/evals/` — deterministic harness + grounding candidates
+- `src/facet_studio/evidence_layer/` + `ingest.py` — 新视频接入
+- `integrations/` — LibreChat / 小红书卡片 / PDF
+- `skills/writing/` — long_article / wechat_article / xiaohongshu_note
 
 ## 已知边界
 
-- **一个产物一次 writer**：没有草稿、editor、checker、词表、核实；Lead Planner 只编排。
-- **Writer 不知道来源**：只拿到「这件事的完整内容」；正文不出现来源/工作痕迹。
-- **不核验内容本身**：不挑内容的错、不做百科；只处理已有内容 + 用户补充/未来联网调研。
-- **不写死数量/数字**：字数、H2 数、段落数都跟 request/内容相关；request 优先，没 request 用默认。
-- **active skill 不出现具体视频/产品/人物**；例子匿名；≥2 视频/文体复现才改通用层；不按单篇调参。
-- **视觉**：关键帧默认 0、最多 1；没有通过审计的帧就文字/表格/SVG，不硬塞图。
-- **未做**：公网部署/鉴权/限流/成本上限、完整模型配置 UI、用户画像记忆、judge 校准、pass@k。CI 已接：pytest + 合成 fixture gate（不依赖 API key）。
-- 不自动发布；不 commit/push；不改 substrate；不读 `data/cookies/`。
+- 本地 demo，不是生产部署；没有真实用户、线上 A/B、QPS/留存数据。
+- 没有 judge 校准、真人 reader test、pass@k；不伪造写作质量分。
+- 没有公网鉴权/限流/成本上限、完整模型配置 UI、用户画像记忆。
+- 不自动发布；不 commit/push；不读 `data/cookies/`。
+- 视频/帧/ASR/cookies、`runs/`、内部交接、历史含 B 站帧的 `deliverables/` 均不入库；示例不含视频帧。
 
-## 仓库边界
+## 文档
 
-- `data/`（视频/帧/ASR/cookies）、`runs/`（用户 run 产物）、`vendor/`（证据层备份）、`handoffs/`（内部交接）、`deliverables/`（历史含 B 站帧）**不入库**。
-- 仓库只含代码、skill、当前文档、示例文章；示例不含视频帧。
-- 没有 API key / 视频时，单元与集成测试仍可运行；完整生成需要自备 `.env` 和视频。
-- 复用优先：LibreChat / MCP / LangGraph / Pandoc / md2wechat / 开源卡片；嵌入代码优先 MIT/BSD/Apache。第三方许可见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)；本项目代码 MIT，见 [LICENSE](LICENSE)。
+- [产品定义](docs/product-v1-chat-studio.md) · [架构](architecture.md) · [写作引擎](docs/writing-v5-architecture.md)
+- [可观测](docs/observability-2026-11.md) · [评测](evals/product_v1/README.md) · [证据层](docs/evidence-layer-2026-11.md)
+- [运行时证据](docs/runtime-evidence-2026-11-09.md) · [复用栈与 license](docs/reuse-stack-2026-11.md) · [全部文档](docs/README.md)
 
-## 先读
+## License
 
-1. [docs/product-v1-chat-studio.md](docs/product-v1-chat-studio.md) — 产品定义/用户怎么用/UI/数据分层/路线。
-2. [architecture.md](architecture.md) §0–§9 — 目标架构、组件、当前代码 vs 目标。
-3. [docs/writing-v5-architecture.md](docs/writing-v5-architecture.md) — 当前写作引擎（writing_v4）。
-4. [docs/observability-2026-11.md](docs/observability-2026-11.md) — trace/看板/运行卡。
-5. [docs/runtime-evidence-2026-11-09.md](docs/runtime-evidence-2026-11-09.md) — P4/E2E/运行时数字，含不可引用口径。
-6. [evals/product_v1/README.md](evals/product_v1/README.md) — P4 deterministic + grounding。
-7. [docs/reuse-stack-2026-11.md](docs/reuse-stack-2026-11.md) — LibreChat/MCP/LangGraph/排版/卡片复用与 license。
-8. [docs/evidence-layer-2026-11.md](docs/evidence-layer-2026-11.md) — P5 视频证据层。
-9. [docs/README.md](docs/README.md) — 全部当前文档索引。
+代码 MIT，见 [LICENSE](LICENSE)；第三方依赖/素材见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) 和 [examples/NOTICE.md](examples/NOTICE.md)。

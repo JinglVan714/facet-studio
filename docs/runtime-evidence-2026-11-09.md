@@ -60,6 +60,16 @@ Run：`20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note`（小红书，793 字）
 
 注意：该 run 不在 P4 的 10 个固定 cases 内；单 run report 的 `contract.passed=true`（15/15 checks），`review=approved`。早期快照曾显示 11/15，是因为还没有 review 阶段；验收后已补 review stage 并重生成 trace。
 
+### 2.1 最新 UI 验证 run（未验收）
+
+Run：`20261109T161947Z_BV1brgs6mE7a_wechat_article`（公众号，926 字，0 图 / 0 关键帧）
+
+- 用途：用 LibreChat 真实聊天 + 缓存内容跑一条 UI 验证 run；不下载视频。
+- 6 calls / 28,552 tokens / 50,674 ms（LLM 调用合计）；status=typeset / awaiting_review。
+- 视觉审计 4 候选 / 0 通过；因此 0 图，不是渲染丢图。
+- 不在 P4 的 10 个固定 cases 内，所以 Trace 页“检查”显示 `—`；不能拿它抬 manual acceptance。
+- 截图：`docs/assets/run-live-7.png`（运行中）、`ui-preview-drawer.png`（成品预览）、`run-trace-new.png`（Trace）、`run-overview-new.png`（Live/SSE）、`run-stats-new.png`（Stats）、`run-card-done.png`（完成卡片）。
+
 ## 3. 可观测 / 运行时看板快照
 
 来源：`GET http://127.0.0.1:8765/api/runs`（2026-11-09 快照）
