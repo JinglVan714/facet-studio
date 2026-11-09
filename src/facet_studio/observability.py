@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import html
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -36,6 +37,16 @@ FINAL_STATUSES = {
     "rejected",
     "changes_requested",
     "failed",
+}
+
+# A typeset/partial artifact is not settled: the run is still waiting for the
+# user acceptance gate.  Only these statuses end a run.
+SETTLED_STATUSES = {
+    "approved",
+    "rejected",
+    "changes_requested",
+    "failed",
+    "cancelled",
 }
 
 CALL_STAGE_HELP = {
@@ -233,6 +244,95 @@ def _visual_audit_summary(
     }
 
 
+def _story(
+    meta: dict[str, Any],
+    stages: list[dict[str, Any]],
+    *,
+    visual_audit: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Human-readable "what this run did" steps for the run page and chat card."""
+    by_name = {str(item.get("name") or ""): item for item in stages}
+    source = meta.get("source") or {}
+    write = meta.get("write") or {}
+    plan = meta.get("plan") or {}
+    review = meta.get("review") or {}
+    status = str(meta.get("status") or "")
+    story: list[dict[str, Any]] = []
+
+    def add(
+        step: str,
+        value: str,
+        detail: str,
+        stage: dict[str, Any] | None = None,
+    ) -> None:
+        item: dict[str, Any] = {"step": step, "status": value, "detail": detail}
+        if stage:
+            item["duration_ms"] = _int(stage.get("duration_ms"))
+            item["tokens"] = _int((stage.get("usage") or {}).get("total_tokens"))
+        story.append(item)
+
+    if "intake" in by_name:
+        add(
+            "读取内容",
+            "succeeded",
+            f"{_int(source.get('content_chars'))} 字 · {_int(source.get('figure_count'))} 张候选图",
+            by_name["intake"],
+        )
+    if "plan" in by_name:
+        add(
+            "规划",
+            str(by_name["plan"].get("status") or "succeeded"),
+            str(plan.get("central_idea") or "已生成写作计划"),
+            by_name["plan"],
+        )
+    if status == "awaiting_plan_approval":
+        add("计划确认", "awaiting", "等待你确认计划")
+    if _int(visual_audit.get("candidate_count")):
+        reasons = " · ".join(
+            f"{name} {count}" for name, count in (visual_audit.get("reasons") or {}).items()
+        )
+        approved = _int(visual_audit.get("approved_count"))
+        add(
+            "视觉审计",
+            "passed" if approved else "no_frames",
+            f"{_int(visual_audit.get('candidate_count'))} 候选 / {approved} 通过"
+            + (f"（{reasons}）" if reasons else ""),
+        )
+    if "write" in by_name:
+        refs = write.get("figures_referenced") or []
+        images = [item for item in refs if not str(item).lower().endswith(".svg")]
+        approved = (
+            _int(visual_audit.get("approved_count"))
+            if _int(visual_audit.get("candidate_count"))
+            else len(images)
+        )
+        parts = [f"{_int(write.get('output_chars'))} 字"]
+        svg_count = len(write.get("svg_assets") or [])
+        if svg_count:
+            parts.append(f"{svg_count} 个图表")
+        parts.append(f"{approved} 张关键帧")
+        add("写作", str(by_name["write"].get("status") or "succeeded"), " · ".join(parts), by_name["write"])
+    if "typeset" in by_name:
+        add(
+            "排版",
+            str(by_name["typeset"].get("status") or "typeset"),
+            f"{meta.get('form_label') or meta.get('form') or '成品'}预览已生成",
+            by_name["typeset"],
+        )
+    if "review" in by_name:
+        decision = str(review.get("decision") or by_name["review"].get("status") or "")
+        detail = {
+            "approved": "用户已验收",
+            "changes_requested": "用户要求修改",
+            "rejected": "用户已拒绝",
+            "auto_accepted": "自动通过（未人工验收）",
+        }.get(decision, "等待用户验收")
+        add("验收", str(by_name["review"].get("status") or decision or "awaiting"), detail, by_name["review"])
+    elif status in {"typeset", "awaiting_review"}:
+        add("验收", "awaiting_review", "等待用户验收")
+    return story
+
+
 def collect_trace(
     run_id: str,
     run_dir: Path,
@@ -291,22 +391,54 @@ def collect_trace(
     }
     write = meta.get("write") or {}
     source_meta = meta.get("source") or {}
+    plan = meta.get("plan") or {}
+    form = str(meta.get("form") or "")
+    plan_form = next(
+        (
+            item
+            for item in (plan.get("forms") or [])
+            if str(item.get("form") or "") == form
+        ),
+        {},
+    )
     first_call = llm_calls[0] if llm_calls else {}
     context = {
         "content_chars": _int(source_meta.get("content_chars")),
         "figure_count": _int(source_meta.get("figure_count")),
         "figures_referenced": len(write.get("figures_referenced") or []),
+        "keyframes_referenced": (
+            _int((meta.get("visual_audit") or {}).get("approved_count"))
+            if _int((meta.get("visual_audit") or {}).get("candidate_count"))
+            else len(
+                [
+                    item
+                    for item in (write.get("figures_referenced") or [])
+                    if not str(item).lower().endswith(".svg")
+                ]
+            )
+        ),
+        "output_chars": _int(write.get("output_chars")),
+        "svg_count": len(write.get("svg_assets") or []),
+        "card_count": len(
+            ((meta.get("typeset") or {}).get("xhs_export") or {}).get("images")
+            or (meta.get("artifacts") or {}).get("xhs_cards")
+            or []
+        ),
         "visual_audit": _visual_audit_summary(run_dir, meta),
         "skill_id": str(write.get("skill_id") or ""),
         "skill_version": str(write.get("skill_version") or ""),
         "request": str(meta.get("request") or ""),
-        "central_idea": str((meta.get("plan") or {}).get("central_idea") or ""),
+        "central_idea": str(plan.get("central_idea") or ""),
+        "plan_angle": str(plan_form.get("angle") or plan.get("angle") or ""),
+        "plan_reader": str(plan.get("reader_goal") or ""),
+        "plan_brief": str(plan_form.get("brief") or ""),
         "model": str(first_call.get("model") or ""),
         "temperature": first_call.get("temperature"),
         "max_tokens": first_call.get("max_tokens"),
-        "form": str(meta.get("form") or ""),
+        "form": form,
         "video_id": str(meta.get("video_id") or ""),
         "source_title": str(source_meta.get("title") or ""),
+        "started_at": str(meta.get("created_at") or ""),
     }
     checks = _checks(run_id, run_dir) if include_checks else []
     grounding = (
@@ -318,10 +450,16 @@ def collect_trace(
 
     return {
         "run_id": run_id,
+        "trace_url": str(
+            os.environ.get("FACET_STUDIO_PREVIEW_BASE", "http://127.0.0.1:8765/runs")
+        ).rstrip("/")
+        + f"/{run_id}",
         "video_id": str(meta.get("video_id") or ""),
         "form": str(meta.get("form") or ""),
         "form_label": str(meta.get("form_label") or meta.get("form") or ""),
         "status": str(meta.get("status") or ""),
+        "workflow_status": str(workflow.get("status") or ""),
+        "next": workflow.get("next") or [],
         "request": str(meta.get("request") or ""),
         "source": meta.get("source") or {},
         "created_at": meta.get("created_at"),
@@ -332,6 +470,7 @@ def collect_trace(
             "reviewed_at": review.get("reviewed_at"),
         },
         "stages": stages,
+        "story": _story(meta, stages, visual_audit=_visual_audit_summary(run_dir, meta)),
         "events": workflow.get("events") or [],
         "llm_calls": llm_calls,
         "tool_calls": tool_calls,
@@ -921,6 +1060,11 @@ def collect_runs_dashboard(runs_root: Path, *, limit: int = 50) -> dict[str, Any
             {
                 "run_id": run_dir.name,
                 "video_id": meta.get("video_id"),
+                "title": str(
+                    (meta.get("plan") or {}).get("central_idea")
+                    or meta.get("request")
+                    or ""
+                )[:160],
                 "form": meta.get("form"),
                 "form_label": meta.get("form_label") or meta.get("form"),
                 "status": meta.get("status"),

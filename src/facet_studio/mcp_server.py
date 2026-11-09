@@ -637,6 +637,12 @@ def _xhs_export(
     # Playwright is resolved by the renderer itself: local node_modules,
     # then FACET_STUDIO_PLAYWRIGHT.  Never hard-code a machine-specific path.
     env = dict(os.environ)
+    if not env.get("FACET_STUDIO_PLAYWRIGHT"):
+        lib_root = env.get("FACET_STUDIO_LIBRECHAT_ROOT")
+        if lib_root:
+            candidate = Path(lib_root) / "node_modules" / "playwright"
+            if candidate.is_dir():
+                env["FACET_STUDIO_PLAYWRIGHT"] = str(candidate)
     error = ""
     if renderer.is_file():
         try:
@@ -1775,19 +1781,37 @@ def start_workflow(
     video_id: str,
     form: str,
     request: str = "",
+    auto_plan: bool = True,
+    auto_accept: bool = False,
     auto_approve: bool = False,
+    background: bool = True,
     ctx: Context | None = None,
 ) -> dict[str, Any]:
-    """启动 LangGraph 工作流；默认停在计划卡，等 resume_workflow 确认。"""
+    """启动 LangGraph 工作流，立即返回 run_id；默认直接写（auto_plan=True），只在最终验收暂停。
+
+    用户明确说“先看计划/给我计划卡”时传 auto_plan=False；兼容旧调用 auto_approve=True
+    会同时跳过计划和验收两个门（仅自动化用）。
+    """
     from .workflow import start_workflow as _start_workflow
 
     return _start_workflow(
         video_id=video_id,
         form=form,
         request=request,
+        auto_plan=auto_plan,
+        auto_accept=auto_accept,
         auto_approve=auto_approve,
+        background=background,
         on_event=_progress_callback(ctx),
     )
+
+
+@mcp.tool()
+def wait_workflow(run_id: str, timeout_s: int = 120) -> dict[str, Any]:
+    """等待工作流到计划门/验收门或终态；返回人类可读摘要、资产数、下一步。"""
+    from .workflow import agent_view, wait_workflow as _wait_workflow
+
+    return agent_view(_wait_workflow(run_id=run_id, timeout_s=timeout_s))
 
 
 @mcp.tool()
@@ -1798,22 +1822,24 @@ def resume_workflow(
     ctx: Context | None = None,
 ) -> dict[str, Any]:
     """恢复暂停的工作流：计划卡或最终验收。decision=approved/changes_requested/rejected。"""
-    from .workflow import resume_workflow as _resume_workflow
+    from .workflow import agent_view, resume_workflow as _resume_workflow
 
-    return _resume_workflow(
-        run_id=run_id,
-        decision=decision,
-        notes=notes,
-        on_event=_progress_callback(ctx),
+    return agent_view(
+        _resume_workflow(
+            run_id=run_id,
+            decision=decision,
+            notes=notes,
+            on_event=_progress_callback(ctx),
+        )
     )
 
 
 @mcp.tool()
 def get_workflow(run_id: str) -> dict[str, Any]:
     """查看工作流阶段、暂停点、usage、trace 事件。"""
-    from .workflow import get_workflow as _get_workflow
+    from .workflow import agent_view, get_workflow as _get_workflow
 
-    return _get_workflow(run_id=run_id)
+    return agent_view(_get_workflow(run_id=run_id))
 
 
 def _first_heading(markdown: str) -> str:

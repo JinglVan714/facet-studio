@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import facet_studio.workflow as workflow
 
@@ -151,6 +152,116 @@ def test_workflow_auto_approve_skips_human_gates(
     assert result["status"] == "typeset"
     assert result["next"] == []
     assert calls == {"plan": 1, "write": 1, "typeset": 1, "review": 0}
+
+
+def test_snapshot_does_not_treat_auto_plan_as_human_gate() -> None:
+    snapshot = SimpleNamespace(
+        values={"auto_plan": True, "form": "wechat_article"},
+        next=["approval"],
+        interrupts=(),
+    )
+    assert workflow._snapshot_result("run_auto_plan", snapshot, [])["status"] == "running"
+    manual = SimpleNamespace(
+        values={"auto_plan": False, "form": "wechat_article"},
+        next=["approval"],
+        interrupts=(),
+    )
+    assert workflow._snapshot_result("run_manual_plan", manual, [])["status"] == "awaiting_plan_approval"
+
+
+def test_workflow_auto_plan_skips_plan_gate_but_keeps_review(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setenv("FACET_STUDIO_RUNS_ROOT", str(tmp_path))
+    calls = {"plan": 0, "write": 0, "typeset": 0, "review": 0}
+    _fakes(monkeypatch, calls)
+
+    result = workflow.start_workflow(
+        "BVtest", "wechat_article", "写一篇", auto_plan=True
+    )
+    assert result["status"] == "awaiting_review"
+    assert result["next"] == ["review"]
+    assert calls == {"plan": 1, "write": 1, "typeset": 1, "review": 0}
+
+
+def test_workflow_background_start_and_wait(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setenv("FACET_STUDIO_RUNS_ROOT", str(tmp_path))
+    calls = {"plan": 0, "write": 0, "typeset": 0, "review": 0}
+    _fakes(monkeypatch, calls)
+
+    started = workflow.start_workflow(
+        "BVtest", "wechat_article", "写一篇", auto_plan=True, background=True
+    )
+    assert started["status"] == "running"
+    assert started["run_id"]
+    waited = workflow.wait_workflow(started["run_id"], timeout_s=10)
+    assert waited["wait_status"] == "ready"
+    assert waited["status"] == "awaiting_review"
+    assert calls == {"plan": 1, "write": 1, "typeset": 1, "review": 0}
+
+
+def test_result_summary_uses_delivered_assets_not_cited_figures(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setenv("FACET_STUDIO_RUNS_ROOT", str(tmp_path))
+    run_id = "run_assets"
+    run_dir = tmp_path / "product_v1" / run_id
+    run_dir.mkdir(parents=True)
+    (run_dir / "run_meta.json").write_text(
+        json.dumps(
+            {
+                "visual_audit": {"candidate_count": 4, "approved_count": 0},
+                "write": {
+                    "figures_referenced": ["figures/fig-01.jpg"],
+                    "svg_assets": [],
+                },
+                "typeset": {"xhs_export": {"images": ["xhs_export/01_cover.png"]}},
+            }
+        ),
+        encoding="utf-8",
+    )
+    values = {
+        "form": "xiaohongshu_note",
+        "status": "awaiting_review",
+        "write": {"output_chars": 565, "figures_referenced": ["figures/fig-01.jpg"]},
+        "typeset": {"xhs_export": {"images": ["xhs_export/01_cover.png"]}},
+    }
+    summary = workflow._result_summary(values, run_id)
+    assert "1 张卡片" in summary
+    assert "0 张关键帧" in summary
+    assert "引用 1 图" not in summary
+    assert workflow._asset_facts(values, run_id) == {
+        "keyframes": 0,
+        "charts": 0,
+        "cards": 1,
+    }
+
+
+def test_agent_view_omits_full_body() -> None:
+    result = {
+        "run_id": "run_view",
+        "form": "wechat_article",
+        "form_label": "公众号",
+        "status": "awaiting_review",
+        "summary": "公众号 · awaiting_review",
+        "assets": {"keyframes": 0, "charts": 1, "cards": 0},
+        "plan": {"central_idea": "一个想法", "brief": "很长"},
+        "write": {"output": "BODY" * 10_000, "output_chars": 40_000},
+        "typeset": {"preview_url": "http://preview", "typeset_errors": []},
+        "usage": {"total_tokens": 12},
+        "stages": [{"name": "plan", "status": "succeeded", "usage": {"total_tokens": 9}}],
+    }
+    view = workflow.agent_view(result)
+    assert view["summary"] == "公众号 · awaiting_review"
+    assert view["assets"]["charts"] == 1
+    assert view["write"] == {"output_chars": 40000, "title_candidates": []}
+    assert "output" not in view["write"]
+    assert view["usage"] == {"total_tokens": 12}
+    assert "preview_url" not in view["typeset"]
+    assert "trace_url" not in view
+    assert view["typeset"]["has_preview"] is True
 
 
 def test_workflow_plan_changes_requested_stops(

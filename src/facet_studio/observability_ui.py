@@ -63,6 +63,26 @@ h2 .hint{font-size:12px;font-weight:400;color:var(--muted);margin-left:8px}
 .event:last-child{border-bottom:0}
 .event time{color:var(--muted);font-variant-numeric:tabular-nums;min-width:150px}
 .event b{font-weight:650}
+.story{display:grid;gap:0}
+.story-step{display:grid;grid-template-columns:30px 1fr;gap:12px;padding:12px 0;border-bottom:1px dashed #eee8de}
+.story-step:last-child{border-bottom:0}
+.story-num{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;background:#f1ede4;color:var(--muted)}
+.story-step.ok .story-num{background:#eef6f0;color:var(--ok)}
+.story-step.wait .story-num{background:#f7f0df;color:#9a6b1f}
+.story-step.bad .story-num{background:#fbeeeb;color:var(--bad)}
+.story-title{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.story-detail{font-size:13px;color:var(--text);margin-top:2px;line-height:1.6}
+.story-meta{font-size:11px;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums}
+.plan-grid{display:grid;grid-template-columns:110px 1fr;gap:8px 12px;font-size:13px;line-height:1.6}
+.plan-grid b{color:var(--muted);font-weight:600}
+.result-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:4px 0 12px}
+.result-stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.result-stat .k{font-size:11px;color:var(--muted)}
+.result-stat .v{font-size:18px;font-weight:750;margin-top:2px;font-variant-numeric:tabular-nums}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.actions a{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:12px;color:var(--ink);text-decoration:none;background:#fff}
+.actions a.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.muted-note{font-size:12px;color:var(--muted);line-height:1.6}
 .trace-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:14px}
 .tree{border:1px solid var(--line);border-radius:14px;background:#fff;padding:8px;min-height:220px}
 .tree-row{border-radius:10px;padding:8px 10px;cursor:pointer;display:flex;gap:9px;align-items:flex-start}
@@ -77,6 +97,8 @@ h2 .hint{font-size:12px;font-weight:400;color:var(--muted);margin-left:8px}
 .inspector h3{font-size:14px;margin:0 0 4px}.inspector .ins-sub{font-size:11px;color:var(--muted);margin-bottom:10px}
 .kv{display:grid;grid-template-columns:96px 1fr;gap:4px 10px;font-size:12px}
 .kv b{color:var(--muted);font-weight:600}
+.dev{margin-top:12px;border-top:1px solid var(--line);padding-top:8px}
+.dev summary{font-size:12px;color:var(--muted);cursor:pointer}
 .inspector pre{background:#211d19;color:#f4f1e8;padding:10px 12px;border-radius:8px;overflow-x:auto;
 font-size:11.5px;line-height:1.55;margin:8px 0 0}
 .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:#fff}
@@ -101,6 +123,7 @@ code{background:#f1ede4;border-radius:4px;padding:1px 5px;font-size:.92em}
       <div class="kicker">Facet Studio · Run</div>
       <h1>运行数据</h1>
       <div class="sub" id="run-id">__RUN_ID__</div>
+      <div class="sub" id="run-title" style="margin-top:4px;font-size:14px;color:var(--text)"></div>
       <div class="badges" id="badges"></div>
     </div>
     <div class="live" id="live"><span>连接中…</span></div>
@@ -110,13 +133,29 @@ code{background:#f1ede4;border-radius:4px;padding:1px 5px;font-size:.92em}
   <div class="sub" style="margin-top:8px">GROUNDING 是候选标记，不是幻觉率；机器检查通过不等于写作质量通过。</div>
 
   <div class="tabs">
-    <button class="tab active" data-tab="live">Live 实时</button>
+    <button class="tab active" data-tab="overview">概览</button>
+    <button class="tab" data-tab="live">Live 实时</button>
     <button class="tab" data-tab="trace">Trace 详情</button>
     <button class="tab" data-tab="stats">Stats 统计</button>
   </div>
-  <div class="sub" style="margin-top:10px">Live 面向产品用户；Trace / Stats 面向开发与面试，含内部调用、机器检查和 grounding 候选，不是写作质量分。</div>
+  <div class="sub" style="margin-top:10px">概览 / Live 面向产品用户；Trace / Stats 面向开发与面试，含内部调用、机器检查和 grounding 候选，不是写作质量分。</div>
 
-  <div class="section active" id="tab-live">
+  <div class="section active" id="tab-overview">
+    <div class="card">
+      <h2>这次 run 做了什么</h2>
+      <div class="story" id="story"></div>
+    </div>
+    <div class="card">
+      <h2>关键判断</h2>
+      <div id="plan-summary"></div>
+    </div>
+    <div class="card">
+      <h2>结果</h2>
+      <div id="result-summary"></div>
+    </div>
+  </div>
+
+  <div class="section" id="tab-live">
     <div class="card">
       <h2>运行进度 <span class="hint">SSE 实时更新</span></h2>
       <div class="stepper" id="stepper"></div>
@@ -163,6 +202,45 @@ code{background:#f1ede4;border-radius:4px;padding:1px 5px;font-size:.92em}
 const RUN_ID = "__RUN_ID__";
 const FINAL = new Set(["approved","typeset","partial","rejected","changes_requested","failed"]);
 const STAGE_LABEL = {intake:"接入",plan:"规划",approval:"计划确认",write:"写作",typeset:"排版",review:"验收"};
+const CALL_TITLE = {bundle_plan:"规划文章",visual_audit:"视觉审计",typeset:"排版"};
+const DECISION_IMPACT = {plan:"决定这次写什么形态、角度和读者；不写正文。",approval:"决定是否开始写作；自动通过表示没有人工确认。",review:"决定产物能不能发布；自动通过仍不是用户验收。"};
+function safeJson(text){
+ try{return JSON.parse(String(text||""));}catch(e){
+  const a=String(text||"").indexOf("{"),b=String(text||"").lastIndexOf("}");
+  if(a>=0&&b>a){try{return JSON.parse(String(text).slice(a,b+1));}catch(e2){return null;}}
+  return null;
+ }
+}
+function auditFacts(c){
+ const key=String(c.key||"");const file=(key.split(":").pop()||"").split(/[\\/]/).pop();
+ const raw=safeJson(c.raw_response)||{};const reasons=[];
+ if(raw.has_watermark)reasons.push("水印/平台界面");
+ if(raw.has_person)reasons.push("人物出镜");
+ if(["ui","other"].includes(String(raw.scene_type||"")))reasons.push("屏幕/其他");
+ if(String(raw.quality||"")&&String(raw.quality)!=="clear")reasons.push("画面质量");
+ if(raw.info_value===false)reasons.push("信息价值低");
+ return {file:file||"候选帧",passed:reasons.length===0,reasons};
+}
+function callTitle(c,i){
+ const stage=String(c.stage||"");
+ if(stage==="visual_audit"){return `视觉审计 · ${auditFacts(c).file}`;}
+ if(stage.startsWith("write_"))return "写作";
+ if(stage.includes("_svg_spec")||stage==="svg_spec")return "生成图表";
+ return CALL_TITLE[stage]||`模型调用 #${i+1}`;
+}
+function callHelp(c){
+ const stage=String(c.stage||"");
+ if(stage==="visual_audit"){
+  const f=auditFacts(c);
+  return f.passed?`${f.file} 通过：可以当关键帧`:`${f.file} 未通过：${f.reasons.join("、")}`;
+ }
+ const help=(trace.help&&trace.help.call)||{};
+ return help[c.stage]||"一次模型调用，用来完成当前阶段。";
+}
+function decisionTitle(d){
+ const stage=String(d.stage||"");
+ return stage?`${stageLabel(stage)}判断`:"判断";
+}
 const STATUS_TEXT = {awaiting_plan_approval:"等待计划确认",awaiting_review:"等待验收",planned:"已规划",written:"已写完",
 typeset:"已排版",partial:"部分完成",approved:"已验收",rejected:"已拒绝",changes_requested:"待修改",failed:"失败"};
 const STATUS_DISPLAY = {auto_approved:"自动通过（未人工确认）",auto_accepted:"自动通过（未验收）",succeeded:"成功",complete:"完成",running:"进行中",queued:"排队中"};
@@ -186,6 +264,8 @@ function renderBadges(){
  const c=trace.context||{}, r=trace.review||{};
  const items=[["视频",c.video_id||"—"],["形态",trace.form_label||trace.form||"—"],["run",statusText(trace.status)],["验收",REVIEW_DISPLAY[r.decision]||r.decision||"未验收"]];
  document.getElementById("badges").innerHTML=items.map(([k,v])=>`<span class="badge">${esc(k)} ${esc(v)}</span>`).join("");
+ const title=document.getElementById("run-title");
+ if(title)title.textContent=c.central_idea||"";
 }
 function renderStats(){
  const u=trace.usage||{}, checks=trace.checks_total?`${trace.checks_passed||0}/${trace.checks_total}`:"—";
@@ -236,7 +316,7 @@ function renderConfig(){
  const src=[c.video_id,c.source_title].filter(Boolean); const source=src.length>1&&src[0]===src[1]?src[0]:(src.join(" · ")||"—");
  const rows=[["来源",source],["形态",trace.form_label||trace.form||"—"],["请求",c.request||"—"],["模型",c.model||"—"],
  ["temperature",c.temperature==null?"—":c.temperature],["max_tokens",c.max_tokens==null?"—":num(c.max_tokens)],
- ["skill 版本",[c.skill_id,c.skill_version].filter(Boolean).join(" ")||"—"],["内容稿",`${num(c.content_chars||0)} 字 · ${num(c.figure_count||0)} 图`],["正文引用",`${num(c.figures_referenced||0)} 图`],
+ ["skill 版本",[c.skill_id,c.skill_version].filter(Boolean).join(" ")||"—"],["内容稿",`${num(c.content_chars||0)} 字 · ${num(c.figure_count||0)} 图`],["关键帧",`${num(c.keyframes_referenced ?? c.figures_referenced ?? 0)} 图`],["SVG",`${num(c.svg_count||0)} 个`],
  ["视觉审计",(()=>{const va=c.visual_audit||{};if(va.error)return `出错：${va.error}`;return `${num(va.candidate_count||0)} 候选 / ${num(va.approved_count||0)} 通过`;})()],
  ["未通过原因",Object.entries((c.visual_audit||{}).reasons||{}).map(([k,v])=>`${k} ${v}`).join(" · ")||"—"],
  ["中心判断",c.central_idea||"—"]];
@@ -251,11 +331,11 @@ function nodes(){
  out.push({id:"run",kind:"run",title:"Run",sub:trace.run_id,status:trace.status,body:trace});
  stages.forEach(st=>{const sid=`stage:${st.name}`;
   out.push({id:sid,kind:"stage",title:stageLabel(st.name),sub:st.name,status:st.status,usage:st.usage,duration:st.duration_ms,body:st,parent:"run"});
-  calls.forEach((c,i)=>{if(callStageMatch(c.stage,st.name))out.push({id:`llm:${i}`,kind:"llm",title:`模型调用 #${i+1}`,sub:c.stage,status:c.status,usage:c.usage,duration:c.latency_ms,body:c,parent:sid});});
-  decisions.forEach((d,i)=>{if(d.stage===st.name)out.push({id:`dec:${i}`,kind:"decision",title:"决策",sub:d.question,status:d.selected,body:d,parent:sid});});
+  calls.forEach((c,i)=>{if(callStageMatch(c.stage,st.name))out.push({id:`llm:${i}`,kind:"llm",title:callTitle(c,i),sub:callHelp(c),status:c.status,usage:c.usage,duration:c.latency_ms,body:c,parent:sid});});
+  decisions.forEach((d,i)=>{if(d.stage===st.name)out.push({id:`dec:${i}`,kind:"decision",title:decisionTitle(d),sub:d.question,status:d.selected,body:d,parent:sid});});
  });
- calls.forEach((c,i)=>{if(!stages.some(s=>callStageMatch(c.stage,s.name)))out.push({id:`llm:${i}`,kind:"llm",title:`模型调用 #${i+1}`,sub:c.stage,status:c.status,usage:c.usage,duration:c.latency_ms,body:c,parent:"run"});});
- decisions.forEach((d,i)=>{if(!stages.some(s=>d.stage===s.name))out.push({id:`dec:${i}`,kind:"decision",title:"决策",sub:d.question,status:d.selected,body:d,parent:"run"});});
+ calls.forEach((c,i)=>{if(!stages.some(s=>callStageMatch(c.stage,s.name)))out.push({id:`llm:${i}`,kind:"llm",title:callTitle(c,i),sub:callHelp(c),status:c.status,usage:c.usage,duration:c.latency_ms,body:c,parent:"run"});});
+ decisions.forEach((d,i)=>{if(!stages.some(s=>d.stage===s.name))out.push({id:`dec:${i}`,kind:"decision",title:decisionTitle(d),sub:d.question,status:d.selected,body:d,parent:"run"});});
  return out;
 }
 function renderTree(){
@@ -266,7 +346,7 @@ function renderTree(){
  const runIdx=order.findIndex(x=>x.n.id==="run"); if(runIdx>0)order.unshift(order.splice(runIdx,1)[0]);
  const html=order.map(({n,depth})=>{
   const indent=depth?("│  ".repeat(Math.max(0,depth-1))+"├─ "):"";
-  const kind={run:"run",stage:"stage",llm:"LLM",decision:"decision"}[n.kind]||n.kind;
+  const kind={run:"run",stage:"阶段",llm:"模型调用",decision:"判断"}[n.kind]||n.kind;
   return `<div class="tree-row ${selected===n.id?"selected":""}" data-id="${esc(n.id)}">
    <div class="indent">${esc(indent)}</div><div class="body">
     <div class="title">${dot(n.status)}${esc(n.title)}<span class="kind">${esc(kind)}</span></div>
@@ -282,14 +362,15 @@ function renderInspector(all){
  const node=(all||nodes()).find(n=>n.id===selected),box=document.getElementById("inspector");
  if(!node){box.innerHTML=`<div class="empty">选择左边一条记录。</div>`;return;}
  const b=node.body||{},k=node.kind;
+ const stageHelp=(trace.help&&trace.help.stage)||{};
  let kv="";
- if(k==="run")kv=`<div class="kv"><b>run</b><span>${esc(b.run_id)}</span><b>status</b><span>${esc(statusText(b.status))}</span></div>`;
- else if(k==="stage")kv=`<div class="kv"><b>stage</b><span>${esc(b.name)}</span><b>status</b><span>${esc(statusText(b.status))}</span><b>耗时</b><span>${fmt(b.duration_ms)}</span><b>tokens</b><span>${esc(usage(b.usage)||"—")}</span></div>`;
- else if(k==="llm")kv=`<div class="kv"><b>stage</b><span>${esc(b.stage)}</span><b>model</b><span>${esc(b.model)}</span><b>status</b><span>${esc(b.status)}</span><b>tokens</b><span>${esc(usage(b.usage)||"—")}</span><b>延迟</b><span>${fmt(b.latency_ms)}</span><b>finish</b><span>${esc(b.finish_reason||"—")}</span><b>max_tokens</b><span>${esc(b.max_tokens??"—")}</span><b>temperature</b><span>${esc(b.temperature??"—")}</span></div>`;
- else if(k==="decision")kv=`<div class="kv"><b>stage</b><span>${esc(b.stage||"")}</span><b>问题</b><span>${esc(b.question||"")}</span><b>选择</b><span>${esc(DECISION_DISPLAY[b.selected]||b.selected||"")}</span><b>由谁</b><span>${esc(DECIDED_BY_DISPLAY[b.decided_by]||b.decided_by||"")}</span></div>`;
+ if(k==="run")kv=`<div class="kv"><b>总览</b><span>这次 run 的完整执行记录</span><b>状态</b><span>${esc(statusText(b.status))}</span><b>中心判断</b><span>${esc((trace.context||{}).central_idea||"—")}</span></div>`;
+ else if(k==="stage")kv=`<div class="kv"><b>作用</b><span>${esc(stageHelp[b.name]||"这次 run 的一个执行阶段")}</span><b>状态</b><span>${esc(statusText(b.status))}</span><b>耗时</b><span>${fmt(b.duration_ms)}</span><b>tokens</b><span>${esc(usage(b.usage)||"—")}</span></div>`;
+ else if(k==="llm")kv=`<div class="kv"><b>作用</b><span>${esc(callHelp(b))}</span><b>模型</b><span>${esc(b.model||"—")}</span><b>状态</b><span>${esc(statusText(b.status))}</span><b>tokens</b><span>${esc(usage(b.usage)||"—")}</span><b>延迟</b><span>${fmt(b.latency_ms)}</span><b>finish</b><span>${esc(b.finish_reason||"—")}</span></div>`;
+ else if(k==="decision")kv=`<div class="kv"><b>问题</b><span>${esc(b.question||"")}</span><b>选择</b><span>${esc(DECISION_DISPLAY[b.selected]||b.selected||"")}</span><b>由谁</b><span>${esc(DECIDED_BY_DISPLAY[b.decided_by]||b.decided_by||"")}</span><b>影响</b><span>${esc(DECISION_IMPACT[b.stage]||"影响下一步执行。")}</span></div>`;
  const payload=JSON.stringify(b,null,2);
- box.innerHTML=`<h3>${esc(node.title)}</h3><div class="ins-sub">${esc(node.kind)} · ${esc(node.sub||"")}</div>${kv}
-  <pre>${esc(payload.length>5000?payload.slice(0,5000)+"…":payload)}</pre>`;
+ box.innerHTML=`<h3>${esc(node.title)}</h3><div class="ins-sub">${esc(node.sub||"")}</div>${kv}
+  <details class="dev"><summary>开发者详情（原始字段/ID）</summary><pre>${esc(payload.length>5000?payload.slice(0,5000)+"…":payload)}</pre></details>`;
 }
 function checkDisplay(c){
  const id=String(c.check_id||""),d=String(c.detail||"");
@@ -308,9 +389,55 @@ function renderChecks(){
   `<tr><td><code>${esc(f.kind)}</code></td><td>${esc(f.value)}</td><td>${esc(f.context)}</td></tr>`
  ).join(""):`<tr><td colspan="3" class="empty">没有 grounding 候选。</td></tr>`;
 }
+const STORY_STATUS={succeeded:"完成",typeset:"完成",auto_approved:"自动通过",auto_accepted:"自动通过",awaiting:"等待",awaiting_review:"等待验收",no_frames:"0 通过",passed:"通过",failed:"失败"};
+function storyClass(s){s=String(s||"").toLowerCase();if(s==="failed")return "bad";if(["awaiting","awaiting_review","no_frames","auto_accepted","auto_approved"].includes(s))return "wait";return "ok";}
+function renderStory(){
+ const items=trace.story||[];
+ const box=document.getElementById("story");
+ box.innerHTML=items.length?items.map((item,i)=>{
+  const cls=storyClass(item.status);
+  const meta=[item.duration_ms?fmt(item.duration_ms):"",item.tokens?`${num(item.tokens)} tokens`:""].filter(Boolean).join(" · ");
+  return `<div class="story-step ${cls}"><div class="story-num">${i+1}</div><div>
+   <div class="story-title">${esc(item.step||"步骤")}<span class="pill ${cls}">${esc(STORY_STATUS[item.status]||item.status||"")}</span></div>
+   <div class="story-detail">${esc(item.detail||"")}</div>
+   ${meta?`<div class="story-meta">${esc(meta)}</div>`:""}
+  </div></div>`;
+ }).join(""):`<div class="empty">还在启动，暂无步骤。</div>`;
+}
+function renderPlanSummary(){
+ const c=trace.context||{}, va=c.visual_audit||{};
+ const rows=[
+  ["中心判断",c.central_idea||"—"],
+  ["角度",c.plan_angle||"—"],
+  ["读者收获",c.plan_reader||"—"],
+  ["用户要求",c.request||"—"],
+  ["视觉审计",(()=>{if(va.error)return `出错：${va.error}`;if(!va.candidate_count)return "未发现候选关键帧";return `${num(va.candidate_count)} 候选 / ${num(va.approved_count||0)} 通过`;})()],
+  ["未通过原因",Object.entries(va.reasons||{}).map(([k,v])=>`${k} ${v}`).join(" · ")||"—"],
+ ];
+ document.getElementById("plan-summary").innerHTML=`<div class="plan-grid">${rows.map(([k,v])=>`<b>${esc(k)}</b><span>${esc(v)}</span>`).join("")}</div>`;
+}
+function renderResultSummary(){
+ const c=trace.context||{}, form=trace.form||c.form||"";
+ const visual=form==="xiaohongshu_note"?["卡片",`${num(c.card_count||0)} 张`]:["关键帧",`${num(c.keyframes_referenced ?? c.figures_referenced ?? 0)} 图`];
+ const stats=[
+  ["正文",`${num(c.output_chars||0)} 字`],
+  visual,
+  ["SVG",`${num(c.svg_count||0)} 个`],
+  ["状态",STATUS_TEXT[trace.status]||trace.status||"—"],
+  ["验收",trace.review&&trace.review.decision?REVIEW_DISPLAY[trace.review.decision]||trace.review.decision:"未验收"],
+ ];
+ const links=[];
+ const artifacts=trace.artifacts||{};
+ const add=(label,path,primary)=>{if(!path)return;const href=/^https?:\\/\\//.test(String(path))?String(path):`/runs/${encodeURIComponent(trace.run_id)}/${String(path).replace(/^\\//,"")}`;links.push(`<a class="${primary?"primary":""}" href="${href}" target="_blank" rel="noopener">${label}</a>`);};
+ if(artifacts.preview_url)add("阅读预览",artifacts.preview_url,true);
+ if(artifacts.wechat_url)add("公众号预览",artifacts.wechat_url,false);
+ if(form==="long_article")add("PDF",`${form}/article.pdf`,false);
+ if(artifacts.trace_url)add("Trace 导出",artifacts.trace_url,false);
+ document.getElementById("result-summary").innerHTML=`<div class="result-grid">${stats.map(([k,v])=>`<div class="result-stat"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div></div>`).join("")}</div>${links.length?`<div class="actions">${links.join("")}</div>`:""}<div class="muted-note" style="margin-top:10px">验收在聊天里回复“通过 / 要改 / 不要了”；这里只读，不会自动发布。</div>`;
+}
 function render(){
  if(!trace)return;
- renderBadges();renderStats();renderStepper();renderEvents();renderStageStats();renderCallStats();renderConfig();renderTree();renderChecks();
+ renderBadges();renderStats();renderStepper();renderEvents();renderStageStats();renderCallStats();renderConfig();renderTree();renderChecks();renderStory();renderPlanSummary();renderResultSummary();
  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));
  document.querySelectorAll(".section").forEach(s=>s.classList.toggle("active",s.id===`tab-${tab}`));
  const done=trace.final||FINAL.has(String(trace.status||""));
@@ -366,6 +493,7 @@ th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;verti
 th{font-size:11px;color:var(--muted);background:#f6f2ea;white-space:nowrap}
 tr:last-child td{border-bottom:0}
 tr:hover td{background:#faf8f3;cursor:pointer}
+.title-cell{max-width:320px;white-space:normal;line-height:1.45}
 code{background:#f1ede4;border-radius:4px;padding:1px 5px;font-size:.92em}
 .ok{color:var(--ok)}.bad{color:var(--bad)}.muted{color:var(--muted)}
 @media(max-width:760px){.page{padding:20px 12px 60px}}
@@ -379,7 +507,7 @@ code{background:#f1ede4;border-radius:4px;padding:1px 5px;font-size:.92em}
   <div class="stats" id="stats"></div>
   <div class="card">
     <h2>最近 runs</h2>
-    <div class="table-wrap"><table><thead><tr><th>run</th><th>视频</th><th>形态</th><th>状态</th><th>验收</th><th>calls</th><th>tokens</th><th>延迟</th><th>检查</th><th>grounding</th></tr></thead><tbody id="rows"></tbody></table></div>
+    <div class="table-wrap"><table><thead><tr><th>run</th><th>标题/任务</th><th>视频</th><th>形态</th><th>状态</th><th>验收</th><th>calls</th><th>tokens</th><th>延迟</th><th>检查</th><th>grounding</th></tr></thead><tbody id="rows"></tbody></table></div>
   </div>
 </div>
 <script>
@@ -398,12 +526,12 @@ async function load(){
   document.getElementById("rows").innerHTML=(data.runs||[]).map(x=>{
    const cls=x.status==="approved"||x.status==="typeset"?"ok":x.status==="failed"||x.status==="partial"?"bad":"";
    return `<tr onclick="location.href='/runs/${encodeURIComponent(x.run_id)}'">
-    <td><code>${esc(x.run_id)}</code></td><td>${esc(x.video_id||"")}</td><td>${esc(x.form_label||x.form||"")}</td>
+    <td><code>${esc(x.run_id)}</code></td><td class="title-cell">${esc(x.title||"")}</td><td>${esc(x.video_id||"")}</td><td>${esc(x.form_label||x.form||"")}</td>
     <td class="${cls}">${esc(STATUS_DISPLAY[x.status]||x.status||"")}</td><td>${esc(REVIEW_DISPLAY[x.review]||x.review||"未验收")}</td><td>${x.calls_known===false?"—":num(x.calls_total)}</td>
     <td>${x.tokens_known===false?"—":num(x.tokens)}</td><td>${fmt(x.latency_ms)}</td><td>${x.checks_total?`${x.checks_passed}/${x.checks_total}`:"—"}</td><td>${num(x.grounding_flags)}</td>
    </tr>`;
-  }).join("")||`<tr><td colspan="10" class="muted">没有 runs。</td></tr>`;
- }catch(e){document.getElementById("rows").innerHTML=`<tr><td colspan="10" class="muted">读取失败：${esc(e.message)}</td></tr>`;}
+  }).join("")||`<tr><td colspan="11" class="muted">没有 runs。</td></tr>`;
+ }catch(e){document.getElementById("rows").innerHTML=`<tr><td colspan="11" class="muted">读取失败：${esc(e.message)}</td></tr>`;}
 }
 load(); setInterval(load,5000);
 </script>

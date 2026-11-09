@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import os
+import threading
 import time
 import uuid
 from datetime import datetime, timezone
@@ -20,6 +21,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command, interrupt
 
 from .mcp_server import (
+    FORM_LABELS,
     FORM_SKILLS,
     _new_run_id,
     _normalize_form,
@@ -43,6 +45,8 @@ class WorkflowState(TypedDict, total=False):
     form: str
     request: str
     auto_approve: bool
+    auto_plan: bool
+    auto_accept: bool
     status: str
     plan: dict[str, Any]
     decision: str
@@ -56,6 +60,17 @@ class WorkflowState(TypedDict, total=False):
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+_BACKGROUND_RUNS: dict[str, threading.Thread] = {}
+_BACKGROUND_LOCK = threading.Lock()
+
+
+def _trace_url(run_id: str) -> str:
+    base = str(
+        os.environ.get("FACET_STUDIO_PREVIEW_BASE", "http://127.0.0.1:8765/runs")
+    ).rstrip("/")
+    return f"{base}/{run_id}"
 
 
 def _merge_usage(
@@ -247,7 +262,7 @@ def plan_node(state: WorkflowState) -> dict[str, Any]:
 
 def approval_node(state: WorkflowState) -> dict[str, Any]:
     started = time.perf_counter()
-    if state.get("auto_approve"):
+    if state.get("auto_plan") or state.get("auto_approve"):
         return {
             "decision": "approved",
             "status": "planned",
@@ -336,7 +351,7 @@ def typeset_node(state: WorkflowState) -> dict[str, Any]:
 
 def review_node(state: WorkflowState) -> dict[str, Any]:
     started = time.perf_counter()
-    if state.get("auto_approve"):
+    if state.get("auto_accept") or state.get("auto_approve"):
         return {
             "status": state.get("status") or "typeset",
             "stages": _stage(state, "review", "auto_accepted", started),
@@ -464,10 +479,14 @@ def _snapshot_result(
 ) -> dict[str, Any]:
     values = dict(snapshot.values or {})
     next_nodes = list(snapshot.next or ())
+    auto_plan = bool(values.get("auto_plan") or values.get("auto_approve"))
+    auto_accept = bool(values.get("auto_accept") or values.get("auto_approve"))
     if "approval" in next_nodes:
-        status = "awaiting_plan_approval"
+        # In end-to-end mode the approval node is about to auto-run; this
+        # transient snapshot must not look like a human gate.
+        status = "running" if auto_plan else "awaiting_plan_approval"
     elif "review" in next_nodes:
-        status = "awaiting_review"
+        status = "typeset" if auto_accept else "awaiting_review"
     else:
         status = str(values.get("status") or "unknown")
     interrupts = [
@@ -475,18 +494,14 @@ def _snapshot_result(
         for item in (getattr(snapshot, "interrupts", ()) or ())
     ]
     usage = values.get("usage") or {}
-    trace_url = None
-    if (_run_dir(run_id) / "trace.html").is_file():
-        base = str(
-            os.environ.get("FACET_STUDIO_PREVIEW_BASE", "http://127.0.0.1:8765/runs")
-        ).rstrip("/")
-        trace_url = f"{base}/{run_id}"
+    trace_url = _trace_url(run_id)
     return {
         "run_id": run_id,
         "thread_id": run_id,
         "trace_url": trace_url,
         "video_id": values.get("video_id"),
         "form": values.get("form"),
+        "form_label": FORM_LABELS.get(str(values.get("form") or ""), ""),
         "request": values.get("request"),
         "status": status,
         "next": next_nodes,
@@ -500,6 +515,8 @@ def _snapshot_result(
         "typeset": values.get("typeset"),
         "review": values.get("review"),
         "errors": values.get("errors") or [],
+        "summary": _result_summary(values, run_id),
+        "assets": _asset_facts(values, run_id),
         "updated_at": _now(),
     }
 
@@ -566,31 +583,332 @@ def _execute(
         return result
 
 
+def _asset_facts(values: dict[str, Any], run_id: str = "") -> dict[str, int]:
+    """Count what the reader actually receives, not what the writer cited.
+
+    `write.figures_referenced` is pre-visual-audit; a rejected keyframe must
+    not reappear in the chat summary as a delivered image. XHS cards are a
+    generated cover, not video keyframes, so they are reported separately.
+    """
+    meta: dict[str, Any] = {}
+    if run_id:
+        meta_path = _run_dir(run_id) / "run_meta.json"
+        if meta_path.is_file():
+            try:
+                meta = _read_json(meta_path)
+            except (OSError, ValueError):
+                meta = {}
+    write = values.get("write") or meta.get("write") or {}
+    typeset = values.get("typeset") or meta.get("typeset") or {}
+    visual = meta.get("visual_audit") or {}
+    if visual and "approved_count" in visual:
+        keyframes = int(visual.get("approved_count") or 0)
+    else:
+        keyframes = len(
+            [
+                figure
+                for figure in (write.get("figures_referenced") or [])
+                if not str(figure).lower().endswith(".svg")
+            ]
+        )
+    svg_assets = write.get("svg_assets") or []
+    charts = len(svg_assets)
+    if not charts:
+        charts = len(
+            [
+                figure
+                for figure in (write.get("figures_referenced") or [])
+                if str(figure).lower().endswith(".svg")
+            ]
+        )
+    cards = len(((typeset.get("xhs_export") or {}).get("images") or []))
+    if not cards:
+        cards = len(((meta.get("artifacts") or {}).get("xhs_cards") or []))
+    return {"keyframes": keyframes, "charts": charts, "cards": cards}
+
+
+def _result_summary(values: dict[str, Any], run_id: str = "") -> str:
+    form = str(values.get("form") or "")
+    label = FORM_LABELS.get(form, form or "产物")
+    write = values.get("write") or {}
+    parts = [label, str(values.get("status") or "running")]
+    if write.get("output_chars"):
+        parts.append(f"{int(write['output_chars']):,} 字")
+    assets = _asset_facts(values, run_id)
+    if form == "xiaohongshu_note":
+        parts.append(f"{assets['cards']} 张卡片")
+        parts.append(f"{assets['keyframes']} 张关键帧")
+        if assets["charts"]:
+            parts.append(f"{assets['charts']} 个图表")
+    elif assets["keyframes"] or assets["charts"]:
+        if assets["charts"]:
+            parts.append(f"{assets['charts']} 个图表")
+        parts.append(f"{assets['keyframes']} 张关键帧")
+    else:
+        parts.append("0 图")
+    tokens = _int_usage(values)
+    if tokens:
+        parts.append(f"{tokens:,} tokens")
+    return " · ".join(parts)
+
+
+def _int_usage(values: dict[str, Any]) -> int:
+    usage = values.get("usage") or {}
+    try:
+        return int(usage.get("total_tokens") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _running_result(run_id: str, state: WorkflowState) -> dict[str, Any]:
+    return {
+        "run_id": run_id,
+        "thread_id": run_id,
+        "trace_url": _trace_url(run_id),
+        "video_id": state.get("video_id"),
+        "form": state.get("form"),
+        "form_label": FORM_LABELS.get(str(state.get("form") or ""), ""),
+        "request": state.get("request"),
+        "status": "running",
+        "next": [],
+        "interrupt": None,
+        "events": [],
+        "stages": [],
+        "usage": {},
+        "cost_estimate": None,
+        "plan": None,
+        "write": None,
+        "typeset": None,
+        "review": None,
+        "errors": [],
+        "summary": _result_summary(dict(state), run_id),
+        "assets": {"keyframes": 0, "charts": 0, "cards": 0},
+        "updated_at": _now(),
+    }
+
+
+def _init_background_run(run_id: str, state: WorkflowState) -> None:
+    """Make run_meta/workflow readable before the first LLM call finishes."""
+    run_dir = _run_dir(run_id)
+    run_dir.mkdir(parents=True, exist_ok=True)
+    meta_path = run_dir / "run_meta.json"
+    if not meta_path.is_file():
+        _write_json(
+            meta_path,
+            {
+                "schema_version": "product-v1-run",
+                "run_id": run_id,
+                "video_id": state.get("video_id"),
+                "form": state.get("form"),
+                "form_label": FORM_LABELS.get(str(state.get("form") or ""), ""),
+                "request": state.get("request"),
+                "status": "running",
+                "created_at": _now(),
+            },
+        )
+    wf_path = run_dir / "workflow.json"
+    if not wf_path.is_file():
+        _write_json(wf_path, _running_result(run_id, state))
+
+
+def _background_worker(run_id: str, state: WorkflowState) -> None:
+    try:
+        _execute(run_id, state, check_existing=False)
+    except Exception as exc:  # noqa: BLE001 - surface in the persisted trace
+        path = _run_dir(run_id) / "workflow.json"
+        previous = _read_json(path) if path.is_file() else _running_result(run_id, state)
+        previous.update(
+            {
+                "status": "failed",
+                "errors": [f"{type(exc).__name__}: {exc}"],
+                "updated_at": _now(),
+            }
+        )
+        _write_json(path, previous)
+    finally:
+        with _BACKGROUND_LOCK:
+            _BACKGROUND_RUNS.pop(run_id, None)
+
+
 def start_workflow(
     video_id: str,
     form: str,
     request: str = "",
     auto_approve: bool = False,
+    auto_plan: bool = False,
+    auto_accept: bool = False,
+    background: bool = False,
     on_event: Any = None,
 ) -> dict[str, Any]:
-    """Start a checkpointed workflow and pause at the plan gate by default."""
+    """Start a checkpointed workflow.
+
+    ``auto_plan=True`` skips the plan gate (end-to-end by default for chat);
+    ``auto_accept=True`` is only for explicit automation and skips user
+    acceptance.  ``background=True`` returns a running result immediately so
+    the chat can show live progress; use ``wait_workflow`` to await the next
+    gate.
+    """
     normalized = _normalize_form(form)
     if normalized not in FORM_SKILLS:
         raise ValueError(f"未知 form：{form}")
     run_id = _new_run_id(video_id, normalized)
     if _run_dir(run_id).exists():
         run_id = f"{run_id}_{uuid.uuid4().hex[:6]}"
+    legacy = bool(auto_approve)
     state: WorkflowState = {
         "run_id": run_id,
         "video_id": video_id,
         "form": normalized,
         "request": request,
-        "auto_approve": auto_approve,
+        "auto_approve": legacy,
+        "auto_plan": bool(auto_plan) or legacy,
+        "auto_accept": bool(auto_accept) or legacy,
         "errors": [],
         "usage": {},
         "stages": [],
     }
-    return _execute(run_id, state, check_existing=False, on_event=on_event)
+    if not background:
+        return _execute(run_id, state, check_existing=False, on_event=on_event)
+    _init_background_run(run_id, state)
+    thread = threading.Thread(
+        target=_background_worker,
+        args=(run_id, state),
+        name=f"facet-workflow-{run_id}",
+        daemon=True,
+    )
+    with _BACKGROUND_LOCK:
+        _BACKGROUND_RUNS[run_id] = thread
+    thread.start()
+    return _running_result(run_id, state)
+
+
+_WAIT_STATES = {
+    "awaiting_plan_approval",
+    "awaiting_review",
+    "typeset",
+    "partial",
+    "failed",
+    "approved",
+    "rejected",
+    "changes_requested",
+}
+
+
+def _plan_view(plan: dict[str, Any]) -> dict[str, Any]:
+    return {
+        key: plan.get(key)
+        for key in ("central_idea", "reader_goal", "angle", "must_use_figures")
+        if plan.get(key) is not None
+    }
+
+
+def agent_view(result: dict[str, Any]) -> dict[str, Any]:
+    """The MCP-facing result: enough for a grounded reply, no full body.
+
+    LibreChat truncates large MCP outputs. Returning `write.output` plus the
+    full plan used to cut off the summary and push the model toward stale
+    pre-audit figure counts. The trace page and card API read the full
+    workflow.json separately.
+    """
+    plan = result.get("plan") or {}
+    write = result.get("write") or {}
+    typeset = result.get("typeset") or {}
+    review = result.get("review") or {}
+    xhs = typeset.get("xhs_export") or {}
+    cards = list(xhs.get("images") or xhs.get("card_urls") or [])
+    stages = [
+        {
+            "name": stage.get("name"),
+            "status": stage.get("status"),
+            "duration_ms": stage.get("duration_ms"),
+        }
+        for stage in (result.get("stages") or [])
+        if isinstance(stage, dict)
+    ]
+    interrupt = result.get("interrupt")
+    interrupt_view: dict[str, Any] | None = None
+    if isinstance(interrupt, dict):
+        interrupt_view = {
+            key: interrupt.get(key)
+            for key in ("run_id", "question", "decisions")
+            if interrupt.get(key) is not None
+        }
+        if interrupt.get("plan"):
+            interrupt_view["plan"] = _plan_view(interrupt["plan"])
+    view: dict[str, Any] = {
+        "run_id": result.get("run_id"),
+        "video_id": result.get("video_id"),
+        "form": result.get("form"),
+        "form_label": result.get("form_label"),
+        "status": result.get("status"),
+        "next": result.get("next") or [],
+        "interrupt": interrupt_view,
+        "summary": result.get("summary"),
+        "assets": result.get("assets")
+        or {"keyframes": 0, "charts": 0, "cards": len(cards)},
+        "usage": {"total_tokens": _int_usage(result)},
+        "stages": stages,
+        "errors": result.get("errors") or [],
+    }
+    if plan:
+        view["plan"] = _plan_view(plan)
+    if write:
+        view["write"] = {
+            "output_chars": write.get("output_chars"),
+            "title_candidates": write.get("title_candidates") or [],
+        }
+    if typeset:
+        # The chat card owns the preview links. Agents used to paste
+        # `preview_url` into the final reply; keep only presence flags so the
+        # model cannot leak a raw URL.
+        view["typeset"] = {
+            "has_preview": bool(
+                typeset.get("preview_url")
+                or typeset.get("wechat_url")
+                or cards
+            ),
+            "typeset_errors": typeset.get("typeset_errors") or [],
+        }
+    if review:
+        view["review"] = {
+            "decision": review.get("decision"),
+            "notes": review.get("notes"),
+        }
+    for key in ("wait_status", "timeout", "error"):
+        if key in result:
+            view[key] = result[key]
+    return view
+
+
+def wait_workflow(run_id: str, timeout_s: int = 120) -> dict[str, Any]:
+    """Wait until the workflow reaches a human gate or a terminal state."""
+    run_dir = _run_dir(run_id)
+    if not run_dir.is_dir():
+        raise FileNotFoundError(f"workflow 不存在：{run_id}")
+    deadline = time.time() + max(1, min(int(timeout_s), 300))
+    last: dict[str, Any] = {}
+    while True:
+        path = run_dir / "workflow.json"
+        if path.is_file():
+            last = _read_json(path)
+            status = str(last.get("status") or "")
+            if status in _WAIT_STATES:
+                return {**last, "wait_status": "ready"}
+        with _BACKGROUND_LOCK:
+            thread = _BACKGROUND_RUNS.get(run_id)
+        if thread is not None and not thread.is_alive():
+            if path.is_file():
+                last = _read_json(path)
+                if str(last.get("status") or "") in _WAIT_STATES:
+                    return {**last, "wait_status": "ready"}
+            return {
+                **last,
+                "wait_status": "failed",
+                "error": "workflow thread exited before a gate",
+            }
+        if time.time() >= deadline:
+            return {**last, "wait_status": "timeout", "timeout": True}
+        time.sleep(0.5)
 
 
 def resume_workflow(

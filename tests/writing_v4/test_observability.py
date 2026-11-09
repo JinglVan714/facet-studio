@@ -112,6 +112,15 @@ def test_collect_trace_combines_stages_calls_checks(tmp_path: Path) -> None:
     assert "stages" in trace and "llm_calls" in trace and "grounding" in trace
 
 
+def test_collect_trace_story_is_human_readable(tmp_path: Path) -> None:
+    run_dir, run_id, meta = _run(tmp_path)
+    trace = collect_trace(run_id, run_dir, meta)
+    steps = [item["step"] for item in trace["story"]]
+    assert steps == ["规划", "写作", "排版", "验收"]
+    assert trace["story"][-1]["detail"] == "等待用户验收"
+    assert "call_id" not in json.dumps(trace["story"], ensure_ascii=False)
+
+
 def test_render_trace_html_has_timeline_and_checks(tmp_path: Path) -> None:
     run_dir, run_id, meta = _run(tmp_path)
     trace = collect_trace(run_id, run_dir, meta)

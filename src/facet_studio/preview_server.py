@@ -19,14 +19,26 @@ from typing import Any
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from .core.config import get_settings
-from .observability import FINAL_STATUSES, collect_runs_dashboard, collect_trace
+from .observability import (
+    FINAL_STATUSES,
+    SETTLED_STATUSES,
+    collect_runs_dashboard,
+    collect_trace,
+)
 from .observability_ui import DASHBOARD_HTML, RUN_DETAIL_HTML
 
 app = FastAPI(title="Facet Studio preview")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3080", "http://127.0.0.1:3080"],
+    allow_methods=["GET"],
+    allow_headers=["*"],
+)
 
 
 def _runs_root() -> Path:
@@ -92,6 +104,17 @@ def run_detail(run_id: str) -> str:
     return RUN_DETAIL_HTML.replace("__RUN_ID__", _safe_run_id(run_id))
 
 
+def _workflow_status(run_dir: Path) -> str:
+    path = run_dir / "workflow.json"
+    if not path.is_file():
+        return ""
+    try:
+        data = json.loads(path.read_text(encoding="utf-8-sig"))
+    except json.JSONDecodeError:
+        return ""
+    return str(data.get("status") or "")
+
+
 def _trace_signature(run_dir: Path) -> tuple[tuple[str, int, int], ...]:
     names = (
         "run_meta.json",
@@ -123,17 +146,21 @@ async def run_stream(run_id: str, request: Request) -> StreamingResponse:
             if current != last:
                 meta = json.loads((run_dir / "run_meta.json").read_text(encoding="utf-8-sig"))
                 final = str(meta.get("status") or "") in FINAL_STATUSES
+                settled = (
+                    str(meta.get("status") or "") in SETTLED_STATUSES
+                    or _workflow_status(run_dir) in SETTLED_STATUSES
+                )
                 trace = collect_trace(
                     run_id,
                     run_dir,
                     meta,
                     include_checks=final,
                     include_grounding=final,
-                    live=not final,
+                    live=not settled,
                 )
                 yield f"data: {json.dumps(trace, ensure_ascii=False)}\n\n"
                 last = current
-                if final:
+                if settled:
                     break
             else:
                 yield ": ping\n\n"
@@ -149,14 +176,32 @@ async def run_stream(run_id: str, request: Request) -> StreamingResponse:
 @app.get("/runs/{run_id}/api/trace")
 def run_trace(run_id: str) -> JSONResponse:
     run_dir, meta = _run_meta(run_id)
-    final = str(meta.get("status") or "") in FINAL_STATUSES
+    settled = (
+        str(meta.get("status") or "") in SETTLED_STATUSES
+        or _workflow_status(run_dir) in SETTLED_STATUSES
+    )
     trace = collect_trace(
         run_id,
         run_dir,
         meta,
-        include_checks=final,
-        include_grounding=final,
-        live=not final,
+        include_checks=settled,
+        include_grounding=settled,
+        live=not settled,
+    )
+    return JSONResponse(trace)
+
+
+@app.get("/runs/{run_id}/api/card")
+def run_card(run_id: str) -> JSONResponse:
+    """Lightweight chat-card payload: no checks/grounding scans."""
+    run_dir, meta = _run_meta(run_id)
+    trace = collect_trace(
+        run_id,
+        run_dir,
+        meta,
+        include_checks=False,
+        include_grounding=False,
+        live=True,
     )
     return JSONResponse(trace)
 
