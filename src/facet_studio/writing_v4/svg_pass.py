@@ -29,31 +29,21 @@ from ..providers.llm import DeepSeekLLM
 PLACEHOLDER = re.compile(r"<!--\s*svg:\s*(.*?)\s*-->", re.S)
 ALLOWED_KINDS = {
     "flow",
-    "stack",
-    "two-axis",
-    "compare",
     "tree",
     "timeline",
-    "matrix",
-    "cards",
-    "cause",
 }
 
 SPEC_SYSTEM = """你是图表编辑。根据文章上下文和占位符描述，返回一个 JSON 图表规格；不要返回 SVG。
 
-允许的 kind：
+只允许三类常用图：
 - "flow"：2–4 个顺序步骤，用方框和箭头。
-- "stack"：2–4 层，用纵向层。
-- "two-axis"：两条刻度/尺子对比（只用于同一量纲的刻度）。
-- "compare"：2 个对象的并列对比，左右两张卡片。
-- "tree"：2–4 个层级/分类；items[0] 是根，其余是子项。
+- "tree"：2–4 个层级/分类；items[0] 是根，其余是子项（思维导图/层级图）。
 - "timeline"：2–4 个时间点/阶段，横向时间线。
-- "matrix"：2–4 个项放 2×2/网格（优先 4 个），用于四象限/多维归类。
-- "cards"：2–4 张并列的观点/摘要卡，不画箭头。
-- "cause"：2–4 步因果链，纵向箭头。
+
+不要画关系图、对比图、四象限、观点卡、因果链、分数分布图、分层卡片；统计数字用 Markdown 表格，不画 SVG。填不出“步骤/层级/时间线”，就不要画。
 
 字段：
-{"kind":"flow|stack|two-axis|compare|tree|timeline|matrix|cards|cause","title":"...","items":[{"label":"...","detail":"..."}],"caption":"..."}
+{"kind":"flow|tree|timeline","title":"...","items":[{"label":"...","detail":"..."}],"caption":"..."}
 
 要求：2–4 个 items；label ≤ 8 个汉字，detail ≤ 24 个汉字（太长会被截断）；如果占位符有更多步骤/层，先合并成 4 个阶段，不要丢关键动作；label/detail 只使用文章或占位符里出现的词；不引入新数字、事实或结论；caption 只进报告，不渲染成图注。
 只输出 JSON。"""
@@ -90,7 +80,7 @@ def normalize_spec(raw: dict[str, Any]) -> dict[str, Any]:
     if kind == "three-column":
         kind = "flow"
     if kind not in ALLOWED_KINDS:
-        kind = "flow"
+        raise SpecError(f"unsupported kind: {kind}")
     items = raw.get("items")
     if not isinstance(items, list):
         raise SpecError("items is not a list")

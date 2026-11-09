@@ -26,7 +26,6 @@ def test_normalize_rejects_too_few_items() -> None:
 def test_normalize_defaults_kind_and_caption() -> None:
     spec = normalize_spec(
         {
-            "kind": "unknown",
             "title": "两层关系",
             "items": [
                 {"label": "A", "detail": "第一层"},
@@ -37,6 +36,21 @@ def test_normalize_defaults_kind_and_caption() -> None:
     )
     assert spec["kind"] == "flow"
     assert spec["caption"].startswith("示意")
+
+
+@pytest.mark.parametrize("kind", ["two-axis", "compare", "matrix", "cards", "cause"])
+def test_relationship_kinds_are_rejected(kind: str) -> None:
+    with pytest.raises(SpecError):
+        normalize_spec(
+            {
+                "kind": kind,
+                "title": "关系图",
+                "items": [
+                    {"label": "A", "detail": "a"},
+                    {"label": "B", "detail": "b"},
+                ],
+            }
+        )
 
 
 def test_render_flow_is_valid_svg() -> None:
@@ -57,25 +71,9 @@ def test_render_flow_is_valid_svg() -> None:
     assert 'marker-end="url(#arrow)"' in svg
 
 
-def test_render_compare_keeps_two_cards() -> None:
-    spec = normalize_spec(
-        {
-            "kind": "compare",
-            "title": "两种分布",
-            "items": [
-                {"label": "三花", "detail": "分界明显"},
-                {"label": "玳瑁", "detail": "混杂"},
-            ],
-        }
-    )
-    svg = render_svg(spec)
-    ET.fromstring(svg)
-    assert svg.count("<rect") == 2
-
-
 @pytest.mark.parametrize(
     "kind",
-    ["tree", "timeline", "matrix", "cards", "cause"],
+    ["tree", "timeline"],
 )
 def test_render_new_visual_kinds(kind: str) -> None:
     spec = normalize_spec(
@@ -99,7 +97,7 @@ def test_build_svg_assets_omits_caption() -> None:
     class FakeClient:
         def complete(self, **kwargs):
             class Response:
-                text = '{"kind":"cards","title":"三点","items":[{"label":"A","detail":"a"},{"label":"B","detail":"b"}],"caption":"示意"}'
+                text = '{"kind":"tree","title":"三点","items":[{"label":"A","detail":"a"},{"label":"B","detail":"b"}],"caption":"示意"}'
 
             return Response()
 
@@ -114,10 +112,28 @@ def test_build_svg_assets_omits_caption() -> None:
     assert "caption" in report
 
 
+def test_build_svg_assets_skips_unsupported_kind() -> None:
+    class FakeClient:
+        def complete(self, **kwargs):
+            class Response:
+                text = '{"kind":"two-axis","title":"分数轴","items":[{"label":"文字","detail":"0.6–0.76"},{"label":"图片","detail":"0.78–0.95"}]}'
+
+            return Response()
+
+    article, report, assets = build_svg_assets(
+        "前文\n\n<!-- svg: 分数分布 -->\n\n后文",
+        client=FakeClient(),
+        key_prefix="test",
+    )
+    assert assets == []
+    assert "![](figures/" not in article
+    assert "unsupported kind" in report
+
+
 def test_render_escapes_xml() -> None:
     spec = normalize_spec(
         {
-            "kind": "stack",
+            "kind": "flow",
             "title": "A & B",
             "items": [
                 {"label": "<分类>", "detail": "x & y"},

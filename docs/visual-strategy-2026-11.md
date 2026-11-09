@@ -3,6 +3,8 @@
 > 状态：2026-11-08 用户确认方向。内容质量（尤其插图）是下一阶段主线程；本文件定义“什么视觉载体该用、关键帧什么时候能用、图注怎么处理”。
 > 上位：[writing-v5-architecture.md](writing-v5-architecture.md) / [writing-rebuild-brief.md](writing-rebuild-brief.md) §2/§3；实现落在 `skills/writing/*`、`content_manuscript`、`svg_pass`。
 > 原则：**视频关键帧是原始画面的截取；文章插图是对语义信息的提炼、重组和可视化。两者设计目标不同。** 默认用语义绘图/原生内容组件；关键帧是最后手段，必须非常紧。
+>
+> **2026-11-10 修订（当前）**：SVG 只保留 `flow`（步骤）、`tree`（层级/思维导图）、`timeline`（时间线）三类；`stack` / `two-axis` / `compare` / `matrix` / `cards` / `cause` 已从 `svg_pass` 与 active skill 删除。统计/对比/分布/因果/观点用 Markdown 表格或正文；每篇 0–2 张；未知 kind 直接跳过，不兜底成 flow。
 
 ## 1. 为什么不能直接拿关键帧当插图
 
@@ -35,11 +37,11 @@
 ### 2.1 载体优先级（从高到低）
 
 1. **原生内容组件**：Markdown Table、Code Block、Ordered List、Checklist、LaTeX、Callout/Highlight Card。
-2. **语义绘图**：SVG 信息图（结构/关系、流程/步骤、清单/组成、比较/决策、因果/逻辑、数据/统计、空间/实体、概念/隐喻、观点/摘要、代码/技术）。
+2. **语义绘图**：SVG 仅限步骤图（`flow`）、层级/思维导图（`tree`）、时间线（`timeline`）；统计/对比/分布/因果/观点用 Markdown 表格或正文。
 3. **关键帧**：只有通过下面“极紧门槛”时才用；默认 0 张。
 4. **没有合适的视觉**：文字说清楚，不硬编画面。
 
-> 原则：根据内容选择表达载体，而不是强制所有内容都生成 SVG。代码/命令用 Code Block；多维数据用 Table；数学用 LaTeX；长步骤用 Ordered List；简单注意事项用 Checklist；复杂关系/流程用 SVG/Mermaid；统计数据用 SVG Chart 或原生 Chart；核心观点用 Callout。
+> 原则：根据内容选择表达载体，而不是强制所有内容都生成 SVG。代码/命令用 Code Block；多维数据用 Table；数学用 LaTeX；长步骤用 Ordered List；简单注意事项用 Checklist；只有步骤/层级/时间线用 SVG/Mermaid；统计、对比、因果、观点用 Table/正文/Callout。
 
 ### 2.1.1 关系测试与盖图测试（画之前先过）
 
@@ -168,7 +170,7 @@
 
 实现范围（v1）：
 
-- 现有 `svg_pass` 支持 `flow` / `stack` / `two-axis` / `compare`；本轮新增 `tree`（层级/分类）、`timeline`（时间线）、`matrix`（2×2/四象限）、`cards`（观点/摘要卡）、`cause`（因果链）。
+- 当前 `svg_pass` 只支持 `flow`（步骤）、`tree`（层级/思维导图）、`timeline`（时间线）；`stack` / `two-axis` / `compare` / `matrix` / `cards` / `cause` 已删除。
 - 数据图表：**精确查值/多字段对照 → Markdown Table；看分布形状、阈值缺口、排序变化 → 图表（SVG/原生 Chart）**。不要用表格代替分布，也不要用图代替查值表。柱状/趋势图后续再扩展 `bars/line`，本轮不硬做。
 - 空间/实体、概念/隐喻不强行生成；没有可靠映射就退回文字/表格/简单示意。
 
@@ -233,7 +235,7 @@ SVG 占位符写成关系，不写几何：
 - `skills/writing/bundle-planner/SKILL.md`：`must_use_figures` 改为“可选关键帧建议”，默认空；不强制 writer 用图。
 - `src/facet_studio/writing_v4/content_manuscript.py`：`图示 N：OCR...` 改为短、去噪的 `画面参考 N（可选）`，并限制候选数量；不把 OCR 全文塞进 writer 上下文。
 - `src/facet_studio/writing_v4/visual_audit.py`：writing layer 的视觉审计；用 `deepseek-flash` 的视觉输入判断候选帧，只把通过帧留在 run content；`plan_article` 调用。
-- `src/facet_studio/writing_v4/svg_pass.py`：扩展到 `tree/timeline/matrix/cards/cause`；输出无 caption 的图片引用。
+- `src/facet_studio/writing_v4/svg_pass.py`：只支持 `flow/tree/timeline`；未知 kind 抛 `SpecError` 并删除占位符；输出无 caption 的图片引用。
 - 渲染器：图片不加 figcaption；XHS `## 配图` 的 caption 可为空；文字封面继续可用。
 
 ## 4. 首轮验证（探索性，不是质量通过）
