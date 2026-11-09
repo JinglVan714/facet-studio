@@ -78,6 +78,32 @@ def test_eval_passes_well_formed_xhs_case(tmp_path: Path) -> None:
     assert all(check["passed"] for check in result["checks"])
 
 
+def test_stale_review_does_not_count_as_manual_acceptance(tmp_path: Path) -> None:
+    runs_root = _xhs_run(tmp_path)
+    meta_path = runs_root / "product_v1" / "run_xhs" / "run_meta.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    meta["review_stale"] = True
+    meta_path.write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
+    result = _check_run(
+        {
+            "case_id": "case_xhs",
+            "kind": "capability",
+            "form": "xiaohongshu_note",
+            "run_id": "run_xhs",
+            "require_approval": True,
+            "min_body_chars": 100,
+            "min_figures": 1,
+            "min_cards": 1,
+            "must_include": ["测试"],
+        },
+        runs_root=runs_root,
+    )
+    checks = {check["check_id"]: check for check in result["checks"]}
+    assert checks["manual_acceptance"]["passed"] is False
+    assert "stale=true" in checks["manual_acceptance"]["detail"]
+    assert result["passed"] is False
+
+
 def test_workflow_trajectory_checks(tmp_path: Path) -> None:
     runs_root = _xhs_run(tmp_path)
     run_dir = runs_root / "product_v1" / "run_xhs"

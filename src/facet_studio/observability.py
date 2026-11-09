@@ -169,7 +169,10 @@ def _checks(run_id: str, run_dir: Path) -> list[dict[str, Any]]:
                 "case_id": run_id,
                 "run_id": run_id,
                 "kind": "trace",
-                "require_approval": False,
+                # Keep the human gate visible: a pending run must not show
+                # manual_acceptance=True just because trace checks are a
+                # developer view.
+                "require_approval": True,
             },
             runs_root=run_dir.parent.parent,
         )

@@ -204,12 +204,14 @@ def _check_run(
     )
 
     require_approval = bool(spec.get("require_approval", True))
-    approved = review.get("decision") == "approved"
+    review_stale = bool(meta.get("review_stale"))
+    approved = review.get("decision") == "approved" and not review_stale
     checks.append(
         _result(
             "manual_acceptance",
             approved if require_approval else True,
-            f"review={review.get('decision') or 'missing'}",
+            f"review={review.get('decision') or 'missing'}"
+            + (", stale=true" if review_stale else ""),
         )
     )
 
