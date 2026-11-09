@@ -39,7 +39,7 @@
 |---|---|---|
 | 多 Agent 编排 | Lead Planner（只编排）+ per-form writer（一次写完）；`task_plan.json`、`decision_records.jsonl` | 有真实 run；不是 supervisor/worker 全形态 |
 | 任务规划/调度 | LangGraph StateGraph：intake → plan → approval → write → typeset → review；SQLite checkpoint；plan/review interrupt；`workflow.json` stages/events/usage | P3 原型已跑通；无动态子 agent 调度/重规划 |
-| 工具调用 | MCP 12 tools：ingest/list/resolve/plan/write/typeset/get_run/review + start/resume/get_workflow；ToolRegistry/Executor 回执 | 真实 LibreChat → MCP 调用已跑通 |
+| 工具调用 | MCP 13 tools：ingest/list/resolve/compile/plan/write/typeset/get_run/review + start/wait/resume/get_workflow；ToolRegistry/Executor 回执 | 真实 LibreChat → MCP 调用已跑通 |
 | 记忆 | content hash / figure catalog / skill registry / working memory；LibreChat 会话 | 缺用户画像/偏好/长期记忆的正式 schema |
 | 评测 | P4 deterministic + grounding candidate audit；10 cases；contract/trajectory；`evals/product_v1/reports/` | 有数据集和报告；无 judge 校准、无 pass^k、无 CI 门禁 |
 | Trace/观测 | `workflow.json` stages/events + `llm_calls.jsonl` + `tool_calls.jsonl` + `decision_records.jsonl` + Run Detail（Live SSE / Trace / Stats）+ `/runs` 看板（p50/p95/tokens/error/checks/grounding）；`get_run.trace` 摘要 | 有本地实时/事后观测；无 OTel/Langfuse |

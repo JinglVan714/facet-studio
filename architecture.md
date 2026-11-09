@@ -1,7 +1,7 @@
 # Facet Studio 架构（产品 v1，2026-11-07）
 
 > 状态：**目标产品架构**。2026-11-06 已确认产品形态：聊天式内容工作台（LibreChat + MCP + LangGraph + 排版/导出 + 人工验收）。
-> 当前代码：substrate v1 + writing_v4 写作引擎 + **P1/P2 产品原型 + P3 workflow 原型 + P4 deterministic/grounding harness + P5 证据层**（LibreChat + MCP 12 tools + preview + review + 公众号 HTML / 小红书卡片 / PDF；LangGraph StateGraph + SQLite checkpoint + plan/review interrupt + trace；P5 新视频下载 + DashScope ASR（Qwen-Audio 3.1）+ VLM + content + workflow 已于 2026-11-08 跑通）。本文 §4–§5 区分“已有”与“目标”。
+> 当前代码：substrate v1 + writing_v4 写作引擎 + **P1/P2 产品原型 + P3 workflow 原型 + P4 deterministic/grounding harness + P5 证据层**（LibreChat + MCP 13 tools + preview + review + 公众号 HTML / 小红书卡片 / PDF；LangGraph StateGraph + SQLite checkpoint + plan/review interrupt + trace；端到端默认 `auto_plan=True`，后台 run + 消息级运行卡；P5 新视频下载 + DashScope ASR（Qwen-Audio 3.1）+ VLM + content + workflow 已于 2026-11-08 跑通）。本文 §4–§5 区分“已有”与“目标”。
 > 产品定义/UX：[docs/product-v1-chat-studio.md](docs/product-v1-chat-studio.md)；UI：[docs/ui-design-2026-11.md](docs/ui-design-2026-11.md)；写作引擎：[docs/writing-v5-architecture.md](docs/writing-v5-architecture.md)；JD：[docs/jd-mapping-2026-11.md](docs/jd-mapping-2026-11.md)；复用栈：[docs/reuse-stack-2026-11.md](docs/reuse-stack-2026-11.md)。
 > 方法/纪律：[docs/writing-rebuild-brief.md](docs/writing-rebuild-brief.md) §2/§3 + [AGENTS.md](AGENTS.md)。§5 开发纪律不要改。
 > 旧的 v3 机会地图保留在文末附录，**不是当前实现**。
@@ -77,8 +77,8 @@ Artifacts: 阅读 HTML / 公众号 HTML / 小红书卡片 / PDF / Markdown
 | runtime | `src/facet_studio/runtime/`：RunStore、TaskPlan、ToolRegistry/Executor、WorkingMemory、ArtifactBoard、Decision、Trace |
 | 产物 | `runs/writing_v5/bundle_BV17_social_05/`、`bundle_BV1ix_social_04/`；P1/P2 产物在 `runs/product_v1/` |
 | P5 证据层 | `src/facet_studio/evidence_layer/`（从 `知识底稿核心-clean` 迁移：acquire/audio/frames/VLM/ASR/substrate）、`src/facet_studio/ingest.py`（新视频 → content.md + figures） |
-| P1/P2 + P3 产品原型 | `src/facet_studio/mcp_server.py`（FastMCP 12 tools：ingest/list/resolve/plan/write/typeset/get_run/review + start/resume/get_workflow）、`src/facet_studio/workflow.py`（LangGraph StateGraph + SQLite checkpoint + interrupt + trace）、`src/facet_studio/preview_server.py`（FastAPI reader 预览）、`integrations/librechat/`、`integrations/xhs/`（Playwright 卡片）、`integrations/pdf/`（Tectonic 模板） |
-| 测试 | **608 passed**（2026-11-09 实测；含 MCP server / 排版 / PDF / 验收状态 / 视觉模板 / workflow / eval / trajectory / run report / grounding / ingest / 路径配置 / visual svg / PDF SVG 测试） |
+| P1/P2 + P3 产品原型 | `src/facet_studio/mcp_server.py`（FastMCP 13 tools：ingest/list/resolve/compile/plan/write/typeset/get_run/review + start/wait/resume/get_workflow）、`src/facet_studio/workflow.py`（LangGraph StateGraph + SQLite checkpoint + interrupt + trace）、`src/facet_studio/preview_server.py`（FastAPI reader 预览）、`integrations/librechat/`、`integrations/xhs/`（Playwright 卡片）、`integrations/pdf/`（Tectonic 模板） |
+| 测试 | **617 passed**（2026-11-09 实测；含 MCP server / 排版 / PDF / 验收状态 / 视觉模板 / workflow / eval / trajectory / run report / grounding / ingest / 路径配置 / visual svg / PDF SVG 测试） |
 | 未接 | 3 个新 machine run 待用户验收；eval pass^k/多 trial；完整模型配置 UI；部署 |
 
 ## 5. 当前 vs 目标

@@ -17,6 +17,8 @@
 | `20261108T040941Z_BV1ixpd6GENc_long_article` | BV1ix | 深度总结 | typeset | 2,130 | 4 | 2 | 21,153 | 61.4s | pending |
 | `20261108T041238Z_BV1ixpd6GENc_wechat_article` | BV1ix | 公众号 | typeset | 1,876 | 2 | 2 | 31,513 | 92.7s | pending |
 | `20261108T095810Z_BV1brgs6mE7a_wechat_article` | BV1brgs6mE7a（新视频，含视觉审计） | 公众号 | typeset | 1,720 | 1 | 6 | 31,223 | 48.3s | pending |
+| `20261109T125434Z_BV1brgs6mE7a_xiaohongshu_note` | BV1brgs6mE7a | 小红书 | typeset | 697 | 1 张卡片 / 0 关键帧 | 6 | 9,400 | 50.5s | pending |
+| `20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note` | BV1brgs6mE7a | 小红书 | typeset | 793 | 1 张卡片 / 0 关键帧 | 6 | 8,922 | 44.6s | pending |
 | `smoke_long_pdf` | BV17 | 深度总结 | approved | 2,813 | 4 | 2 | 19,608 | 47.2s | approved |
 
 - P3 workflow run `20261107T132341Z_BV1B5411A7ax_xiaohongshu_note`：LangGraph stages `intake → plan → approval → write → typeset → review`；plan/review 两次 interrupt；`workflow.json` 记录 stages/events/usage；2 calls / 17,327 tokens / approved。
@@ -29,6 +31,7 @@
 - 真实 run 的 trace 示例（拷贝 `20261108T095810Z_BV1brgs6mE7a_wechat_article` 到 `_trace_demo_wechat` 验证，不改原 run）：6 stages / 7 LLM calls / 6 tool spans / 3 decisions / 32,363 tokens / 74,597 ms / checks 15/15 / grounding 4 candidates。
 - 真实 workflow run `20261108T154015Z_BV1B5411A7ax_wechat_article`（BV1B 中华田园猫，auto approve）：6 stages / 2 LLM calls / 6 tool spans / 3 decisions / 36,619 tokens / 105,409 ms / checks 15/15 / grounding 0 / 正文 2,288 字 / 内容稿 10 图 / **正文引用 0**（旧内容格式 `图示 N` 未进入视觉审计）；`trace.html` 自动生成，**待用户验收**。
 - 视觉审计修复后重跑 `20261109T072111Z_BV1B5411A7ax_wechat_article`：6 候选 / 0 通过（B 站水印/人物/UI）、0 关键帧、2,194 字、8 LLM calls / 43,841 tokens / 128.3s / checks 15/15 / grounding 4；来源行已补“本文根据 B 站视频（BV1B5411A7ax）整理”；**待用户验收**。0 图是审计结果，不是渲染丢图。
+- 端到端聊天 run `20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note`：用户给 BV 号后直接 `start_workflow(background=True, auto_plan=True)`，不再先 resolve；消息级运行卡从“正在启动”更新到“等待验收”；`wait_workflow` 只返回摘要/资产数，最终回复 793 字 / 1 张卡片 / 0 关键帧，没有裸 URL，聊天里只有一张运行卡，无“执行过程”分组。
 - 这是开发/面试观测页，不是写作质量分，也不是幻觉率；工具/决策 span 来自 workflow stage 边界，不伪造额外执行层。
 
 ## P4 deterministic + grounding（2026-11-08 基线）

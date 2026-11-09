@@ -2,7 +2,7 @@
 
 把一条视频变成可发布的文章/笔记：用户在聊天框里给视频和写作要求，Agent 按需写一种形态（深度总结 / 公众号 / 小红书），在聊天里预览、修改、验收。
 
-> **2026-11-09 收尾轮**：产品 UI 收口——聊天不再倒 JSON，Facet 工具结果显示为成品卡（预览/公众号/PDF/运行数据）；阅读页按形态显示标签，宽表格可横向滚动；Run Detail 区分“自动通过”和“用户验收”，看板缺 `llm_calls.jsonl` 时显示 —；视觉审计修复旧格式 `图示 N` 漏检，并显示候选/未通过原因；导出补 B 站来源行。最新验收候选：`20261109T072111Z_BV1B5411A7ax_wechat_article`（猫视频，6 候选 0 通过、2,194 字、0 关键帧）和聊天 E2E `20261109T075145Z_BV17DHC6CELr_wechat_article`（2,575 字 / 1 SVG），均待人工验收。测试 608 passed。
+> **2026-11-09 收尾轮**：聊天侧重做——端到端默认后台 run（`start_workflow(background=True, auto_plan=True)`），消息级只显示一张运行卡，不再倒 JSON、不再显示重复按钮/空按钮和“执行过程”分组；卡里展示阶段、当前步骤、计划、视觉审计结论、字数与交付物；右侧抽屉预览阅读页/公众号/PDF。`wait_workflow` 只返回压缩摘要，最终回复按 `assets` 说“N 张卡片 / M 张关键帧”，不把封面卡说成视频关键帧。Run Detail 的 Trace 把视觉审计逐帧标成“fig-01.jpg 未通过：水印/画面质量”，不再是一串内部 ID。SVG 只保留 flow/tree/timeline；旧公众号的第一张 two-axis 关系图已从 md/HTML/文件删除并重新排版。最新验收候选：`20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note`（793 字 / 1 张卡片 / 0 关键帧，待人工验收）。测试 617 passed。
 >
 > **2026-11-08 上一轮状态**：产品 v1 已定义（[docs/product-v1-chat-studio.md](docs/product-v1-chat-studio.md)）；目标壳是 **LibreChat + MCP + LangGraph + 排版/导出**。P1/P2 产品原型、P3 workflow 原型、P4 deterministic/grounding harness、P5 证据层均已接；**P5 新视频下载 + DashScope ASR（Qwen-Audio 3.1）+ VLM + content + workflow 已端到端跑通**（BV1brgs6mE7a，2 分钟）；**视觉策略 + deepseek-flash 视觉审计**已接：关键帧极紧、图注默认不加、SVG/表格优先。P4 10/10 cases、contract 10/10、trajectory 30/30；3 个新 machine run 待用户验收。详见 [architecture.md](architecture.md) §4、[docs/visual-strategy-2026-11.md](docs/visual-strategy-2026-11.md)、[integrations/librechat/README.md](integrations/librechat/README.md)、[docs/evidence-layer-2026-11.md](docs/evidence-layer-2026-11.md)、[docs/evidence-2026-11.md](docs/evidence-2026-11.md)。
 > 三种形态：深度总结（long_article）/ 公众号（wechat_article）/ 小红书（xiaohongshu_note）。短视频脚本暂不做。
@@ -41,8 +41,8 @@ Agent：确认来源/形态/读者/长度 → 读取内容（缓存）→ 计划
 - `src/facet_studio/writing_v3/`：substrate v1（冻结）：transcript / sentences / frames / OCR / content manuscript。
 - `src/facet_studio/writing_v4/`：content manuscript、skill loader、一次 writer、planner/orchestrator、SVG、bundle、`visual_audit.py`（deepseek-flash 视觉审计候选关键帧）。
 - `src/facet_studio/runtime/`：RunStore / TaskPlan / ToolRegistry / WorkingMemory / ArtifactBoard / Decision / Trace / Eval。
-- `src/facet_studio/mcp_server.py`：FastMCP **12 tools**（ingest / list / resolve / compile / plan / write / typeset / get_run / review / start_workflow / resume_workflow / get_workflow）。
-- `src/facet_studio/workflow.py`：LangGraph StateGraph（intake → plan → approval → write → typeset → review）+ SQLite checkpoint + interrupt + `workflow.json` trace。
+- `src/facet_studio/mcp_server.py`：FastMCP **13 tools**（ingest / list / resolve / compile / plan / write / typeset / get_run / review / start_workflow / wait_workflow / resume_workflow / get_workflow）。
+- `src/facet_studio/workflow.py`：LangGraph StateGraph（intake → plan → approval → write → typeset → review）+ SQLite checkpoint + interrupt + `workflow.json` trace；`start_workflow(background=True)` 立即返回 run_id，聊天卡轮询 `/api/card`，`wait_workflow` 只返回人类可读摘要。
 - `src/facet_studio/preview_server.py`：FastAPI reader 预览（127.0.0.1:8765）。
 - `src/facet_studio/evidence_layer/`：下载/抽帧/ASR/VLM/substrate；`src/facet_studio/ingest.py`：新视频 → `content.md + figures`。
 - `src/facet_studio/evals/`：deterministic product checks + grounding candidate audit。

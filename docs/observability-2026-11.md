@@ -68,14 +68,15 @@
 
 - `src/facet_studio/observability.py`：collect trace、写 `trace.json`、聚合 runs dashboard。
 - `src/facet_studio/observability_ui.py`：`/runs` 看板 + Run Detail（Live / Trace / Stats）。
-- `preview_server.py`：`/runs`、`/runs/<run_id>`、`/runs/<run_id>/api/trace`、`/runs/<run_id>/stream`（SSE）、`/api/runs`。
+- `preview_server.py`：`/runs`、`/runs/<run_id>`、`/runs/<run_id>/api/card`（聊天运行卡轮询）、`/runs/<run_id>/api/trace`、`/runs/<run_id>/stream`（SSE）、`/api/runs`。
 - `typeset_article`：生成最终 trace，写 `artifacts.trace_html` / `trace_url`（`trace.html` 仅作导出/降级）。
 - `get_run.trace`：返回 stages/calls/tools/decisions/usage/latency/cost 摘要。
 - `workflow.py`：每个 stage 后写 live trace；stage 作为 tool span；plan/approval/review 写 decision record。
 - 预览页：reader / 公众号 / 小红书右上或页脚“运行数据” → `../../<run_id>`。
 - 真实 run 验证：`20261108T154015Z_BV1B5411A7ax_wechat_article`（2 calls / 36,619 tokens / 105.4s / 6 tool spans / 3 decisions / checks 15/15 / grounding 0 / 2,288 字 / 内容稿 10 图 / 正文引用 0，待验收）。
 - 视觉审计修复后 run `20261109T072111Z_BV1B5411A7ax_wechat_article`：8 calls / 43,841 tokens / 128.3s / 6 候选 0 通过（水印/人物/UI）/ 0 关键帧 / 2,194 字 / checks 15/15 / grounding 4；Stats 运行配置里显示“视觉审计 6 候选 / 0 通过”和未通过原因。
-- 聊天侧（`FacetRunLinks.tsx`）：Facet 工具结果不再把原始 JSON 铺在聊天里，改为成品卡——形态/状态/字数/引用图/标题候选 + 预览/公众号/PDF/运行数据按钮；原始 JSON 只留在 Run Detail/Trace。链接从 `run_id`/`form`/`trace_url` 派生，避免 MCP 输出在 UI 侧被截断时丢按钮。
+- 聊天侧（`client/src/components/Facet/*`）：每个 assistant 消息只渲染一张运行卡，不再有 `FacetRunLinks` 或“执行过程”分组；卡轮询 `/api/card`，显示消息级阶段轨、当前步骤/已用时间、计划、视觉审计结论、字数和交付物；原始 JSON 只留在 Run Detail/Trace。`wait_workflow` 只返回压缩摘要，避免 MCP 输出被截断后模型读错图数。
+- 端到端 run `20261109T125434Z_BV1brgs6mE7a_xiaohongshu_note`：后台启动 → 卡片“正在启动 → 正在进行 → 规划完成 → 等待验收”；697 字 / 1 张卡片 / 0 关键帧；聊天一张卡，无重复按钮。
 
 ## 5. JD 映射
 
@@ -101,7 +102,7 @@
 
 ## 7. 后续
 
-1. SSE + `/runs` 看板已接；聊天 turn 的 MCP tool card 已加“运行数据/预览/公众号/PDF”按钮（`client-ui.patch`），下一步按真实 UI 截图验收。
+1. SSE + `/runs` 看板、消息级运行卡、右侧预览抽屉已接；真实聊天 E2E 已截图验收（一张卡、无原始 JSON、无“执行过程”分组）。
 2. 如果目标 JD 需要 Langfuse/LibreChat 原生 Trace Viewer：只接 Langfuse Cloud（已配置 key），默认关闭正文采集；不自建。
 3. 细化 tool span 到 MCP args/receipt；补 session/conversation 关联。
 4. 评测闭环：checks/grounding → 回归报告；trace 里可跳转 run report。
