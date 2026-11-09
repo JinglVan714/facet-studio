@@ -21,7 +21,7 @@
 - `SETTINGS_DIR`：`FACET_STUDIO_SETTINGS_ROOT` 或 `<project>/settings`。
 - `COOKIES_PATH`：`<data>/cookies/bilibili.txt`（可选；存在才传给 yt-dlp；不读内容、不提交）。
 - `.env`：`DEEPSEEK_API_KEY` / `DEEPSEEK_BASE_URL` / `DASHSCOPE_API_KEY`；VLM/ASR 需要 `DASHSCOPE_API_KEY`。
-- 模型默认：ASR `qwen-audio-3.0-asr-flash-streaming`；VLM `qwen3.8-27b`（fallback `qwen3.7-max-2026-06-08`）；L1 `deepseek-flash`。
+- 模型默认：ASR `qwen-audio-3.1-asr-flash-streaming`；VLM `qwen3.8-27b`（fallback `qwen3.7-max-2026-06-08`）；L1 `deepseek-flash`。
 - `settings/params.json` 目前是登记表，代码实际默认值在 `evidence_layer/constants.py`。
 
 ## 3. 链路
@@ -29,7 +29,7 @@
 ```text
 ingest_source(target)
   → acquire_url / acquire_local
-  → data/<video_id>/source.json + raw media
+  → data/<video_id>/source.json + raw media + cover.jpg（平台封面，可选）
   → run_ingest(profile)
        frames + ASR (layer0)
        VLM frame captions
@@ -52,7 +52,10 @@ ingest_source(target)
 
 ## 5. 尚未验证 / 注意
 
-- **没有真实跑新视频下载 + ASR/VLM 端到端**；需要网络、`DASHSCOPE_API_KEY`、可选 cookie。下一步验收：一条没缓存的 BV/本地视频跑完整链路并人工看产物。
+- **真实新视频下载 + DashScope ASR 3.1 + VLM + content + workflow 已验证**（BV1brgs6mE7a，2 分钟；2026-11-08）：下载/抽帧成功，ASR 3.1 成功，VLM 成功，content 1,577 字 / 4 图（短画面参考重建后 1,052 字 / 4 图）。
+- **ASR 模型已切到 `qwen-audio-3.1-asr-flash-streaming`**：3.0 的免费额度返回 `status=44, free quota exhausted`；3.1 在同一端点直接可用（2 分钟音频 40.9s，rtf 0.339，9 句，字级时间戳可用）。不使用本地 ASR/OCR；非 200 响应就是显式失败。
+- 已用 3.1 重新生成 BV1brgs6mE7a：content 1,577 字 / 4 图（短画面参考重建后 1,052 字 / 4 图）。审计前 workflow run `20261108T052817Z`（1,981 字 / 2 图 / 24,563 tokens）；审计后产品 run `20261108T095810Z`（审计 4/0、1 SVG、1,720 字 / 31,223 tokens）。旧的 local fallback transcript 只作本地审计，不进入产品路径。
+- 产品默认 `ingest_source(..., include_evidence=False)` → `run_ingest(content_only=True)`：跳过 contract/L1（写作层只消费 transcript + frames + VLM captions）。完整证据层用 `include_evidence=True`。
 - 源项目没有 CLI；入口是 Python API。`run_ingest` 不负责下载，必须先 acquire。
 - `run_ingest` 的 VLM 失败批次默认拒绝继续；显式 `allow_partial_vlm=True` 才接受 partial。
 - `profile="quality"` 才有 scene 帧；`fast` 只用固定 30s 帧。内容稿默认用 quality 以获得更多帧候选。

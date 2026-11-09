@@ -1,7 +1,7 @@
 {
   "schema_version": "product-eval-cases-v1",
   "dataset": "product_v1",
-  "notes": "Capability set = 2 videos x 3 forms; missing cases are explicit, not fabricated. Regression cases reuse approved artifacts for previously broken PDF/copy paths.",
+  "notes": "Capability set = 2 videos x 3 forms; all 6 cases now have a run. New machine runs are marked user-review-pending, not auto-approved. Regression cases reuse approved artifacts for previously broken PDF/copy paths and add one P5 new-video E2E run.",
   "cases": [
     {
       "case_id": "cap_bv17_long",
@@ -48,18 +48,29 @@
       "kind": "capability",
       "video_id": "BV1ixpd6GENc",
       "form": "long_article",
-      "run_id": null,
+      "run_id": "20261108T040941Z_BV1ixpd6GENc_long_article",
       "require_approval": true,
-      "notes": "not generated yet; report as missing, not scored"
+      "min_body_chars": 1000,
+      "max_body_chars": 6000,
+      "min_figures": 2,
+      "must_include": ["160", "210"],
+      "min_pages": 2,
+      "max_pages": 10,
+      "notes": "machine run; user review pending. First PDF build failed on an uncaptioned longtable; template fixed and re-typeset."
     },
     {
       "case_id": "cap_bv1ix_wechat",
       "kind": "capability",
       "video_id": "BV1ixpd6GENc",
       "form": "wechat_article",
-      "run_id": null,
+      "run_id": "20261108T041238Z_BV1ixpd6GENc_wechat_article",
       "require_approval": true,
-      "notes": "not generated yet; report as missing, not scored"
+      "min_body_chars": 1000,
+      "max_body_chars": 6000,
+      "min_figures": 2,
+      "min_images": 2,
+      "must_include": ["160", "210"],
+      "notes": "machine run; user review pending"
     },
     {
       "case_id": "cap_bv1ix_xhs",
@@ -73,6 +84,20 @@
       "min_figures": 2,
       "min_cards": 2,
       "must_include": ["160", "210"]
+    },
+    {
+      "case_id": "reg_p5_new_video_wechat",
+      "kind": "regression",
+      "video_id": "BV1brgs6mE7a",
+      "form": "wechat_article",
+      "run_id": "20261108T095810Z_BV1brgs6mE7a_wechat_article",
+      "require_approval": true,
+      "min_body_chars": 800,
+      "max_body_chars": 4000,
+      "min_figures": 1,
+      "min_images": 1,
+      "must_include": ["Harness", "模型"],
+      "notes": "P5 true E2E + deepseek-flash visual audit: 4 candidates, 0 approved (UI/watermark), 0 keyframes, 1 SVG. User review pending."
     },
     {
       "case_id": "reg_pdf_code_block",

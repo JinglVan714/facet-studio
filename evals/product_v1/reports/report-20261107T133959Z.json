@@ -48,7 +48,7 @@
         {
           "check_id": "reader_artifact",
           "passed": true,
-          "detail": "reader_html=D:\\秋招\\个人作品\\1023视频写作\\runs\\product_v1\\20261106T130634Z_BV17DHC6CELr_long_article\\long_article\\reader.html"
+          "detail": "reader_html=<project>\\runs\\product_v1\\20261106T130634Z_BV17DHC6CELr_long_article\\long_article\\reader.html"
         },
         {
           "check_id": "manual_acceptance",
@@ -120,7 +120,7 @@
         {
           "check_id": "reader_artifact",
           "passed": true,
-          "detail": "reader_html=D:\\秋招\\个人作品\\1023视频写作\\runs\\product_v1\\20261106T131015Z_BV17DHC6CELr_wechat_article\\wechat_article\\reader.html"
+          "detail": "reader_html=<project>\\runs\\product_v1\\20261106T131015Z_BV17DHC6CELr_wechat_article\\wechat_article\\reader.html"
         },
         {
           "check_id": "manual_acceptance",
@@ -192,7 +192,7 @@
         {
           "check_id": "reader_artifact",
           "passed": true,
-          "detail": "reader_html=D:\\秋招\\个人作品\\1023视频写作\\runs\\product_v1\\20261107T032530Z_BV17DHC6CELr_xiaohongshu_note\\xiaohongshu_note\\reader.html"
+          "detail": "reader_html=<project>\\runs\\product_v1\\20261107T032530Z_BV17DHC6CELr_xiaohongshu_note\\xiaohongshu_note\\reader.html"
         },
         {
           "check_id": "manual_acceptance",
@@ -296,7 +296,7 @@
         {
           "check_id": "reader_artifact",
           "passed": true,
-          "detail": "reader_html=D:\\秋招\\个人作品\\1023视频写作\\runs\\product_v1\\20261106T132229Z_BV1ixpd6GENc_xiaohongshu_note\\xiaohongshu_note\\reader.html"
+          "detail": "reader_html=<project>\\runs\\product_v1\\20261106T132229Z_BV1ixpd6GENc_xiaohongshu_note\\xiaohongshu_note\\reader.html"
         },
         {
           "check_id": "manual_acceptance",
@@ -368,7 +368,7 @@
         {
           "check_id": "reader_artifact",
           "passed": true,
-          "detail": "reader_html=D:\\秋招\\个人作品\\1023视频写作\\runs\\product_v1\\20261106T130634Z_BV17DHC6CELr_long_article\\long_article\\reader.html"
+          "detail": "reader_html=<project>\\runs\\product_v1\\20261106T130634Z_BV17DHC6CELr_long_article\\long_article\\reader.html"
         },
         {
           "check_id": "manual_acceptance",
@@ -440,7 +440,7 @@
         {
           "check_id": "reader_artifact",
           "passed": true,
-          "detail": "reader_html=D:\\秋招\\个人作品\\1023视频写作\\runs\\product_v1\\20261107T080924Z_BV13EHX64EaY_wechat_article\\wechat_article\\reader.html"
+          "detail": "reader_html=<project>\\runs\\product_v1\\20261107T080924Z_BV13EHX64EaY_wechat_article\\wechat_article\\reader.html"
         },
         {
           "check_id": "manual_acceptance",
@@ -512,7 +512,7 @@
         {
           "check_id": "reader_artifact",
           "passed": true,
-          "detail": "reader_html=D:\\秋招\\个人作品\\1023视频写作\\runs\\product_v1\\20261107T132341Z_BV1B5411A7ax_xiaohongshu_note\\xiaohongshu_note\\reader.html"
+          "detail": "reader_html=<project>\\runs\\product_v1\\20261107T132341Z_BV1B5411A7ax_xiaohongshu_note\\xiaohongshu_note\\reader.html"
         },
         {
           "check_id": "manual_acceptance",

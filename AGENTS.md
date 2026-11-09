@@ -5,7 +5,7 @@
 ## 1. 事实源与边界
 
 - **产品**：2026-11-06 已定义 v1——聊天式内容工作台。用户给视频 + 写作要求，Agent 按需写一种形态，聊天内预览/修改/验收。目标壳是 LibreChat + MCP + LangGraph + 排版/导出。
-- **当前代码**：substrate v1 + `writing_v4` 写作引擎（planner/orchestrator/writer/skills/tools）+ **P1/P2 产品原型**（`mcp_server.py` / `preview_server.py` / `integrations/librechat` / `integrations/xhs` / `integrations/pdf`）；LangGraph/评测未接。`architecture.md` §4 有 current vs target。
+- **当前代码**：substrate v1 + `writing_v4` 写作引擎 + **P1/P2 产品原型 + P3 workflow 原型 + P4 deterministic/grounding harness + P5 证据层**（`mcp_server.py` / `workflow.py` / `evidence_layer/` / `ingest.py` / `preview_server.py` / `integrations/*` / `evals/product_v1`）；P5 新视频下载 + DashScope ASR（Qwen-Audio 3.1）+ VLM + content + workflow 已于 2026-11-08 跑通。`architecture.md` §4 有 current vs target。
 - **写作引擎事实源**：[docs/writing-v5-architecture.md](docs/writing-v5-architecture.md)。`architecture.md` 文末附录是 v3 机会地图，不是当前实现。
 - **产品/UX 事实源**：[docs/product-v1-chat-studio.md](docs/product-v1-chat-studio.md)；UI 细节 [docs/ui-design-2026-11.md](docs/ui-design-2026-11.md)。**bundle 是内部/调试产物，不是产品默认输出。**
 - **JD 事实源**：[docs/jd-mapping-2026-11.md](docs/jd-mapping-2026-11.md)。旧 roadmap 的 JD 表（含“评测=per-form case+rubric”）已过时，不要用。
@@ -68,14 +68,14 @@
 
 ## 6. 阶段门（2026-11-06）
 
-- 当前方向：产品 v1（聊天式内容工作台）。目标壳 LibreChat + MCP + LangGraph；**P1/P2 原型已跑通**（LibreChat + MCP server + preview server + `review_artifact`；缓存内容 → 聊天 → 计划卡 → 一次 writer → 预览/导出）。下一步：P3 LangGraph + HITL + 观测；P2 内容层遗留（小红书标题、公众号数字/图表）按用户指示最后改。
+- 当前方向：产品 v1（聊天式内容工作台）。目标壳 LibreChat + MCP + LangGraph；**P1/P2 原型 + P3 workflow 原型 + P4 deterministic/grounding harness + P5 证据层迁移已接**；P5 新视频 E2E 已跑通（DashScope ASR 3.1），3 个新 machine run 待用户验收。P2 内容层遗留（选图/造图、正文、标题/图注）按用户指示后续单独改。
 - **产品按需一种形态**；bundle 是内部/调试产物，不是产品默认输出。多形态 = 多次请求。
 - **用户 run 数据 / 开发评测数据 / 简历数据分开**：产品只展示本次 run 的 trace/成本/状态；eval 在独立 dashboard；简历只取 eval 报告。
 - 当前没有已验收的产品基线：`video-article` 是写作引擎底座；公众号/小红书“大致验收”；旧 P1/supervisor/demo/词表已删除，不要恢复。架构推进由用户裁决。
 - 用户边界：一个产物一次 writer；没有草稿/editor/checker/词表/核实；writer 不知道内容来自视频/素材包；输入只是“这件事的完整内容”；用户验收质量和架构。
 - **不写死字数、H2 数、段落数、镜头数、脚本时长**；request 优先，没 request 用默认。
 - substrate v1 已冻结；非必要不改；发现真实阻塞先报告。
-- 质量门/评测：用户 manual acceptance 是唯一发布门；不跑 30 judge；不伪造 reader test；评测先预留，产品稳定后再做。
+- 质量门/评测：用户 manual acceptance 是唯一发布门；不跑 30 judge；不伪造 reader test；**不评 writing 质量**，P4 只测运行数据/产物合同/grounding candidates。
 - 先测后调；同 request；不按单条 finding/单篇调参；不手改单篇文章。
 
 ## 7. 素材消费（2026-11-04）

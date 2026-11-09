@@ -1,0 +1,736 @@
+{
+  "schema_version": "grounding-audit-v1",
+  "created_at": "2026-11-08T13:56:25.790137+00:00",
+  "summary": {
+    "artifacts": 9,
+    "flags": 16,
+    "flags_by_kind": {
+      "quote_not_in_content": 7,
+      "scope_term_not_in_content": 6,
+      "entity_not_in_content": 3
+    },
+    "total_tokens": 194125,
+    "latency_ms": 476828,
+    "note": "Candidate flags only: not found in the content manuscript. Model knowledge is allowed; quotes shorter than 6 chars are treated as emphasis, not claims. This is not a hallucination rate and not a writing-quality score. Human adjudication is optional."
+  },
+  "artifacts": [
+    {
+      "case_id": "cap_bv17_long",
+      "run_id": "20261106T130634Z_BV17DHC6CELr_long_article",
+      "form": "long_article",
+      "status": "approved",
+      "review": "approved",
+      "runtime": {
+        "total_tokens": 21148,
+        "latency_ms": 58757
+      },
+      "numbers": {
+        "checked": 25,
+        "grounded": 25,
+        "all": [
+          "0.0092",
+          "0.0368",
+          "0.6",
+          "0.624",
+          "0.709",
+          "0.756",
+          "0.76",
+          "0.781",
+          "0.8",
+          "0.921",
+          "0.951",
+          "1",
+          "10",
+          "100",
+          "128",
+          "2",
+          "256",
+          "3",
+          "300",
+          "4",
+          "5",
+          "7",
+          "768",
+          "9",
+          "95%"
+        ],
+        "candidates": []
+      },
+      "quotes": {
+        "checked": 3,
+        "grounded": 1,
+        "candidates": [
+          "模型总能找对",
+          "落在同一个空间"
+        ]
+      },
+      "entities": {
+        "checked": 2,
+        "grounded": 2,
+        "candidates": []
+      },
+      "scope": {
+        "in_content": [
+          "全部",
+          "完全"
+        ],
+        "candidates": [
+          "总能",
+          "所有",
+          "永远",
+          "绝对"
+        ]
+      },
+      "flags": [
+        {
+          "kind": "quote_not_in_content",
+          "value": "模型总能找对",
+          "context": "",
+          "note": "candidate; may be editorial emphasis or an invented quote"
+        },
+        {
+          "kind": "quote_not_in_content",
+          "value": "落在同一个空间",
+          "context": "",
+          "note": "candidate; may be editorial emphasis or an invented quote"
+        },
+        {
+          "kind": "scope_term_not_in_content",
+          "value": "总能",
+          "context": "",
+          "note": "candidate scope upgrade; check whether the source supports it"
+        },
+        {
+          "kind": "scope_term_not_in_content",
+          "value": "所有",
+          "context": "",
+          "note": "candidate scope upgrade; check whether the source supports it"
+        },
+        {
+          "kind": "scope_term_not_in_content",
+          "value": "永远",
+          "context": "",
+          "note": "candidate scope upgrade; check whether the source supports it"
+        },
+        {
+          "kind": "scope_term_not_in_content",
+          "value": "绝对",
+          "context": "",
+          "note": "candidate scope upgrade; check whether the source supports it"
+        }
+      ]
+    },
+    {
+      "case_id": "cap_bv17_wechat",
+      "run_id": "20261106T131015Z_BV17DHC6CELr_wechat_article",
+      "form": "wechat_article",
+      "status": "approved",
+      "review": "approved",
+      "runtime": {
+        "total_tokens": 23216,
+        "latency_ms": 45048
+      },
+      "numbers": {
+        "checked": 23,
+        "grounded": 23,
+        "all": [
+          "0.6",
+          "0.624",
+          "0.709",
+          "0.756",
+          "0.76",
+          "0.781",
+          "0.8",
+          "0.921",
+          "0.951",
+          "1",
+          "10",
+          "100",
+          "128",
+          "2",
+          "256",
+          "3",
+          "300",
+          "4",
+          "5",
+          "7",
+          "768",
+          "9",
+          "95%"
+        ],
+        "candidates": []
+      },
+      "quotes": {
+        "checked": 1,
+        "grounded": 1,
+        "candidates": []
+      },
+      "entities": {
+        "checked": 4,
+        "grounded": 4,
+        "candidates": []
+      },
+      "scope": {
+        "in_content": [
+          "全部",
+          "完全"
+        ],
+        "candidates": []
+      },
+      "flags": []
+    },
+    {
+      "case_id": "cap_bv17_xhs",
+      "run_id": "20261107T032530Z_BV17DHC6CELr_xiaohongshu_note",
+      "form": "xiaohongshu_note",
+      "status": "approved",
+      "review": "approved",
+      "runtime": {
+        "total_tokens": 16208,
+        "latency_ms": 49364
+      },
+      "numbers": {
+        "checked": 9,
+        "grounded": 9,
+        "all": [
+          "0.6",
+          "0.756",
+          "0.76",
+          "10",
+          "2",
+          "300",
+          "5",
+          "768",
+          "9"
+        ],
+        "candidates": []
+      },
+      "quotes": {
+        "checked": 2,
+        "grounded": 1,
+        "candidates": [
+          "把一句话变成一串代表意思的数字"
+        ]
+      },
+      "entities": {
+        "checked": 2,
+        "grounded": 2,
+        "candidates": []
+      },
+      "scope": {
+        "in_content": [
+          "全部"
+        ],
+        "candidates": [
+          "一定"
+        ]
+      },
+      "flags": [
+        {
+          "kind": "quote_not_in_content",
+          "value": "把一句话变成一串代表意思的数字",
+          "context": "",
+          "note": "candidate; may be editorial emphasis or an invented quote"
+        },
+        {
+          "kind": "scope_term_not_in_content",
+          "value": "一定",
+          "context": "",
+          "note": "candidate scope upgrade; check whether the source supports it"
+        }
+      ]
+    },
+    {
+      "case_id": "cap_bv1ix_long",
+      "run_id": "20261108T040941Z_BV1ixpd6GENc_long_article",
+      "form": "long_article",
+      "status": "typeset",
+      "review": "missing",
+      "runtime": {
+        "total_tokens": 21153,
+        "latency_ms": 61379
+      },
+      "numbers": {
+        "checked": 9,
+        "grounded": 9,
+        "all": [
+          "0.5",
+          "1",
+          "12",
+          "13",
+          "160",
+          "210",
+          "6",
+          "7",
+          "8"
+        ],
+        "candidates": []
+      },
+      "quotes": {
+        "checked": 0,
+        "grounded": 0,
+        "candidates": []
+      },
+      "entities": {
+        "checked": 0,
+        "grounded": 0,
+        "candidates": []
+      },
+      "scope": {
+        "in_content": [],
+        "candidates": []
+      },
+      "flags": []
+    },
+    {
+      "case_id": "cap_bv1ix_wechat",
+      "run_id": "20261108T041238Z_BV1ixpd6GENc_wechat_article",
+      "form": "wechat_article",
+      "status": "typeset",
+      "review": "missing",
+      "runtime": {
+        "total_tokens": 31513,
+        "latency_ms": 92738
+      },
+      "numbers": {
+        "checked": 17,
+        "grounded": 17,
+        "all": [
+          "0.5",
+          "1",
+          "12",
+          "120",
+          "13",
+          "150",
+          "160",
+          "2",
+          "210",
+          "3",
+          "300",
+          "4",
+          "5",
+          "6",
+          "7",
+          "75",
+          "8"
+        ],
+        "candidates": []
+      },
+      "quotes": {
+        "checked": 0,
+        "grounded": 0,
+        "candidates": []
+      },
+      "entities": {
+        "checked": 0,
+        "grounded": 0,
+        "candidates": []
+      },
+      "scope": {
+        "in_content": [],
+        "candidates": []
+      },
+      "flags": []
+    },
+    {
+      "case_id": "cap_bv1ix_xhs",
+      "run_id": "20261106T132229Z_BV1ixpd6GENc_xiaohongshu_note",
+      "form": "xiaohongshu_note",
+      "status": "approved",
+      "review": "approved",
+      "runtime": {
+        "total_tokens": 8405,
+        "latency_ms": 16361
+      },
+      "numbers": {
+        "checked": 16,
+        "grounded": 16,
+        "all": [
+          "0.5",
+          "1",
+          "12",
+          "120",
+          "13",
+          "150",
+          "160",
+          "2",
+          "210",
+          "3",
+          "300",
+          "4",
+          "6",
+          "7",
+          "75",
+          "8"
+        ],
+        "candidates": []
+      },
+      "quotes": {
+        "checked": 0,
+        "grounded": 0,
+        "candidates": []
+      },
+      "entities": {
+        "checked": 0,
+        "grounded": 0,
+        "candidates": []
+      },
+      "scope": {
+        "in_content": [],
+        "candidates": []
+      },
+      "flags": []
+    },
+    {
+      "case_id": "reg_p5_new_video_wechat",
+      "run_id": "20261108T095810Z_BV1brgs6mE7a_wechat_article",
+      "form": "wechat_article",
+      "status": "typeset",
+      "review": "missing",
+      "runtime": {
+        "total_tokens": 23998,
+        "latency_ms": 48338
+      },
+      "numbers": {
+        "checked": 3,
+        "grounded": 3,
+        "all": [
+          "3",
+          "30",
+          "5.6"
+        ],
+        "candidates": []
+      },
+      "quotes": {
+        "checked": 1,
+        "grounded": 0,
+        "candidates": [
+          "从零做一个东西"
+        ]
+      },
+      "entities": {
+        "checked": 13,
+        "grounded": 2,
+        "candidates": [
+          "Agent",
+          "Codex",
+          "DeepSeek",
+          "Flash",
+          "GPT-5.6",
+          "Harness",
+          "Loop",
+          "Pro",
+          "SDK",
+          "SOUL",
+          "Web"
+        ]
+      },
+      "scope": {
+        "in_content": [
+          "官方"
+        ],
+        "candidates": [
+          "一定"
+        ]
+      },
+      "flags": [
+        {
+          "kind": "quote_not_in_content",
+          "value": "从零做一个东西",
+          "context": "",
+          "note": "candidate; may be editorial emphasis or an invented quote"
+        },
+        {
+          "kind": "entity_not_in_content",
+          "value": "Pro",
+          "context": "",
+          "note": "candidate; may be general knowledge/explanation"
+        },
+        {
+          "kind": "entity_not_in_content",
+          "value": "Web",
+          "context": "",
+          "note": "candidate; may be general knowledge/explanation"
+        },
+        {
+          "kind": "scope_term_not_in_content",
+          "value": "一定",
+          "context": "",
+          "note": "candidate scope upgrade; check whether the source supports it"
+        }
+      ]
+    },
+    {
+      "case_id": "reg_wechat_copy",
+      "run_id": "20261107T080924Z_BV13EHX64EaY_wechat_article",
+      "form": "wechat_article",
+      "status": "approved",
+      "review": "approved",
+      "runtime": {
+        "total_tokens": 31157,
+        "latency_ms": 50970
+      },
+      "numbers": {
+        "checked": 8,
+        "grounded": 8,
+        "all": [
+          "150",
+          "2",
+          "20",
+          "200",
+          "30",
+          "4",
+          "40%",
+          "500"
+        ],
+        "candidates": []
+      },
+      "quotes": {
+        "checked": 3,
+        "grounded": 0,
+        "candidates": [
+          "不出门要不要涂",
+          "它是在出效果",
+          "水乳没什么效果"
+        ]
+      },
+      "entities": {
+        "checked": 1,
+        "grounded": 0,
+        "candidates": [
+          "SPF30"
+        ]
+      },
+      "scope": {
+        "in_content": [
+          "一定",
+          "所有"
+        ],
+        "candidates": []
+      },
+      "flags": [
+        {
+          "kind": "quote_not_in_content",
+          "value": "不出门要不要涂",
+          "context": "",
+          "note": "candidate; may be editorial emphasis or an invented quote"
+        },
+        {
+          "kind": "quote_not_in_content",
+          "value": "它是在出效果",
+          "context": "",
+          "note": "candidate; may be editorial emphasis or an invented quote"
+        },
+        {
+          "kind": "quote_not_in_content",
+          "value": "水乳没什么效果",
+          "context": "",
+          "note": "candidate; may be editorial emphasis or an invented quote"
+        },
+        {
+          "kind": "entity_not_in_content",
+          "value": "SPF30",
+          "context": "",
+          "note": "candidate; may be general knowledge/explanation"
+        }
+      ]
+    },
+    {
+      "case_id": "reg_xhs_copy_cards",
+      "run_id": "20261107T132341Z_BV1B5411A7ax_xiaohongshu_note",
+      "form": "xiaohongshu_note",
+      "status": "approved",
+      "review": "approved",
+      "runtime": {
+        "total_tokens": 17327,
+        "latency_ms": 53873
+      },
+      "numbers": {
+        "checked": 1,
+        "grounded": 1,
+        "all": [
+          "7"
+        ],
+        "candidates": []
+      },
+      "quotes": {
+        "checked": 1,
+        "grounded": 1,
+        "candidates": []
+      },
+      "entities": {
+        "checked": 0,
+        "grounded": 0,
+        "candidates": []
+      },
+      "scope": {
+        "in_content": [
+          "唯一"
+        ],
+        "candidates": []
+      },
+      "flags": []
+    }
+  ],
+  "cross_form": [
+    {
+      "video_id": "BV13EHX64EaY",
+      "forms": {
+        "wechat_article": [
+          "150",
+          "2",
+          "20",
+          "200",
+          "30",
+          "4",
+          "40%",
+          "500"
+        ]
+      },
+      "note": "candidate-number coverage by form; omission is not a contradiction"
+    },
+    {
+      "video_id": "BV17DHC6CELr",
+      "forms": {
+        "long_article": [
+          "0.0092",
+          "0.0368",
+          "0.6",
+          "0.624",
+          "0.709",
+          "0.756",
+          "0.76",
+          "0.781",
+          "0.8",
+          "0.921",
+          "0.951",
+          "1",
+          "10",
+          "100",
+          "128",
+          "2",
+          "256",
+          "3",
+          "300",
+          "4",
+          "5",
+          "7",
+          "768",
+          "9",
+          "95%"
+        ],
+        "wechat_article": [
+          "0.6",
+          "0.624",
+          "0.709",
+          "0.756",
+          "0.76",
+          "0.781",
+          "0.8",
+          "0.921",
+          "0.951",
+          "1",
+          "10",
+          "100",
+          "128",
+          "2",
+          "256",
+          "3",
+          "300",
+          "4",
+          "5",
+          "7",
+          "768",
+          "9",
+          "95%"
+        ],
+        "xiaohongshu_note": [
+          "0.6",
+          "0.756",
+          "0.76",
+          "10",
+          "2",
+          "300",
+          "5",
+          "768",
+          "9"
+        ]
+      },
+      "note": "candidate-number coverage by form; omission is not a contradiction"
+    },
+    {
+      "video_id": "BV1B5411A7ax",
+      "forms": {
+        "xiaohongshu_note": [
+          "7"
+        ]
+      },
+      "note": "candidate-number coverage by form; omission is not a contradiction"
+    },
+    {
+      "video_id": "BV1brgs6mE7a",
+      "forms": {
+        "wechat_article": [
+          "3",
+          "30",
+          "5.6"
+        ]
+      },
+      "note": "candidate-number coverage by form; omission is not a contradiction"
+    },
+    {
+      "video_id": "BV1ixpd6GENc",
+      "forms": {
+        "long_article": [
+          "0.5",
+          "1",
+          "12",
+          "13",
+          "160",
+          "210",
+          "6",
+          "7",
+          "8"
+        ],
+        "wechat_article": [
+          "0.5",
+          "1",
+          "12",
+          "120",
+          "13",
+          "150",
+          "160",
+          "2",
+          "210",
+          "3",
+          "300",
+          "4",
+          "5",
+          "6",
+          "7",
+          "75",
+          "8"
+        ],
+        "xiaohongshu_note": [
+          "0.5",
+          "1",
+          "12",
+          "120",
+          "13",
+          "150",
+          "160",
+          "2",
+          "210",
+          "3",
+          "300",
+          "4",
+          "6",
+          "7",
+          "75",
+          "8"
+        ]
+      },
+      "note": "candidate-number coverage by form; omission is not a contradiction"
+    }
+  ]
+}

@@ -13,6 +13,9 @@
 | [architecture.md](../architecture.md) §0–§9 | 目标产品架构、组件、当前代码 vs 目标、路线；**文末附录是 v3 机会地图（历史）** |
 | [writing-v5-architecture.md](writing-v5-architecture.md) | 当前写作引擎（writing_v4）：planner/orchestrator/writer/skills/tools/bundle；不是产品壳 |
 | [jd-mapping-2026-11.md](jd-mapping-2026-11.md) | 2026 JD 真实含义、产品 consumer、评测口径（数据集/指标/校准/回归/pass^k） |
+| [jd-keywords-2026-11-08.md](jd-keywords-2026-11-08.md) | 2026-11-08 外部关键词复核：多 Agent/记忆/规划/评测/Trace/Harness；项目证据 vs 缺口 |
+| [observability-2026-11.md](observability-2026-11.md) | 可观测设计：运行中/复盘两段、说人话配置、每条 trace 可展开；本地轻量，不自建 Langfuse |
+| [visual-strategy-2026-11.md](visual-strategy-2026-11.md) | 视觉策略：关键帧极紧门槛、图注默认不加、语义绘图/原生组件优先 |
 | [reuse-stack-2026-11.md](reuse-stack-2026-11.md) | LibreChat / MCP / LangGraph / Pandoc / md2wechat / 卡片库复用与 license |
 | [integrations/librechat/](../integrations/librechat/README.md) | P1/P2 LibreChat + MCP + preview server 配置/启动/验收；外部 clone 主题/工具名补丁 |
 | [integrations/xhs/](../integrations/xhs/README.md) | 小红书 3:4 卡片 + App 导入包（Playwright） |
@@ -28,10 +31,13 @@
 |---|---|
 | [STATE.md](../STATE.md) | 当前分支/代码/测试/未做项事实 |
 | [HANDOFF.md](../HANDOFF.md) | 当前接手点/下一步 |
-| [handoffs/2026-11-07/NEXT_SESSION_PROMPT.md](../handoffs/2026-11-07/NEXT_SESSION_PROMPT.md) | **新 session 入口**：产品/方法/纪律/本轮自检/下一步思考 |
-| [handoffs/2026-11-07/ROUND_REVIEW.md](../handoffs/2026-11-07/ROUND_REVIEW.md) | 本轮 P2 自检：改动、验证、已修/存疑 |
-| [runs/writing_v5/](../runs/writing_v5/) | 最新 bundle 与 trace 证据 |
-| [runs/product_v1/](../runs/product_v1/) | P1/P2 产品原型 run：内容稿、article/note、reader.html、wechat.html、xhs_export、PDF、run_meta、publish_review |
+| [handoffs/2026-11-08/NEXT_SESSION_PROMPT.md](../handoffs/2026-11-08/NEXT_SESSION_PROMPT.md) | **最新快照**：发布级闭环、P5 真 E2E、P4 评测/轨迹/报告、待用户验收项 |
+| [handoffs/2026-11-07/NEXT_SESSION_PROMPT_P5.md](../handoffs/2026-11-07/NEXT_SESSION_PROMPT_P5.md) | 方法入口：产品/方法/纪律/自检/风险/整体推进分析 |
+| [handoffs/2026-11-07/NEXT_SESSION_PROMPT.md](../handoffs/2026-11-07/NEXT_SESSION_PROMPT.md) | 旧 P2 快照（历史，保留不改） |
+| [handoffs/2026-11-07/ROUND_REVIEW.md](../handoffs/2026-11-07/ROUND_REVIEW.md) | 旧 P2 自检（历史） |
+| [evidence-2026-11.md](evidence-2026-11.md) | 可提交的 run 证据摘要（P1–P5）：run id、形态、字数/图数、tokens、时延、验收；原始 run 在本地 `runs/`，不入库 |
+| `runs/writing_v5/`（本地，gitignored） | bundle 与 trace 原始证据；公开仓库不含 |
+| `runs/product_v1/`（本地，gitignored） | P1/P2/P3 产品原型 run：内容稿、article/note、reader.html、wechat.html、xhs_export、PDF、run_meta、publish_review；公开仓库不含 |
 
 ## Historical — 不要当 current
 
@@ -48,7 +54,7 @@
 | [writing-planner-position.md](writing-planner-position.md) | 旧 planner 定位；历史 |
 | [writing-skill-study.md](writing-skill-study.md) | 旧 skill 学习笔记；历史 |
 | [architecture.md](../architecture.md) 文末附录 | v3 机会地图/早期实现假设；不是当前实现 |
-| [runs/_reader_test_2026-11-03/reader_pack/](../runs/_reader_test_2026-11-03/reader_pack/) | 12 维/5 层写作标准与 persona；评测设计参考，不是当前 eval 流程 |
+| `runs/_reader_test_2026-11-03/reader_pack/`（本地，gitignored） | 12 维/5 层写作标准与 persona；评测设计参考，不是当前 eval 流程 |
 | [handoffs/](../handoffs/) | 历史交接，只追加 |
 | [_archive/](../_archive/) | 归档；不恢复 |
 | [portfolio/](../portfolio/) | 旧 P1 作品案例；历史，不是 current eval |

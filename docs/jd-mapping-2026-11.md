@@ -2,6 +2,7 @@
 
 > 状态：2026-11-06 重写。上一版把“评测”映射成 per-form case + 结构报告 + 可选 A/B，**这是 smoke test，不是 2026 JD 说的 evaluation**；本版按近期 JD、工程实践和产品真实 consumer 重映射。
 > 上位：[architecture.md](../architecture.md)；产品定义见 [product-v1-chat-studio.md](product-v1-chat-studio.md)；复用栈见 [reuse-stack-2026-11.md](reuse-stack-2026-11.md)。
+> 2026-11-08 复核：外部 JD 关键词（多 Agent/记忆/规划/评测/Trace/Harness）见 [jd-keywords-2026-11-08.md](jd-keywords-2026-11-08.md)；本文件仍是能力映射主表。
 > 原则：每个能力有真实 consumer、可打开的 run 证据和可复跑的数据；不造关键词 demo；不把“跑通”写成“质量通过”。
 
 ## 1. 调研结论（2026）
@@ -40,7 +41,7 @@
 | 4 | MCP | tools/resources/prompts；stdio/HTTP；auth/discovery | Python MCP server 暴露写作工具；LibreChat 连接；外部 agent 可复用 | **P1 已跑通**：`mcp_server.py` stdio + LibreChat |
 | 5 | LangGraph | StateGraph、checkpoint、streaming、interrupt、memory | 写作工作流图；可暂停/恢复/人工审批；stream 执行过程 | **P3 原型**：StateGraph + SQLite checkpoint + plan/review interrupt + stream events；完整 stream UI 未接 |
 | 6 | Memory | working / episodic / semantic / procedural；用户画像、偏好、历史 | 用户风格/画像、最近 runs、content hash、skill 版本、artifact 版本 | 当前只有 content hash/figure catalog/skill 库 + LibreChat 会话；用户画像未做 |
-| 7 | Observability | 端到端 trace、span、token/cost/latency/error；OTel/Langfuse | LibreChat Trace Viewer + Token 统计；我们的 run 面板/span | **P1 + P3 部分**：`workflow.json` stages/events/usage；`cost_estimate` 未配费率时为 null；Trace Viewer/OTel 未接 |
+| 7 | Observability | 端到端 trace、span、token/cost/latency/error；OTel/Langfuse | LibreChat Trace Viewer + Token 统计；我们的 run 面板/span | **P1 + P3 + 本地 Run Detail**：`/runs/<run_id>`（Live SSE / Trace / Stats）+ `/runs` 看板（p50/p95/tokens/error/checks/grounding）+ `get_run.trace` + 聊天 tool card 链接；`cost_estimate` 未配费率时为 null；OTel/Langfuse 未接 |
 | 8 | Evaluation | 数据集、指标、trajectory、回归门禁、pass@k/pass^k、线上闭环；writing 质量不做自动评分 | runtime/grounding eval harness + 独立报告；产品不显示分数 | **P4 原型**：deterministic harness + grounding candidate audit；不做 writing 质量 judge；trajectory 扩展/回归门禁未做 |
 | 9 | HITL | draft-and-approve、interrupt、review queue | 导出/发布前验收；LangGraph `interrupt()`；LibreChat tool approval | **P1 + P3**：`review_artifact` + workflow 的 plan/review interrupt；LibreChat tool approval 未接 |
 | 10 | Guardrails | 输入/输出校验、prompt injection、PII、工具权限、结构化输出 | 源内容按不可信输入；工具权限；输出 schema；不自动发布 | 当前有部分 schema/失败状态；guardrails 未系统化 |
@@ -52,9 +53,9 @@
 ## 3. 当前能拿出的真实证据
 
 - 写作引擎：`src/facet_studio/writing_v4/`（planner/orchestrator/writer/skills/tools/run_bundle）；`skills/writing/`；`runs/writing_v5/`。
-- 两套 latest bundle：
-  - [BV17 social_05](../runs/writing_v5/bundle_BV17_social_05/bundle.md)：公众号 2,637 字 + 小红书 944 字，complete。
-  - [BV1ix social_04](../runs/writing_v5/bundle_BV1ix_social_04/bundle.md)：公众号 2,514 字 + 小红书 773 字，complete。
+- 两套 latest bundle（本地 `runs/writing_v5/`，gitignored，公开仓库不含原始 run）：
+  - BV17 social_05：公众号 2,637 字 + 小红书 944 字，complete。
+  - BV1ix social_04：公众号 2,514 字 + 小红书 773 字，complete。
 - run 证据：`lead_plan.json`、`task_plan.json`、`llm_calls.jsonl`、`tool_calls.jsonl`、`decision_records.jsonl`、`working_memory.json`、`artifact_board.json`、`semantic_memory.json`、`bundle_manifest.json`。
 - 成本样例：BV17 3 calls / 35,905 tokens；BV1ix 3 calls / 35,453 tokens；墙钟约 1 分钟；无 repair loop。
 - P1 产品原型（2026-11-06）：LibreChat + MCP + preview server；BV17 公众号 2767 字/5 图/approved；BV1ix 小红书 999 字/3 图；证据在 `runs/product_v1/`；配置见 [integrations/librechat/README.md](../integrations/librechat/README.md)。

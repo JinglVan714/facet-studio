@@ -1,0 +1,292 @@
+{
+  "schema_version": "facet-run-report-v1",
+  "created_at": "2026-11-08T04:16:08.139479+00:00",
+  "run_id": "20261108T041238Z_BV1ixpd6GENc_wechat_article",
+  "video_id": "BV1ixpd6GENc",
+  "form": "wechat_article",
+  "status": "typeset",
+  "review": "missing",
+  "workflow": {
+    "status": "typeset",
+    "next": [],
+    "stages": [
+      {
+        "name": "intake",
+        "status": "succeeded",
+        "duration_ms": 0,
+        "usage": {},
+        "error": null,
+        "at": "2026-11-08T04:12:38.854826+00:00"
+      },
+      {
+        "name": "plan",
+        "status": "succeeded",
+        "duration_ms": 18342,
+        "usage": {
+          "prompt_tokens": 3423,
+          "completion_tokens": 2241,
+          "total_tokens": 5664,
+          "reasoning_tokens": 1730,
+          "cached_tokens": 768
+        },
+        "error": null,
+        "at": "2026-11-08T04:12:57.198370+00:00"
+      },
+      {
+        "name": "approval",
+        "status": "auto_approved",
+        "duration_ms": 0,
+        "usage": {},
+        "error": null,
+        "at": "2026-11-08T04:12:57.199428+00:00"
+      },
+      {
+        "name": "write",
+        "status": "succeeded",
+        "duration_ms": 74916,
+        "usage": {
+          "prompt_tokens": 15541,
+          "completion_tokens": 10308,
+          "total_tokens": 25849,
+          "reasoning_tokens": 8785,
+          "cached_tokens": 12928
+        },
+        "error": null,
+        "at": "2026-11-08T04:14:12.116065+00:00"
+      },
+      {
+        "name": "typeset",
+        "status": "succeeded",
+        "duration_ms": 10,
+        "usage": {},
+        "error": null,
+        "at": "2026-11-08T04:14:12.127838+00:00"
+      },
+      {
+        "name": "review",
+        "status": "auto_accepted",
+        "duration_ms": 0,
+        "usage": {},
+        "error": null,
+        "at": "2026-11-08T04:14:12.128399+00:00"
+      }
+    ],
+    "events": [
+      {
+        "type": "update",
+        "node": "intake",
+        "keys": [
+          "form",
+          "stages",
+          "status"
+        ]
+      },
+      {
+        "type": "update",
+        "node": "plan",
+        "keys": [
+          "plan",
+          "stages",
+          "status",
+          "usage"
+        ]
+      },
+      {
+        "type": "update",
+        "node": "approval",
+        "keys": [
+          "decision",
+          "stages",
+          "status"
+        ]
+      },
+      {
+        "type": "update",
+        "node": "write",
+        "keys": [
+          "stages",
+          "status",
+          "usage",
+          "write"
+        ]
+      },
+      {
+        "type": "update",
+        "node": "typeset",
+        "keys": [
+          "errors",
+          "stages",
+          "status",
+          "typeset"
+        ]
+      },
+      {
+        "type": "update",
+        "node": "review",
+        "keys": [
+          "stages",
+          "status"
+        ]
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 18964,
+      "completion_tokens": 12549,
+      "total_tokens": 31513,
+      "reasoning_tokens": 10515,
+      "cached_tokens": 13696
+    },
+    "cost_estimate": null,
+    "errors": []
+  },
+  "contract": {
+    "passed": true,
+    "checks": [
+      {
+        "check_id": "status_healthy",
+        "passed": true,
+        "detail": "status=typeset"
+      },
+      {
+        "check_id": "reader_artifact",
+        "passed": true,
+        "detail": "reader_html=<project>\\runs\\product_v1\\20261108T041238Z_BV1ixpd6GENc_wechat_article\\wechat_article\\reader.html"
+      },
+      {
+        "check_id": "manual_acceptance",
+        "passed": false,
+        "detail": "review=missing"
+      },
+      {
+        "check_id": "figures",
+        "passed": true,
+        "detail": "figures=2, missing=[], missing_on_disk=[]"
+      },
+      {
+        "check_id": "body_chars",
+        "passed": true,
+        "detail": "output_chars=1876, bounds=0-∞"
+      },
+      {
+        "check_id": "fact_keywords",
+        "passed": true,
+        "detail": "missing=[]"
+      },
+      {
+        "check_id": "forbidden_keywords",
+        "passed": true,
+        "detail": "present=[]"
+      },
+      {
+        "check_id": "trajectory_stages",
+        "passed": true,
+        "detail": "stages=['intake', 'plan', 'approval', 'write', 'typeset', 'review']"
+      },
+      {
+        "check_id": "trajectory_order",
+        "passed": true,
+        "detail": "ordered=['intake', 'plan', 'approval', 'write', 'typeset', 'review']"
+      },
+      {
+        "check_id": "trajectory_no_editor",
+        "passed": true,
+        "detail": "forbidden=[]"
+      },
+      {
+        "check_id": "trajectory_failures",
+        "passed": true,
+        "detail": "failed_stages=[], errors=[]"
+      },
+      {
+        "check_id": "trajectory_hitl",
+        "passed": true,
+        "detail": "review_status=auto_accepted"
+      },
+      {
+        "check_id": "trajectory_usage",
+        "passed": true,
+        "detail": "plan_tokens=5664, write_tokens=25849"
+      },
+      {
+        "check_id": "usage_present",
+        "passed": true,
+        "detail": "tokens=31513, latency_ms=92738"
+      },
+      {
+        "check_id": "wechat_artifact",
+        "passed": true,
+        "detail": "html=True, main=True, h1_in_main=False, images=2"
+      }
+    ],
+    "metrics": {
+      "body_chars": 1876,
+      "figures": 2,
+      "planner_tokens": 5664,
+      "writer_tokens": 25849,
+      "total_tokens": 31513,
+      "latency_ms": 92738,
+      "review": "missing",
+      "workflow": true,
+      "planner_trace": true
+    }
+  },
+  "llm_calls": {
+    "count": 2,
+    "total_tokens": 31513,
+    "by_stage": {
+      "bundle_plan": 1,
+      "write_wechat_article": 1
+    }
+  },
+  "grounding": {
+    "case_id": "20261108T041238Z_BV1ixpd6GENc_wechat_article",
+    "run_id": "20261108T041238Z_BV1ixpd6GENc_wechat_article",
+    "form": "wechat_article",
+    "status": "typeset",
+    "review": "missing",
+    "runtime": {
+      "total_tokens": 31513,
+      "latency_ms": 92738
+    },
+    "numbers": {
+      "checked": 17,
+      "grounded": 17,
+      "all": [
+        "0.5",
+        "1",
+        "12",
+        "120",
+        "13",
+        "150",
+        "160",
+        "2",
+        "210",
+        "3",
+        "300",
+        "4",
+        "5",
+        "6",
+        "7",
+        "75",
+        "8"
+      ],
+      "candidates": []
+    },
+    "quotes": {
+      "checked": 0,
+      "grounded": 0,
+      "candidates": []
+    },
+    "entities": {
+      "checked": 0,
+      "grounded": 0,
+      "candidates": []
+    },
+    "scope": {
+      "in_content": [],
+      "candidates": []
+    },
+    "flags": []
+  },
+  "notes": "Developer run report. Contract/trajectory checks are process checks; grounding flags are candidates, not a hallucination rate. No writing quality score; human acceptance remains the only publish gate."
+}

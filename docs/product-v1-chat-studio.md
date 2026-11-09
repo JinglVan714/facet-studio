@@ -63,7 +63,7 @@ Facet Studio 是一个聊天式内容工作台：你把视频和写作要求丢�
 - 读取内容：显示来源、内容字数、图数、content hash；现阶段用缓存内容，不重跑视频。
 - 规划：Lead Planner 决定角度/brief/图；不是固定章节模板。
 - 写作：一个产物一次 writer；没有 editor/checker/草稿阶段。
-- 执行过程：聊天内可折叠的“思考/工具/消耗”面板，显示阶段、工具调用、tokens、时延、错误；默认折叠。
+- 执行过程：聊天内可折叠的“思考/工具/消耗”面板，显示阶段、工具调用、tokens、时延、错误；默认折叠。需要详情时打开 `trace.html`（stages/LLM calls/tool calls/decisions/机器检查/grounding 候选）；它不是写作质量分页。
 - 失败：partial/failed 显式显示，不静默截断；单产物失败不影响其他请求。
 
 ### 3.4 产物与预览

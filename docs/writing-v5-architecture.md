@@ -187,10 +187,15 @@ skills/writing/bundle-planner/      # 编排 skill：输出 JSON plan，不写�
 
 ## 7. 视觉链路
 
-- **真实图示优先**：content manuscript 里的 `图示 N` + `figures/...` 是可用素材；能证明/展示文字说不清的东西才用。
-- **SVG 占位符**：三步以上流程、三层以上分类、两条轴/两把尺子、分支对比；长文最多 2 个/篇，社媒按需；Writer 只写 `<!-- svg: 一句话关系 -->`，不写 SVG。
-- **SVG 渲染**：模型返回图表 JSON 规格 → 本地确定性渲染；标注“示意”；不引入新数字/事实。
-- **caption**：只写“看哪里”，不复述正文。
+> 2026-11-08 用户确认视觉方向：关键帧极紧，语义绘图/原生组件优先，图注默认不加。完整策略见 [visual-strategy-2026-11.md](visual-strategy-2026-11.md)。
+
+- **三种策略**：真实还原型（关键帧，真实对象/动作/场景/证据）、知识解释型（SVG，概念/关系/流程/逻辑）、信息组织型（表格/代码/列表，检索效率）。
+- **载体优先级**：Markdown Table / Code Block / Ordered List / Checklist / LaTeX / Callout → SVG 信息图 → 关键帧（默认 0，最多 1）→ 没有就文字。
+- **关键帧极紧**：只有不可替代、自解释、视觉合格、无肖像/水印/UI/第三方素材风险、与当前段落严格对应、没有更好载体、权利清楚时才用；任何一条不满足就 0 张。
+- **视觉审计在 writing layer**：证据层只做输入适配；`visual_audit.py` 用 deepseek-flash 的视觉输入判断候选帧，只把通过的帧留给 planner/writer。
+- **SVG 占位符**：流程/层级/时间线/对比/2×2/因果/观点卡；数量按关系/结构复杂度决定，不设固定上限；Writer 只写 `<!-- svg: 一句话关系 -->`，不写 SVG。
+- **SVG 渲染**：模型返回图表 JSON 规格 → 本地确定性渲染；图内标注“示意”；不引入新数字/事实；输出无 caption 的图片引用。
+- **caption**：默认不加；需要“看哪里/这说明什么”时写正文句子或图内标注，不写图片下方 figcaption。
 - **没有合适图**：文字/表格说清楚，不硬编画面。
 - **展示页**：静态 HTML + CSS，响应式、可读、图表/SVG 正常显示；内容验收通过后再做。
 
@@ -205,8 +210,9 @@ skills/writing/bundle-planner/      # 编排 skill：输出 JSON plan，不写�
 | `response_meta.json` | writer | 观测 |
 | `bundle_manifest.json` | orchestrator | 评测 / 作品集 / 面试 |
 | `llm_calls.jsonl` | DeepSeekLLM + RunStore sink | 观测 / replay |
-| `tool_calls.jsonl` | ToolExecutor + RunStore sink | 观测 / 面试 |
-| `decision_records.jsonl` | orchestrator | 观测 / 面试 |
+| `tool_calls.jsonl` | ToolExecutor + RunStore sink；产品 workflow 的 stage span | 观测 / 面试 |
+| `decision_records.jsonl` | orchestrator；产品 workflow 的 plan/approval/review | 观测 / 面试 |
+| `trace.html` | typeset_article + observability | 用户/开发观测：stages / calls / tools / decisions / 机器检查 / grounding |
 | `working_memory.json` | orchestrator | 当前 run |
 | `artifact_board.json` | orchestrator | 一 writer 一 artifact 约束 |
 | `semantic_memory.json` | orchestrator（只读指针） | 多 form 复用 |
