@@ -53,3 +53,7 @@ portfolio/
 
 # P5 视频接入：外部证据层原始备份（不入库；集成代码在 src/facet_studio/evidence_layer）
 vendor/
+
+# 证据层运行时生成的 ffmpeg 副本 / 探针结果（不入库）
+tools/
+results/

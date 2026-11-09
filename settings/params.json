@@ -35,10 +35,10 @@
       "why": "场景切分失效时的上限保护，被截断会写进索引"
     },
     "asr_model": {
-      "value": "qwen-audio-3.0-asr-flash-streaming",
+      "value": "qwen-audio-3.1-asr-flash-streaming",
       "kind": "外部依赖",
-      "why": "百炼当前可用且支持字级时间戳（enable_words=True）",
-      "measured": "rtf 0.273–0.278，字级时间戳可用，150s 与 1373s 表现一致"
+      "why": "百炼当前可用且支持字级时间戳（enable_words=True）；3.0 的免费额度可能耗尽（status=44），3.1 同端点可用",
+      "measured": "3.1：2 分钟音频 40.9s，rtf 0.339，9 句，字级时间戳可用；3.0：rtf 0.273–0.278，但本轮免费额度耗尽"
     },
     "frame_batch_concurrency": {
       "value": 3,

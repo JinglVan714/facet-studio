@@ -1,11 +1,38 @@
-# Facet Studio P1/P2 local launcher (Windows PowerShell)
-# Adjust $Project / $LibreChat / $Python if your paths differ.
+# Facet Studio local launcher (Windows PowerShell).
 # Starts: Mongo (mongodb-memory-server) -> preview server -> LibreChat -> browser.
-# After editing LibreChat client code: cd $LibreChat; npm run frontend; then restart backend.
+#
+# Configure with environment variables (or edit the defaults below):
+#   FACET_STUDIO_PROJECT_ROOT  project directory (default: parent of this script)
+#   FACET_STUDIO_LIBRECHAT_ROOT  LibreChat clone (default: sibling "librechat")
+#   FACET_STUDIO_PYTHON  Python executable (default: "python")
+#
+# After editing LibreChat client code: cd $LibreChat; npm run frontend; restart backend.
 
-$Project  = "D:\秋招\个人作品\1023视频写作"
-$LibreChat = "D:\luno_external\librechat"
-$Python   = "D:\anaconda\envs\myagent\python.exe"
+$Project = if ($env:FACET_STUDIO_PROJECT_ROOT) {
+  $env:FACET_STUDIO_PROJECT_ROOT
+} else {
+  (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+}
+
+$LibreChat = if ($env:FACET_STUDIO_LIBRECHAT_ROOT) {
+  $env:FACET_STUDIO_LIBRECHAT_ROOT
+} else {
+  Join-Path (Split-Path $Project -Parent) 'librechat'
+}
+
+$Python = if ($env:FACET_STUDIO_PYTHON) {
+  $env:FACET_STUDIO_PYTHON
+} else {
+  'python'
+}
+
+if (-not (Test-Path $LibreChat)) {
+  throw "LibreChat not found at $LibreChat. Set FACET_STUDIO_LIBRECHAT_ROOT."
+}
+
+Write-Host "Project:   $Project"
+Write-Host "LibreChat: $LibreChat"
+Write-Host "Python:    $Python"
 
 Write-Host "Starting Mongo..."
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$LibreChat'; node scripts/dev-mongo.cjs"

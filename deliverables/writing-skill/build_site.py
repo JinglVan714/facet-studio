@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import html
+import os
 import re
 import shutil
 import subprocess
@@ -39,7 +40,11 @@ ARTICLES = [
     },
 ]
 
-EDGE = Path(r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe")
+EDGE = Path(
+    os.environ.get("FACET_STUDIO_EDGE")
+    or shutil.which("msedge")
+    or r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+)
 
 
 def esc(text: str) -> str:

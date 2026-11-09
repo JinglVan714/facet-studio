@@ -1,14 +1,16 @@
 [project]
 name = "facet-studio"
 version = "0.1.0"
-description = "Evidence-driven video understanding and multi-form writing"
+description = "Chat-first video-to-article studio: one form per request, evidence-backed, human review"
 requires-python = ">=3.11"
 dependencies = [
   "pydantic>=2.12",
   "openai>=1.109",
   "fastapi>=0.124",
   "uvicorn>=0.38",
-  "mcp>=1.27",
+  "mcp>=1.27,<2",
+  "langgraph>=1.2",
+  "langgraph-checkpoint-sqlite>=3.1",
   "markdown-it-py>=4.0",
   "pypdf>=6.21",
 ]
