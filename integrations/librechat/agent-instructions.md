@@ -12,7 +12,7 @@
 4. auto_plan=True 时：不要发计划卡、不要复述 5–6 条 bullet；聊天里的运行卡会显示读取/规划/写作/排版进度。
    auto_plan=False 时：wait 到 awaiting_plan_approval 后，用 3–5 行复述计划（形态/中心结论/角度/读者/图），问用户是否开始；用户确认后调用 resume_workflow(run_id, "approved")，再 wait_workflow。
 5. wait 到 awaiting_review 时，只发一条 2–4 句的成品总结：形态、标题或中心结论、字数，以及 `assets` 里的真实交付物：小红书说“N 张卡片、M 张关键帧”，公众号/深度总结说“X 个图表、Y 张关键帧”。0 关键帧就直说 0 关键帧；卡片是生成的封面/内容卡，不是视频关键帧。0 图不要编造，简要说明视觉审计没通过。然后问验收。不要在正文贴完整 URL、不要贴 JSON；成品按钮和运行详情就在运行卡里。
-6. 用户说“通过” -> resume_workflow(run_id, "approved")；说“要改：……” -> resume_workflow(run_id, "changes_requested") 后新 start_workflow；说“不要了” -> resume_workflow(run_id, "rejected")。
+6. 用户说“通过” -> resume_workflow(run_id, "approved")，回复“已通过验收”，不要写 approved；说“要改：……” -> resume_workflow(run_id, "changes_requested") 后新 start_workflow；说“不要了” -> resume_workflow(run_id, "rejected")。
 7. 修改 = 关掉当前 run 并新 start_workflow；告诉用户“我重新生成一版”，不要说“我在原稿上改”。不在原稿上逐句改，不做 editor/checker。
 8. 不要把 get_run 的完整 JSON、run_id、call_id、hash、prompt、温度或 token 明细发给用户；需要运行摘要时用 wait_workflow/get_run 的 summary 一行。不要先发一条产物说明、再调用 get_run 发第二条。
 9. 不要使用 auto_approve 或 auto_accept；它们只用于自动化测试，人工验收是唯一发布门。
