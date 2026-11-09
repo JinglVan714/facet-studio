@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
 
 from facet_studio.writing.prompt import (
@@ -11,7 +12,7 @@ from facet_studio.writing.prompt import (
     build_user_prompt,
 )
 from facet_studio.writing.request import validate_request
-from facet_studio.writing.skill import load_skill
+from facet_studio.writing.skill import HASH_FILES, load_skill
 from facet_studio.writing.writer import run_writer
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -56,6 +57,17 @@ def test_load_skill_package() -> None:
     assert "H2 = 目录" in structure
     assert "Title / TOC" in skill.rubric
     assert "Examples" in skill.examples
+
+
+def test_skill_hash_is_line_ending_independent(tmp_path: Path) -> None:
+    target = tmp_path / "reader_first_explainer"
+    shutil.copytree(SKILL_DIR, target)
+    for name in HASH_FILES:
+        path = target / name
+        if path.is_file():
+            text = path.read_bytes().replace(b"\r\n", b"\n")
+            path.write_bytes(text.replace(b"\n", b"\r\n"))
+    assert load_skill(target).hash_ok is True
 
 
 def test_build_prompts_for_full_text() -> None:

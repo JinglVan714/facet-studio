@@ -79,7 +79,11 @@ def _content_hash(skill_dir: Path) -> str:
         digest.update(b"\0")
         path = skill_dir / name
         if path.exists():
-            digest.update(path.read_bytes())
+            # Git checkout on Windows may convert LF to CRLF.  The manifest
+            # hash is content identity, not a checkout artifact, so normalize
+            # line endings before hashing (a fresh clone must pass tests on
+            # both Windows and Linux).
+            digest.update(path.read_bytes().replace(b"\r\n", b"\n"))
         digest.update(b"\0")
     return digest.hexdigest()
 
