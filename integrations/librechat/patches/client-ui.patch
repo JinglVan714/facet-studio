@@ -84,8 +84,387 @@ index d6d4604..3691947 100644
    if (!conversation_starters.length) {
      return null;
    }
+diff --git a/client/src/components/Chat/Messages/Content/FacetRunLinks.tsx b/client/src/components/Chat/Messages/Content/FacetRunLinks.tsx
+new file mode 100644
+index 0000000..9eb3357
+--- /dev/null
++++ b/client/src/components/Chat/Messages/Content/FacetRunLinks.tsx
+@@ -0,0 +1,373 @@
++import { useMemo } from 'react';
++
++type FacetLink = [string, string];
++type FacetSummary = {
++  title: string;
++  chips: string[];
++  meta: string[];
++  links: FacetLink[];
++};
++
++const LINK_LABELS: Record<string, string> = {
++  trace_url: '运行数据',
++  preview_url: '预览',
++  wechat_url: '公众号',
++  pdf_url: 'PDF',
++};
++
++const STATUS_TEXT: Record<string, string> = {
++  awaiting_plan_approval: '等待计划确认',
++  awaiting_review: '等待验收',
++  planned: '已规划',
++  written: '已写完',
++  typeset: '已排版',
++  partial: '部分完成',
++  approved: '已验收',
++  rejected: '已拒绝',
++  changes_requested: '待修改',
++  failed: '失败',
++};
++
++const REVIEW_TEXT: Record<string, string> = {
++  approved: '已验收',
++  draft: '未验收',
++  stale: '待重新验收',
++  changes_requested: '待修改',
++  rejected: '已拒绝',
++};
++
++function safeParse(text: string): unknown {
++  try {
++    return JSON.parse(text);
++  } catch {
++    // Some tool outputs wrap JSON in prose or a stringified content part.
++  }
++  const start = text.indexOf('{');
++  const end = text.lastIndexOf('}');
++  if (start >= 0 && end > start) {
++    try {
++      return JSON.parse(text.slice(start, end + 1));
++    } catch {
++      // Fall through to URL-only rendering.
++    }
++  }
++  return null;
++}
++
++function findFacetObject(value: unknown, depth = 0): Record<string, any> | null {
++  if (!value || depth > 4) {
++    return null;
++  }
++  if (typeof value === 'string') {
++    return findFacetObject(safeParse(value), depth + 1);
++  }
++  if (typeof value !== 'object') {
++    return null;
++  }
++  if (Array.isArray(value)) {
++    for (const item of value) {
++      const found = findFacetObject(item, depth + 1);
++      if (found) {
++        return found;
++      }
++    }
++    return null;
++  }
++  const obj = value as Record<string, any>;
++  if (obj.run_id || obj.preview_url || obj.trace_url || obj.interrupt) {
++    return obj;
++  }
++  for (const key of ['output', 'result', 'content', 'data', 'tool_call']) {
++    const found = findFacetObject(obj[key], depth + 1);
++    if (found) {
++      return found;
++    }
++  }
++  return null;
++}
++
++/** Tool outputs arrive as raw JSON, nested under `tool_call.output`, or inside
++ *  a stringified part. URLs are the fallback when the payload is unparseable. */
++function urlsFromOutput(output: string | null | undefined): FacetLink[] {
++  if (!output) {
++    return [];
++  }
++  const links: FacetLink[] = [];
++  for (const [key, label] of Object.entries(LINK_LABELS)) {
++    const at = output.indexOf(key);
++    if (at < 0) {
++      continue;
++    }
++    // Look just past the key, whether the payload is raw JSON or an escaped
++    // stringified part. Avoids a fragile template-built RegExp.
++    const tail = output.slice(at, at + 600);
++    const match = tail.match(/https?:\/\/[^"\\\s]+/);
++    if (match?.[0]) {
++      links.push([label, match[0].replace(/\/trace\.html$/, '')]);
++    }
++  }
++  return links;
++}
++
++function linksFromObject(obj: Record<string, any>): FacetLink[] {
++  const links: FacetLink[] = [];
++  for (const [key, label] of Object.entries(LINK_LABELS)) {
++    const value = obj[key];
++    if (typeof value === 'string' && /^https?:\/\//.test(value)) {
++      links.push([label, value.replace(/\/trace\.html$/, '')]);
++    }
++  }
++  return links;
++}
++
++/** Collect links from nested tool payloads (artifacts/typeset/write/review). */
++function collectLinks(value: unknown, depth = 0): FacetLink[] {
++  if (!value || depth > 4) {
++    return [];
++  }
++  if (typeof value === 'string') {
++    if (!value.startsWith('{')) {
++      return [];
++    }
++    return collectLinks(safeParse(value), depth + 1);
++  }
++  if (typeof value !== 'object') {
++    return [];
++  }
++  if (Array.isArray(value)) {
++    return value.flatMap((item) => collectLinks(item, depth + 1));
++  }
++  const obj = value as Record<string, any>;
++  const links = linksFromObject(obj);
++  for (const item of Object.values(obj)) {
++    if (item && typeof item === 'object') {
++      links.push(...collectLinks(item, depth + 1));
++    }
++  }
++  return links;
++}
++
++function firstValue(obj: Record<string, any>, keys: string[], depth = 0): string {
++  if (!obj || depth > 3) {
++    return '';
++  }
++  for (const key of keys) {
++    const value = obj[key];
++    if (typeof value === 'string' && value) {
++      return value;
++    }
++    if (typeof value === 'number') {
++      return String(value);
++    }
++  }
++  for (const value of Object.values(obj)) {
++    if (value && typeof value === 'object' && !Array.isArray(value)) {
++      const found = firstValue(value as Record<string, any>, keys, depth + 1);
++      if (found) {
++        return found;
++      }
++    }
++  }
++  return '';
++}
++
++function stringField(output: string, key: string): string {
++  const at = output.indexOf(`"${key}"`);
++  if (at < 0) {
++    return '';
++  }
++  const tail = output.slice(at, at + 1200);
++  const match = tail.match(/:\s*"([^"]*)"/);
++  if (match?.[1]) {
++    return match[1];
++  }
++  const num = tail.match(/:\s*(-?\d+)/);
++  return num?.[1] || '';
++}
++
++/** The tool payload may be truncated in the chat part; derive the stable
++ *  preview/export URLs from run_id + form + trace_url instead of relying on a
++ *  nested `typeset.preview_url` that may be cut off. */
++function derivedLinks(runId: string, form: string, traceUrl: string): FacetLink[] {
++  if (!runId || !form) {
++    return [];
++  }
++  const base = traceUrl || `http://127.0.0.1:8765/runs/${runId}`;
++  const links: FacetLink[] = [['预览', `${base}/${form}/reader.html`]];
++  if (form === 'wechat_article') {
++    links.push(['公众号', `${base}/${form}/wechat.html`]);
++  }
++  if (form === 'long_article') {
++    links.push(['PDF', `${base}/${form}/article.pdf`]);
++  }
++  return links;
++}
++
++function summarize(output: string | null | undefined): FacetSummary | null {
++  const text = output || '';
++  const obj = findFacetObject(safeParse(text));
++  const runId = String(obj?.run_id || stringField(text, 'run_id') || '').trim();
++  const formId = String(
++    obj?.form || stringField(text, 'form') || firstValue(obj || {}, ['form']) || '',
++  ).trim();
++  const formLabel = String(
++    obj?.form_label ||
++      stringField(text, 'form_label') ||
++      firstValue(obj || {}, ['form_label']) ||
++      formId,
++  ).trim();
++  const traceUrl = String(obj?.trace_url || stringField(text, 'trace_url') || '')
++    .replace(/\/trace\.html$/, '')
++    .trim();
++  const rawLinks = [
++    ...(obj ? collectLinks(obj) : []),
++    ...urlsFromOutput(text),
++    ...derivedLinks(runId, formId, traceUrl),
++  ];
++  const unique = new Map<string, string>();
++  for (const [label, href] of rawLinks) {
++    if (!unique.has(label)) {
++      unique.set(label, href);
++    }
++  }
++  const links = Array.from(unique.entries());
++  if (!obj && !links.length) {
++    return null;
++  }
++  if (!obj) {
++    return { title: '', chips: [], meta: [], links };
++  }
++
++  const plan = obj.interrupt?.plan || obj.plan || {};
++  const title = String(
++    plan.central_idea ||
++      plan.angle ||
++      plan.reader_goal ||
++      stringField(text, 'central_idea') ||
++      '',
++  ).trim();
++  const status = obj.status || stringField(text, 'status');
++  const review =
++    obj.review_status ||
++    obj.review?.decision ||
++    stringField(text, 'review_status') ||
++    firstValue(obj, ['review_status', 'decision']);
++  const chips = [formLabel, STATUS_TEXT[String(status || '')], REVIEW_TEXT[String(review || '')]].filter(
++    Boolean,
++  ) as string[];
++
++  const meta: string[] = [];
++  const charsRaw =
++    obj.output_chars ??
++    obj.write?.output_chars ??
++    stringField(text, 'output_chars') ??
++    firstValue(obj, ['output_chars']);
++  const chars = Number(charsRaw || 0);
++  if (chars > 0) {
++    meta.push(`${chars.toLocaleString()} 字`);
++  }
++  const figures = obj.figures_referenced ?? obj.write?.figures_referenced;
++  if (Array.isArray(figures)) {
++    meta.push(`引用 ${figures.length} 图`);
++  } else if (typeof figures === 'number') {
++    meta.push(`引用 ${figures} 图`);
++  }
++  const tokensRaw = obj.usage?.total_tokens ?? stringField(text, 'total_tokens');
++  const tokens = Number(tokensRaw || 0);
++  if (tokens > 0) {
++    meta.push(`${tokens.toLocaleString()} tokens`);
++  }
++  const candidates = obj.title_candidates ?? obj.write?.title_candidates;
++  if (Array.isArray(candidates) && candidates.length > 0) {
++    meta.push(`${candidates.length} 个标题候选`);
++  }
++
++  return { title, chips, meta, links };
++}
++
++/** Turn a Facet Studio tool result into a compact artifact card. The raw JSON
++ *  stays in the run detail/trace; chat shows what the user can act on. */
++export default function FacetRunLinks({
++  outputs,
++}: {
++  outputs: Array<string | null | undefined>;
++}) {
++  const summary = useMemo(() => {
++    const seen = new Map<string, string>();
++    let best: FacetSummary | null = null;
++    for (const output of outputs) {
++      const item = summarize(output);
++      if (!item) {
++        continue;
++      }
++      for (const [label, href] of item.links) {
++        if (!seen.has(label)) {
++          seen.set(label, href);
++        }
++      }
++      if (!best || item.title) {
++        best = item;
++      }
++    }
++    if (!best) {
++      return null;
++    }
++    return { ...best, links: Array.from(seen.entries()) };
++  }, [outputs]);
++
++  if (!summary) {
++    return null;
++  }
++
++  return (
++    <div
++      className="border-border-light bg-surface-secondary mt-2 rounded-lg border p-3"
++      data-testid="facet-run-card"
++    >
++      {summary.chips.length > 0 && (
++        <div className="flex flex-wrap items-center gap-1.5">
++          {summary.chips.map((chip) => (
++            <span
++              key={chip}
++              className="border-border-light bg-surface-primary text-text-secondary rounded-full border px-2 py-0.5 text-[11px] font-medium"
++            >
++              {chip}
++            </span>
++          ))}
++        </div>
++      )}
++      {summary.title && (
++        <div className="text-text-primary mt-1.5 text-sm leading-relaxed">{summary.title}</div>
++      )}
++      {summary.meta.length > 0 && (
++        <div className="text-text-secondary mt-1 text-xs">{summary.meta.join(' · ')}</div>
++      )}
++      {summary.links.length > 0 && (
++        <div className="mt-2 flex flex-wrap gap-2">
++          {summary.links.map(([label, href]) => (
++            <a
++              key={label}
++              href={href}
++              target="_blank"
++              rel="noopener noreferrer"
++              className="border-border-light bg-surface-primary text-text-secondary hover:text-text-primary inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium no-underline transition-colors"
++            >
++              {label}
++            </a>
++          ))}
++        </div>
++      )}
++    </div>
++  );
++}
++
++/** True for a Facet run/tool payload. Used to keep raw JSON out of the chat. */
++export function isFacetOutput(output: string | null | undefined): boolean {
++  if (!output) {
++    return false;
++  }
++  return (
++    /"run_id"\s*:/.test(output) &&
++    /"(preview_url|wechat_url|pdf_url|trace_url|interrupt|form_label)"\s*:/.test(output)
++  );
++}
 diff --git a/client/src/components/Chat/Messages/Content/ToolCall.tsx b/client/src/components/Chat/Messages/Content/ToolCall.tsx
-index e467390..def870d 100644
+index e467390..ed9deb4 100644
 --- a/client/src/components/Chat/Messages/Content/ToolCall.tsx
 +++ b/client/src/components/Chat/Messages/Content/ToolCall.tsx
 @@ -21,7 +21,7 @@ import {
@@ -97,7 +476,15 @@ index e467390..def870d 100644
  import { isToolCallPreparing, useToolPreparation } from './preparation';
  import { useMCPIconMap, useMCPServerNames } from '~/hooks/MCP';
  import { resolveToolCallPhase } from '~/utils/toolCallPhase';
-@@ -133,11 +133,15 @@ export default function ToolCall({
+@@ -29,6 +29,7 @@ import { MCPAppViews } from '~/components/MCPUIResource';
+ import { AttachmentGroup } from './Parts';
+ import ToolCallInfo from './ToolCallInfo';
+ import ProgressText from './ProgressText';
++import FacetRunLinks, { isFacetOutput } from './FacetRunLinks';
+ import { ToolAuthWarning } from './auth';
+ import { firstErrorLine } from './live';
+ 
+@@ -133,11 +134,15 @@ export default function ToolCall({
         *  above, so re-parsing it would classify an MCP function that happens to
         *  share a built-in's name (`read_file`, `set_memory`) as that native
         *  tool and show, and announce, an unrelated label. */
@@ -114,7 +501,26 @@ index e467390..def870d 100644
  
    const actionId = useMemo(() => {
      if (isMCPToolCall || !parsedAuthUrl) {
-@@ -337,13 +341,16 @@ export default function ToolCall({
+@@ -200,6 +205,9 @@ export default function ToolCall({
+     () => (args?.length ?? 0) > 0 || (output?.length ?? 0) > 0,
+     [args, output],
+   );
++  /** Facet results render as an artifact card; keep the raw JSON in Run Detail
++   *  instead of dumping it into the chat transcript. */
++  const facetOutput = useMemo(() => isFacetOutput(output), [output]);
+   /** The preference opens a card once it has output; a sole call opens on
+    *  its arguments too, so a call that returned nothing still shows them. */
+   const soleTool = useContext(SoleToolContext) === true;
+@@ -229,7 +237,7 @@ export default function ToolCall({
+   const showOAuth = Boolean(auth) && phase === 'running';
+ 
+   const [expandedInfo, setShowInfo] = useToolExpansion(
+-    soleTool ? hasInfo : (output?.length ?? 0) > 0,
++    !facetOutput && (soleTool ? hasInfo : (output?.length ?? 0) > 0),
+   );
+   /** The only call of its group, settled successfully: the group header is the
+    *  row, so the panel stands alone and stays open. An MCP or action call keeps
+@@ -337,13 +345,16 @@ export default function ToolCall({
        return errorLine;
      }
      if (isMCPToolCall && mcpServerName) {
@@ -133,6 +539,72 @@ index e467390..def870d 100644
  
    /** Model-authored live label, streamed as the first args key (injected by
     *  the `tool_intents` capability); persists as the settled label —
+@@ -464,18 +475,19 @@ export default function ToolCall({
+                 isAnimating={phase === 'running'}
+               />
+             }
+-            hasInput={hasInfo}
+-            isExpanded={showInfo}
++            hasInput={hasInfo && !facetOutput}
++            isExpanded={showInfo && !facetOutput}
+           />
+         </div>
+       )}
++      <FacetRunLinks outputs={[output]} />
+       <div
+         style={expandStyle}
+         onTransitionEnd={handleTransitionEnd}
+         data-tool-call-output-id={toolCallId}
+       >
+         <div className="overflow-hidden" ref={expandRef}>
+-          {hasInfo && shouldRenderBody && (
++          {hasInfo && shouldRenderBody && !facetOutput && (
+             <div
+               className={cn(
+                 toolPanelSpacingClassName,
+diff --git a/client/src/components/Chat/Messages/Content/ToolCallGroup.tsx b/client/src/components/Chat/Messages/Content/ToolCallGroup.tsx
+index 8edc733..32de30b 100644
+--- a/client/src/components/Chat/Messages/Content/ToolCallGroup.tsx
++++ b/client/src/components/Chat/Messages/Content/ToolCallGroup.tsx
+@@ -35,6 +35,7 @@ import { useMessagePartsHost } from '~/Providers/MessagePartsHostContext';
+ import { ToolAuthWarning, ToolAuthWarningContext } from './auth';
+ import { useMCPIconMap, useMCPServerNames } from '~/hooks/MCP';
+ import { AttachmentGroup, ReasoningCompact } from './Parts';
++import FacetRunLinks from './FacetRunLinks';
+ import { getOutcomeStatus, summarizeSpan } from './outcome';
+ import { MCPAppViews } from '~/components/MCPUIResource';
+ import { parseToolName } from '~/utils/toolLabels';
+@@ -122,6 +123,22 @@ export default function ToolCallGroup({
+     );
+     return parts.map(({ part }) => summary.metaOf(part)).filter((m): m is ToolMeta => m != null);
+   }, [parts, attachmentsByToolCallId]);
++  /** Tool outputs are the only place run/preview URLs live; read them at the
++   *  group level so the actions remain visible while the group is collapsed. */
++  const facetOutputs = useMemo(
++    () =>
++      parts
++        .filter(({ part }) => part.type === ContentTypes.TOOL_CALL)
++        .map(({ part }) => {
++          try {
++            return JSON.stringify(part);
++          } catch {
++            return null;
++          }
++        })
++        .filter((output): output is string => Boolean(output)),
++    [parts],
++  );
+   const count = toolMetadata.length;
+   const phaseSole = useContext(SoleToolContext);
+   /** Approval state is read from the RAW parts, not `toolMetadata`: a pending
+@@ -711,6 +728,7 @@ export default function ToolCallGroup({
+           />
+         )}
+       </div>
++      <FacetRunLinks outputs={facetOutputs} />
+       <div
+         style={expandStyle}
+         onTransitionEnd={handleTransitionEnd}
 diff --git a/client/src/locales/zh-Hans/translation.json b/client/src/locales/zh-Hans/translation.json
 index 3316633..720fe44 100644
 --- a/client/src/locales/zh-Hans/translation.json

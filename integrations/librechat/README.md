@@ -6,20 +6,19 @@
 
 ## 1. 本地环境（已验证）
 
-- LibreChat `v0.8.9-rc1`（MIT），clone 在 `D:/luno_external/librechat`。
+- LibreChat `v0.8.9-rc1`（MIT），clone 到任意目录；本文用 `<LibreChat>` 表示。已验证目录为外部 clone（不在本仓库内）。
 - Node `v22.14.0`（LibreChat 部分包声明 `^22.18.0 || >=24`，有 engine warning；当前 build/run 可通过）。
 - MongoDB 用 `mongodb-memory-server` 本地进程，不装 MongoDB 服务。
-- Python 用项目 conda 环境 `D:/anaconda/envs/myagent/python.exe`（3.11.14）。
+- Python 用项目 conda 环境（3.11.14）；本文用 `<Python>` 表示。
 - 预览服务：`facet_studio.preview_server`（FastAPI/uvicorn，127.0.0.1:8765）。
 - MCP：`facet_studio.mcp_server`（FastMCP stdio）。
 
 ## 2. 一次性准备
 
 ```bash
-# 1) clone + install + build（外部目录）
-cd D:/luno_external
-git clone --depth 1 https://github.com/danny-avila/LibreChat.git librechat
-cd librechat
+# 1) clone + install + build（外部目录；<LibreChat> 可任意）
+git clone --depth 1 https://github.com/danny-avila/LibreChat.git <LibreChat>
+cd <LibreChat>
 npm install
 npm run build
 
@@ -45,13 +44,13 @@ powershell -ExecutionPolicy Bypass -File <project>/scripts/start_p1.ps1
 
 ```bash
 # A. Mongo（LibreChat 依赖）
-cd D:/luno_external/librechat && node scripts/dev-mongo.cjs
+cd <LibreChat> && node scripts/dev-mongo.cjs
 
 # B. 预览服务
 cd <project> && PYTHONPATH=src python -m facet_studio.preview_server
 
 # C. LibreChat
-cd D:/luno_external/librechat && npm run backend
+cd <LibreChat> && npm run backend
 # open http://localhost:3080
 ```
 
@@ -84,7 +83,7 @@ cd D:/luno_external/librechat && npm run backend
 LibreChat clone 里只改主题/展示层，不改核心 pipeline：
 
 - `client/src/utils/toolLabels.ts`：`FACET_MCP_TOOL_LABELS` 把 12 个工具映射成中文动作名（接入新视频/查看来源/读取视频/规划/写作/排版/运行数据/验收/启动工作流/继续工作流/工作流状态）。
-- `client/src/components/Chat/Messages/Content/ToolCall.tsx`：使用中文动作名；Facet 工具不再显示“来自 facet_studio”。
+- `client/src/components/Chat/Messages/Content/ToolCall.tsx`、`ToolCallGroup.tsx`、`FacetRunLinks.tsx`：解析 MCP tool output 的 `trace_url / preview_url / wechat_url / pdf_url`，在聊天 tool card/group 上渲染“运行数据/预览/公众号/PDF”按钮；使用中文动作名；Facet 工具不再显示“来自 facet_studio”。
 - `client/src/components/Chat/Input/ConversationStarters.tsx`：三张引导卡 + 模型配置提示。
 - `client/index.html`、`client/src/locales/zh-Hans/translation.json`：品牌/标题/中文 UI。
 - `librechat.yaml`：`facet-studio` 暖纸主题、`facet_studio` MCP、欢迎语。
@@ -93,12 +92,12 @@ LibreChat clone 里只改主题/展示层，不改核心 pipeline：
 补丁文件：[patches/client-ui.patch](patches/client-ui.patch)。在新 clone 上应用：
 
 ```bash
-cd D:/luno_external/librechat
+cd <LibreChat>
 git apply <project>/integrations/librechat/patches/client-ui.patch
 npm run frontend
 ```
 
-补丁只含 5 个展示层文件；`librechat.yaml` 主题/MCP 配置用 `librechat.yaml.example`，不放进 patch。
+补丁含 7 个展示层文件（含新增 `FacetRunLinks.tsx`）；`librechat.yaml` 主题/MCP 配置用 `librechat.yaml.example`，不放进 patch。
 
 ## 4.2 P3 workflow（原型）
 
@@ -113,8 +112,11 @@ npm run frontend
 ## 4.3 P5 视频接入（证据层）
 
 - 证据层代码：`src/facet_studio/evidence_layer/`（从 `知识底稿核心-clean` 迁移）；入口 `facet_studio.ingest.ingest_source`。
-- 链路：`ingest_source(target)` → yt-dlp/本地登记 → 抽帧 + ASR → VLM + substrate → `content_manuscript` → `runs/writing_rebuild_2026-11-04/<vid>/content_final_v3/content.md + figures`。
-- 依赖：`yt-dlp`、`DASHSCOPE_API_KEY`（ASR/VLM）、`DEEPSEEK_API_KEY`（L1）；cookie 可选，路径 `data/cookies/bilibili.txt`（不读内容、不提交）。
+- 链路：`ingest_source(target)` → yt-dlp/本地登记 → 抽帧 + ASR → VLM → `content_manuscript` → `runs/writing_rebuild_2026-11-04/<vid>/content_final_v3/content.md + figures`。
+- 产品默认 `content_only=True`：跳过 contract/L1（写作层只消费 transcript + frames + VLM captions）；需要完整证据层时传 `include_evidence=True`。
+- 依赖：`yt-dlp`、`DASHSCOPE_API_KEY`（ASR/VLM）、`DEEPSEEK_API_KEY`（仅完整证据层/L1）；cookie 可选，路径 `data/cookies/bilibili.txt`（不读内容、不提交）。
+- **长视频请先用 CLI ingest**：MCP tool 是同步调用，LibreChat 默认 MCP timeout 300s；当前没有后台任务/进度恢复。2 分钟视频实测 158s 可过；更长视频先在终端跑 `facet_studio.ingest.ingest_source`，再在聊天里用缓存内容。
+- ASR 默认 `qwen-audio-3.1-asr-flash-streaming`（DashScope）；VLM 默认 `qwen3.8-27b`。3.0 的免费额度可能耗尽（status=44），3.1 同端点可用。
 - 设计：新视频接入后立即复用现有 `list_sources → resolve_source → workflow`，写作层不感知视频/证据层。
 - 验证：迁移备份的 17 个证据层测试通过；`evidence_mcp --selftest` 对现有 `data/` 通过；`content_manuscript` 从 `data/BV17DHC6CELr` 重建 4,213 字 / 10 图。
 
@@ -126,9 +128,11 @@ npm run frontend
 - BV1ix → 小红书：`runs/product_v1/20261106T132229Z_BV1ixpd6GENc_xiaohongshu_note/`（999 字 / 3 图）。
 - 完整 Agent 流程 → 小红书（2026-11-07）：`runs/product_v1/20261107T032530Z_BV17DHC6CELr_xiaohongshu_note/`（1,274 字 / 6 图 / 5 标签 / 6 张 3:4 PNG）。
 - 单独 typeset 验证 → 小红书：`runs/product_v1/20261107T031556Z_BV17DHC6CELr_xiaohongshu_note/`（1,172 字 / 2 图 / 5 标签 / 2 张 3:4 PNG）。
-- 深度总结 → PDF：`runs/product_v1/smoke_long_pdf/long_article/article.pdf`（9 页；封面/目录/正文已人工检查）。
+- 深度总结 → PDF：`runs/product_v1/smoke_long_pdf/long_article/article.pdf`（6 页）；含代码块长文 `20261106T130634Z_BV17DHC6CELr_long_article`（7 页）。
 - 工具调用：`resolve_source → plan_article → write_form → typeset_article → get_run`；人工 `review_artifact` 写 `publish_review.json`。
 - 预览：`http://127.0.0.1:8765/runs/<run_id>/<form>/reader.html`。
+- 运行数据：`http://127.0.0.1:8765/runs/<run_id>`（Live SSE / Trace / Stats；运行中 SSE 增量更新，结束后同一页复盘；没有 Story/说人话层）；`/runs` 是最近 runs + p50/p95/tokens/error/checks/grounding 看板；预览页右上/页脚有“运行数据”链接；`get_run.trace` 返回摘要；`start_workflow`/`resume_workflow` 返回 `trace_url`。
+- 聊天 turn 入口：`client-ui.patch` 在 MCP tool card 上解析 `trace_url / preview_url / wechat_url / pdf_url`，渲染“运行数据 / 预览 / 公众号 / PDF”小按钮；不另开 dashboard 作为主入口。
 - 公众号复制页：`.../wechat.html`（“复制正文”不含 H1 标题；每张图有“复制图片/下载”）；小红书导入包：`.../xhs_export/`（阅读页可复制标题/正文/标签和每张卡）；PDF：`.../article.pdf`。
 - P2 收口（2026-11-07）：`get_run` 返回 `review_status`（draft/stale/approved）；未验收显示“草稿”；typeset 失败返回 `typeset_errors` 且状态 `partial`；重新 typeset 会把旧验收标 stale。
 

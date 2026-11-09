@@ -25,6 +25,11 @@
     \pgfplotsset{compat=1.18}
 }{}
 
+% Pandoc's longtable output uses \def\LTcaptype{none} for uncaptioned
+% tables; the caption package then expects a "none" counter.  Define it so
+% an ordinary Markdown table does not abort the PDF build.
+\newcounter{none}
+
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 \providecommand{\pandocbounded}[1]{#1}

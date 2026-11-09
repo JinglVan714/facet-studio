@@ -11,11 +11,17 @@ import path from 'path';
 const require = createRequire(import.meta.url);
 let playwright;
 try {
+  // Prefer a locally installed playwright.
   playwright = require('playwright');
 } catch {
-  const fallback =
-    process.env.FACET_STUDIO_PLAYWRIGHT ||
-    'D:/luno_external/librechat/node_modules/playwright';
+  const fallback = process.env.FACET_STUDIO_PLAYWRIGHT;
+  if (!fallback) {
+    console.error(
+      'playwright not found. Install it (npm i playwright) or set ' +
+        'FACET_STUDIO_PLAYWRIGHT to a playwright module directory.'
+    );
+    process.exit(2);
+  }
   playwright = require(fallback);
 }
 const { chromium } = playwright;
@@ -55,18 +61,19 @@ function pageHtml(inner) {
 *{box-sizing:border-box}html,body{margin:0;width:${W}px;height:${H}px;overflow:hidden}
 body{background:#f4f3ee;color:#191817;font-family:${FONT_SANS}}
 .page{position:relative;width:${W}px;height:${H}px;padding:64px 64px 56px;display:flex;flex-direction:column;background:#f4f3ee}
-.brand{font-size:24px;letter-spacing:.18em;color:#8a847a;font-weight:700}
+.brand{font-size:28px;letter-spacing:.18em;color:#8a847a;font-weight:700}
 .kicker{display:inline-flex;align-self:flex-start;margin-top:28px;padding:10px 20px;border:1px solid #d8d3c8;
-border-radius:999px;font-size:24px;color:#5a554e;background:#eeede6}
-.title{font-family:${FONT_SERIF};font-weight:600;font-size:92px;line-height:1.12;letter-spacing:-.02em;margin:44px 0 0;word-break:keep-all;overflow-wrap:break-word;text-wrap:balance}
-.title.small{font-size:72px}
-.sub{font-size:30px;line-height:1.55;color:#5a554e;margin-top:28px;max-width:860px}
+border-radius:999px;font-size:26px;color:#5a554e;background:#eeede6}
+.title{font-family:${FONT_SERIF};font-weight:600;font-size:96px;line-height:1.12;letter-spacing:-.01em;margin:44px 0 0;word-break:keep-all;overflow-wrap:break-word;text-wrap:balance}
+.title.small{font-size:76px}
+.sub{font-size:38px;line-height:1.55;color:#5a554e;margin-top:28px;max-width:860px}
 .hero{margin-top:auto;border-radius:28px;overflow:hidden;border:1px solid #d8d3c8;background:#191817;
 padding:18px;height:560px;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .hero img{max-width:100%;max-height:calc(100% - 42px);width:auto;height:auto;object-fit:contain;display:block;border-radius:14px}
 .hero .cap{padding:12px 6px 2px;font-size:24px;color:#e8e2d6;text-align:center}
-.footer{display:flex;justify-content:space-between;align-items:center;margin-top:30px;font-size:22px;color:#8a847a}
+.footer{display:flex;justify-content:space-between;align-items:center;margin-top:30px;font-size:26px;color:#8a847a}
 .accent{width:120px;height:8px;background:#c96442;border-radius:999px;margin-top:34px}
+.text-cover .cover-main{margin-top:auto;margin-bottom:auto;width:100%}
 .card-top{display:flex;justify-content:space-between;align-items:center}
 .card-index{font-size:24px;letter-spacing:.14em;color:#8a847a}
 .card-media{flex:0 0 620px;height:620px;margin:24px 0 22px;background:#fff;border:1px solid #d8d3c8;border-radius:24px;padding:24px;
@@ -82,13 +89,22 @@ function coverHtml(card) {
   const rawTitle = card.title || spec.cover_text || spec.title || '';
   const long = Array.from(rawTitle).length > 25;
   const img = dataUri(card.image);
-  return pageHtml(`<div class="page">
+  const head = `
     <div class="brand">${esc(spec.brand || 'FACET STUDIO')}</div>
     <div class="kicker">${esc(spec.kicker || '笔记')}</div>
     <div class="title ${long ? 'small' : ''}">${esc(rawTitle)}</div>
-    ${card.subtitle ? `<div class="sub">${esc(card.subtitle)}</div>` : ''}
-    ${img ? `<div class="hero"><img src="${img}"><div class="cap">${esc(card.caption || '')}</div></div>` : '<div class="accent"></div>'}
-    <div class="footer"><span>${esc(spec.brand || 'FACET STUDIO')}</span><span>${esc(card.index || card.footer || '')}</span></div>
+    ${card.subtitle ? `<div class="sub">${esc(card.subtitle)}</div>` : ''}`;
+  const footer = card.index || card.footer ? `<div class="footer"><span></span><span>${esc(card.index || card.footer || '')}</span></div>` : '';
+  if (!img) {
+    return pageHtml(`<div class="page text-cover">
+      <div class="cover-main">${head}<div class="accent"></div></div>
+      ${footer}
+    </div>`);
+  }
+  return pageHtml(`<div class="page">
+    ${head}
+    <div class="hero"><img src="${img}"><div class="cap">${esc(card.caption || '')}</div></div>
+    ${footer}
   </div>`);
 }
 
