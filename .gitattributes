@@ -1,0 +1,3 @@
+* text=auto
+# Skill manifest hashes are content hashes; keep LF on every checkout.
+skills/** text eol=lf

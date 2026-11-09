@@ -16,9 +16,9 @@
 | `20261107T132341Z_BV1B5411A7ax_xiaohongshu_note` | BV1B | 小红书 | approved | 725 | 3 | 2 | 17,327 | 53.9s | approved |
 | `20261108T040941Z_BV1ixpd6GENc_long_article` | BV1ix | 深度总结 | typeset | 2,130 | 4 | 2 | 21,153 | 61.4s | pending |
 | `20261108T041238Z_BV1ixpd6GENc_wechat_article` | BV1ix | 公众号 | typeset | 1,876 | 2 | 2 | 31,513 | 92.7s | pending |
-| `20261108T095810Z_BV1brgs6mE7a_wechat_article` | BV1brgs6mE7a（新视频，含视觉审计） | 公众号 | typeset | 1,720 | 1 | 6 | 31,223 | 48.3s | pending |
-| `20261109T125434Z_BV1brgs6mE7a_xiaohongshu_note` | BV1brgs6mE7a | 小红书 | typeset | 697 | 1 张卡片 / 0 关键帧 | 6 | 9,400 | 50.5s | pending |
-| `20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note` | BV1brgs6mE7a | 小红书 | typeset | 793 | 1 张卡片 / 0 关键帧 | 6 | 8,922 | 44.6s | pending |
+| `20261108T095810Z_BV1brgs6mE7a_wechat_article` | BV1brgs6mE7a（新视频，含视觉审计） | 公众号 | typeset | 1,720 | 1 | 7 | 32,363 | 74.6s | pending |
+| `20261109T125434Z_BV1brgs6mE7a_xiaohongshu_note` | BV1brgs6mE7a | 小红书 | typeset | 697 | 1 张卡片 / 0 关键帧 | 6 | 17,642 | 59.4s 墙钟 | pending |
+| `20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note` | BV1brgs6mE7a | 小红书 | typeset | 793 | 1 张卡片 / 0 关键帧 | 6 | 15,862 | 51.2s 墙钟 | pending |
 | `smoke_long_pdf` | BV17 | 深度总结 | approved | 2,813 | 4 | 2 | 19,608 | 47.2s | approved |
 
 - P3 workflow run `20261107T132341Z_BV1B5411A7ax_xiaohongshu_note`：LangGraph stages `intake → plan → approval → write → typeset → review`；plan/review 两次 interrupt；`workflow.json` 记录 stages/events/usage；2 calls / 17,327 tokens / approved。
@@ -34,18 +34,20 @@
 - 端到端聊天 run `20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note`：用户给 BV 号后直接 `start_workflow(background=True, auto_plan=True)`，不再先 resolve；消息级运行卡从“正在启动”更新到“等待验收”；`wait_workflow` 只返回摘要/资产数，最终回复 793 字 / 1 张卡片 / 0 关键帧，没有裸 URL，聊天里只有一张运行卡，无“执行过程”分组。
 - 这是开发/面试观测页，不是写作质量分，也不是幻觉率；工具/决策 span 来自 workflow stage 边界，不伪造额外执行层。
 
-## P4 deterministic + grounding（2026-11-08 基线）
+## P4 deterministic + grounding（2026-11-09 复跑）
 
+- 最新报告：`report-20261109T135534Z.json` / `.md`；grounding：`grounding-20261109T135557Z.json` / `.md`。
 - `cases.json`：capability 6（2 视频 × 3 形态，全部有 run）+ regression 4（含 1 条 P5 新视频 E2E）。
-- `cases_run`：10/10；`cases_missing`：0。
-- `contract_pass_rate`：1.0（机器合同，不含人工验收）。
-- `trajectory_pass_rate`：1.0（30/30 checks：阶段顺序、无 editor/checker、无 failed stage、人工门、usage）。
-- `error_rate`：0.0。
-- `manual_acceptance_rate`：0.7（7/10；BV1ix long/wechat 和 P5 新视频 3 个新 machine run **待用户验收**）。
+- `cases_run`：10 cases / 9 unique runs；`cases_missing`：0（`reg_pdf_code_block` 与 `cap_bv17_long` 指向同一 run）。
+- `contract_pass_rate`：1.0（10/10 cases；含 artifact/trajectory，机器合同，不含人工验收）。
+- `trajectory_pass_rate`：1.0（30/30 checks；30 = 4 个 workflow case ×6 项 + 6 个 legacy case ×1 项）。
+- `error_rate`：0.0；`planner_trace_rate`：0.6（6/10；旧 P1/P2 run 没有 planner trace，单独记录）。
+- `manual_acceptance_rate`：0.7（7/10 cases，6/9 unique；BV1ix long/wechat 和 P5 新视频 3 个新 machine run **待用户验收**）。
 - `deterministic_pass_rate`：0.7（包含待验收；不是 writing quality）。
-- p50/p95 latency：52,421 / 92,738 ms；tokens total：215,273。
+- p50/p95 latency：52,421 / 92,738 ms（plan+write）；tokens total：222,498（10 cases；9 unique runs 201,350，重复 long run 多算一次）。
 - grounding：9 artifacts / 16 candidate flags（引语 7 / 范围 6 / 专名 3；数字 0，修复了 CJK 相邻数字被漏检的 regex）；**不是幻觉率，不是 writing 质量分**；未做人工 adjudication。
 - `pass@1/pass^k = null`：没有 judged trials，不伪造。
+- 最新端到端 UI run `20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note` 的单 run report 已生成（6 calls / 15,862 tokens / 51.2s 墙钟（LLM 调用合计 44.6s）；review=missing），它不在 10 个固定 cases 内，不计入 manual acceptance。
 - 报告：`evals/product_v1/reports/report-20261108T100118Z.{json,md}`、`grounding-20261108T100122Z.{json,md}`；单 run 报告：`run-report-*.md`。
 - 修复：Pandoc 无 caption 的 longtable 在 PDF 模板里触发 `No counter 'none' defined`；模板加 `\newcounter{none}`，BV1ix long PDF 已重排 6 页。重新 typeset 现在也会同步 `workflow.json` 的 typeset stage/errors，避免旧的 partial 永久留在 trace 里。
 
@@ -60,7 +62,7 @@
   - 切到同一端点的 `qwen-audio-3.1-asr-flash-streaming` 后直接可用：2 分钟音频 40.9s、rtf 0.339、字级时间戳可用；没有使用本地 ASR/OCR。
   - `content_only` 跳过 L1；ingest 53.8s（layer0 53.7s，VLM 复用已有 4 帧缓存），content 1,577 字 / 4 图；短画面参考格式重建后 1,052 字 / 4 图。
   - 之后走完整 workflow（plan → write → typeset），run `20261108T052817Z_BV1brgs6mE7a_wechat_article`：1,981 字 / 2 图 / 2 calls / 24,563 tokens / 54.3s。
-  - 视觉审计接入后，产品 run `20261108T095810Z_BV1brgs6mE7a_wechat_article`：审计 4 个候选 / 0 通过（UI/水印）、0 关键帧、1 个 SVG；1,720 字 / 6 calls（4 审计 + plan + write）/ 31,223 tokens；合同与轨迹全过，**人工验收 pending**。
+  - 视觉审计接入后，产品 run `20261108T095810Z_BV1brgs6mE7a_wechat_article`：审计 4 个候选 / 0 通过（UI/水印）、0 关键帧、1 个 SVG；1,720 字 / 7 calls（4 审计 + plan + 2 write）/ 32,363 tokens；合同与轨迹全过，**人工验收 pending**。
   - 结论：新视频下载 + DashScope ASR 3.1 + VLM + content + 产品 workflow + deepseek-flash 视觉审计已验证；3.0 的免费额度问题不再阻塞。
 
 ## 观察（不是质量分）

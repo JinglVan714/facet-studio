@@ -36,19 +36,19 @@
 | # | JD 能力 | 2026 真实含义 | 产品落点（真实 consumer） | 当前状态 |
 |---|---|---|---|---|
 | 1 | 多 Agent 编排 | planner-executor / supervisor；角色、共享 state、handoff、停止条件 | 聊天 agent（LibreChat）→ Lead Planner → writer/typesetter；一个产物一次 writer | **P1 原型已跑通**：LibreChat Agent + planner + writer |
-| 2 | 任务规划/调度 | DAG/StateGraph、状态、重试、预算、失败 partial | LangGraph 写作工作流：intake → plan → write → typeset → review；checkpoint/stream | **P3 原型**：StateGraph + SQLite checkpoint + stream events；LibreChat agent 默认流程未迁移 |
+| 2 | 任务规划/调度 | DAG/StateGraph、状态、重试、预算、失败 partial | LangGraph 写作工作流：intake → plan → approval → write → typeset → review；checkpoint/stream | **P3 已默认**：StateGraph + SQLite checkpoint + background + auto_plan=True；无动态子 agent 调度/重规划 |
 | 3 | Function Calling | 模型按 JSON schema 决定调工具；并行/串行、错误恢复、权限 | 聊天 agent 调 `resolve_source` / `plan_article` / `write_form` / `typeset` / `review_artifact` 等 MCP 工具 | **P1 已跑通**：LibreChat native tool calls → MCP |
 | 4 | MCP | tools/resources/prompts；stdio/HTTP；auth/discovery | Python MCP server 暴露写作工具；LibreChat 连接；外部 agent 可复用 | **P1 已跑通**：`mcp_server.py` stdio + LibreChat |
-| 5 | LangGraph | StateGraph、checkpoint、streaming、interrupt、memory | 写作工作流图；可暂停/恢复/人工审批；stream 执行过程 | **P3 原型**：StateGraph + SQLite checkpoint + plan/review interrupt + stream events；完整 stream UI 未接 |
+| 5 | LangGraph | StateGraph、checkpoint、streaming、interrupt、memory | 写作工作流图；可暂停/恢复/人工审批；stream 执行过程 | **P3 已跑通**：StateGraph + SQLite checkpoint + plan/review interrupt + background run；Run Detail 的 Live SSE 已接 |
 | 6 | Memory | working / episodic / semantic / procedural；用户画像、偏好、历史 | 用户风格/画像、最近 runs、content hash、skill 版本、artifact 版本 | 当前只有 content hash/figure catalog/skill 库 + LibreChat 会话；用户画像未做 |
-| 7 | Observability | 端到端 trace、span、token/cost/latency/error；OTel/Langfuse | LibreChat Trace Viewer + Token 统计；我们的 run 面板/span | **P1 + P3 + 本地 Run Detail**：`/runs/<run_id>`（Live SSE / Trace / Stats）+ `/runs` 看板（p50/p95/tokens/error/checks/grounding）+ `get_run.trace` + 聊天 tool card 链接；`cost_estimate` 未配费率时为 null；OTel/Langfuse 未接 |
-| 8 | Evaluation | 数据集、指标、trajectory、回归门禁、pass@k/pass^k、线上闭环；writing 质量不做自动评分 | runtime/grounding eval harness + 独立报告；产品不显示分数 | **P4 原型**：deterministic harness + grounding candidate audit；不做 writing 质量 judge；trajectory 扩展/回归门禁未做 |
+| 7 | Observability | 端到端 trace、span、token/cost/latency/error；OTel/Langfuse | LibreChat Trace Viewer + Token 统计；我们的 run 面板/span | **P1 + P3 + 本地 Run Detail**：`/runs/<run_id>`（概览/Live SSE/Trace/Stats）+ `/runs` 看板 + `get_run.trace` + 消息级运行卡；`cost_estimate` 未配费率时为 null；OTel/Langfuse 未接 |
+| 8 | Evaluation | 数据集、指标、trajectory、回归门禁、pass@k/pass^k、线上闭环；writing 质量不做自动评分 | runtime/grounding eval harness + 独立报告；产品不显示分数 | **P4 已接**：deterministic + grounding harness；本地 `--gate`；trajectory 30/30；不做 writing 质量 judge；无 CI/pass^k |
 | 9 | HITL | draft-and-approve、interrupt、review queue | 导出/发布前验收；LangGraph `interrupt()`；LibreChat tool approval | **P1 + P3**：`review_artifact` + workflow 的 plan/review interrupt；LibreChat tool approval 未接 |
 | 10 | Guardrails | 输入/输出校验、prompt injection、PII、工具权限、结构化输出 | 源内容按不可信输入；工具权限；输出 schema；不自动发布 | 当前有部分 schema/失败状态；guardrails 未系统化 |
 | 11 | RAG | hybrid retrieval + rerank + faithfulness | **不是核心**：内容稿就是上下文；如目标 JD 要求，再加 style/reference 检索并做 retrieval eval | 当前 deterministic content/figure view；不是向量库 |
 | 12 | 工程 | FastAPI/async/streaming/retry/idempotency/限流/成本 | MCP/FastAPI 服务；流式；重试；预算；Docker | **P1 部分**：FastMCP + FastAPI preview；无 Docker/限流 |
 | 13 | Prompt/Context | context engineering、结构化输出、缓存 | skill + 内容稿 + plan brief + tool schema；缓存 | **P1 部分**：tool schema + agent instructions；缓存由 provider |
-| 14 | 作品/开源 | 可运行 demo + trace/eval 证据 + README | LibreChat 产品 demo + run 证据 + eval report | **P1 demo 已跑通**；trace/eval 未做 |
+| 14 | 作品/开源 | 可运行 demo + trace/eval 证据 + README | LibreChat 产品 demo + run 证据 + eval report | **P1 demo 已跑通；Run Detail + P4 报告已接**；公开 demo/fixture 未做 |
 
 ## 3. 当前能拿出的真实证据
 
@@ -59,8 +59,8 @@
 - run 证据：`lead_plan.json`、`task_plan.json`、`llm_calls.jsonl`、`tool_calls.jsonl`、`decision_records.jsonl`、`working_memory.json`、`artifact_board.json`、`semantic_memory.json`、`bundle_manifest.json`。
 - 成本样例：BV17 3 calls / 35,905 tokens；BV1ix 3 calls / 35,453 tokens；墙钟约 1 分钟；无 repair loop。
 - P1 产品原型（2026-11-06）：LibreChat + MCP + preview server；BV17 公众号 2767 字/5 图/approved；BV1ix 小红书 999 字/3 图；证据在 `runs/product_v1/`；配置见 [integrations/librechat/README.md](../integrations/librechat/README.md)。
-- 测试：**580 passed**（含 MCP server / 排版 / PDF / 验收状态 / 视觉模板 / workflow / grounding / ingest 测试；旧 skill 断言已修）。
-- P5 证据层（2026-11-07）：`src/facet_studio/evidence_layer/` + `src/facet_studio/ingest.py`；迁移备份 17 tests、evidence MCP selftest、BV17 content 重建 4,213 字/10 图；真实新视频下载/ASR/VLM 端到端待验收。见 [evidence-layer-2026-11.md](evidence-layer-2026-11.md)。
+- 测试：**clean clone 315 passed / 本地全量 619**（2026-11-09；含 MCP server / 排版 / PDF / workflow / grounding / ingest / visual svg；本地 619 含 gitignored legacy v2）。
+- P5 证据层（2026-11-07 迁移，2026-11-08 真 E2E）：`src/facet_studio/evidence_layer/` + `src/facet_studio/ingest.py`；新视频下载 + DashScope ASR 3.1 + VLM + content + workflow 已跑通；剩用户验收。见 [evidence-layer-2026-11.md](evidence-layer-2026-11.md)。
 
 ## 4. 评测（先预留，产品原型稳定后做）
 

@@ -1,13 +1,13 @@
 # UI 设计（2026-11-06）
 
-> 状态：目标设计；**P1 已用 LibreChat + reader 预览跑通（2026-11-06）；P2 已接暖纸主题、中文工具名、首页引导、公众号/小红书/PDF 平台预览（2026-11-07）**。运行面板/完整模型配置 UI 仍待后续。产品定义见 [product-v1-chat-studio.md](product-v1-chat-studio.md)；壳/复用见 [reuse-stack-2026-11.md](reuse-stack-2026-11.md)；架构见 [architecture.md](../architecture.md)。
+> 状态：**2026-11-09 当前实现以 [product-v1-chat-studio.md](product-v1-chat-studio.md)、[observability-2026-11.md](observability-2026-11.md)、[runtime-evidence-2026-11-09.md](runtime-evidence-2026-11-09.md) 为准。** P1 已用 LibreChat + reader 预览跑通（2026-11-06）；P2 已接暖纸主题、中文工具名、首页引导、公众号/小红书/PDF 平台预览（2026-11-07）；2026-11-09 改为消息级运行卡 + 右侧预览抽屉，默认不出计划卡。本文保留早期 UI 设计，部分“计划卡/执行过程面板”描述是旧方案。产品定义见 [product-v1-chat-studio.md](product-v1-chat-studio.md)；壳/复用见 [reuse-stack-2026-11.md](reuse-stack-2026-11.md)；架构见 [architecture.md](../architecture.md)。
 > 目标：用户用得舒服（chat-first、少表单）、看得舒服（排版后的成品，不是裸 Markdown）、用得放心（run trace/成本/状态可见；评测数据不混进产品）。
 
 ## 1. 原则
 
 1. **Chat-first**：首页就是聊天框，不是 dashboard/卡片流/作品集。
 2. **Preview-first**：产物默认展示排版后的成品；Markdown 是“可编辑源”，不是默认视图。
-3. **Progress in chat**：计划、工具调用、tokens、时延、错误放在聊天里的可折叠执行面板，不跳独立 debug 页。
+3. **Progress in chat**：默认只显示一张消息级运行卡（阶段/当前步骤/计划/视觉审计/交付物）；工具原始 JSON 和内部 ID 留在 `/runs/<run_id>`，不铺在聊天里。
 4. **Reader vs process 分开**：读者页只放成品；执行过程/架构/评测在独立面板或 dev 文档，不混进成品页。
 5. **Trust by default**：每次 run 可查来源 hash、内容字数/图数、模型、calls、tokens、时延、成本、错误、验收状态。
 6. **复用优先**：LibreChat 做壳；Artifacts/Reasoning/Tool 组件现成；不自己造 chat/streaming/artifact 基础设施。

@@ -127,7 +127,7 @@ npm run frontend
 
 已跑通：
 
-- BV17 → 公众号：`runs/product_v1/20261106T131015Z_BV17DHC6CELr_wechat_article/`（2767 字 / 5 图；原 approved，2026-11-07 重排版后标 stale，需重新验收）。
+- BV17 → 公众号：`runs/product_v1/20261106T131015Z_BV17DHC6CELr_wechat_article/`（2767 字 / 5 图；2026-11-07 重排版后已重新 approved）。
 - BV1ix → 小红书：`runs/product_v1/20261106T132229Z_BV1ixpd6GENc_xiaohongshu_note/`（999 字 / 3 图）。
 - 完整 Agent 流程 → 小红书（2026-11-07）：`runs/product_v1/20261107T032530Z_BV17DHC6CELr_xiaohongshu_note/`（1,274 字 / 6 图 / 5 标签 / 6 张 3:4 PNG）。
 - 单独 typeset 验证 → 小红书：`runs/product_v1/20261107T031556Z_BV17DHC6CELr_xiaohongshu_note/`（1,172 字 / 2 图 / 5 标签 / 2 张 3:4 PNG）。
@@ -135,13 +135,13 @@ npm run frontend
 - 工具调用：`resolve_source → plan_article → write_form → typeset_article → get_run`；人工 `review_artifact` 写 `publish_review.json`。
 - 预览：`http://127.0.0.1:8765/runs/<run_id>/<form>/reader.html`。
 - 运行数据：`http://127.0.0.1:8765/runs/<run_id>`（Live SSE / Trace / Stats；运行中 SSE 增量更新，结束后同一页复盘；没有 Story/说人话层）；`/runs` 是最近 runs + p50/p95/tokens/error/checks/grounding 看板；预览页右上/页脚有“运行数据”链接；`get_run.trace` 返回摘要；`start_workflow`/`resume_workflow` 返回 `trace_url`。
-- 聊天 turn 入口：`client-ui.patch` 在 MCP tool card 上解析 `trace_url / preview_url / wechat_url / pdf_url`，渲染“运行数据 / 预览 / 公众号 / PDF”小按钮；不另开 dashboard 作为主入口。
+- 聊天 turn 入口：`client-ui.patch` 渲染一张消息级运行卡（轮询 `/api/card`）和右侧预览抽屉；不贴裸 URL、不显示原始 JSON；运行详情跳 `/runs/<run_id>`。
 - 公众号复制页：`.../wechat.html`（“复制正文”不含 H1 标题；每张图有“复制图片/下载”）；小红书导入包：`.../xhs_export/`（阅读页可复制标题/正文/标签和每张卡）；PDF：`.../article.pdf`。
 - P2 收口（2026-11-07）：`get_run` 返回 `review_status`（draft/stale/approved）；未验收显示“草稿”；typeset 失败返回 `typeset_errors` 且状态 `partial`；重新 typeset 会把旧验收标 stale。
 
 ## 6. 已知问题
 
-- LibreChat 默认 UI 仍是通用 chat；完整运行面板/成本面板是 P3。
+- LibreChat 默认 UI 仍是通用 chat；运行卡/Run Detail/SSE 已接；成本面板/完整模型配置 UI 未做。
 - 首页模型配置提示目前指向 `.env`，没有真正的设置页；这是“先留口子”。
 - `npm run backend` 会报 `[schedules] scheduler NOT started`；单机不影响聊天，设置 `SCHEDULES_SINGLE_PROCESS=true` 可消掉（未验证）。
 - Node engine warning：升级到 22.18+ 或 24 更稳。
@@ -149,4 +149,4 @@ npm run frontend
 - MongoDB 用 `mongodb-memory-server`，进程重启后用户/agent/会话可能丢失；按 §4 重建 agent。
 - 预览服务只监听 127.0.0.1；公网部署前加鉴权/限流/成本上限。
 - 小红书标题钩子/第一人称亲历是内容层待改；公众号数字偏多/缺图表也是内容层，不在排版层解决。
-- 评测未做；按 [docs/jd-mapping-2026-11.md](../../docs/jd-mapping-2026-11.md) §4 预留。
+- P4 deterministic + grounding 已接（本地 `--gate`）；无 judge 校准、pass^k、CI。

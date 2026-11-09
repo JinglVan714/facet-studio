@@ -41,7 +41,7 @@
 | 任务规划/调度 | LangGraph StateGraph：intake → plan → approval → write → typeset → review；SQLite checkpoint；plan/review interrupt；`workflow.json` stages/events/usage | P3 原型已跑通；无动态子 agent 调度/重规划 |
 | 工具调用 | MCP 13 tools：ingest/list/resolve/compile/plan/write/typeset/get_run/review + start/wait/resume/get_workflow；ToolRegistry/Executor 回执 | 真实 LibreChat → MCP 调用已跑通 |
 | 记忆 | content hash / figure catalog / skill registry / working memory；LibreChat 会话 | 缺用户画像/偏好/长期记忆的正式 schema |
-| 评测 | P4 deterministic + grounding candidate audit；10 cases；contract/trajectory；`evals/product_v1/reports/` | 有数据集和报告；无 judge 校准、无 pass^k、无 CI 门禁 |
+| 评测 | P4 deterministic + grounding candidate audit；10 cases；contract/trajectory；`evals/product_v1/reports/`；本地 `--gate` 回归门禁 | 有数据集/报告/本地门禁；无 judge 校准、无 pass^k、未接 CI |
 | Trace/观测 | `workflow.json` stages/events + `llm_calls.jsonl` + `tool_calls.jsonl` + `decision_records.jsonl` + Run Detail（Live SSE / Trace / Stats）+ `/runs` 看板（p50/p95/tokens/error/checks/grounding）；`get_run.trace` 摘要 | 有本地实时/事后观测；无 OTel/Langfuse |
 | HITL | `review_artifact` + workflow plan/review interrupt | 真实 UI 验收已跑通 |
 | Guardrails | 结构化输出、失败状态、工具权限部分；不自动发布 | 未系统化（prompt injection/PII/限流/成本上限） |
@@ -51,8 +51,8 @@
 
 ### 3.1 值得补（有真实 consumer）
 
-1. **Trace 面板/span 聚合**：已接 `trace.html`（stage/tool/tokens/latency/error + 机器检查 + grounding 候选）和 `get_run.trace`；下一步把 span 细化到工具参数/回执，并考虑 OTel/Langfuse 导出。
-2. **评测闭环**：把 P4 的 deterministic + grounding 接成固定回归命令；补 1–2 个 bad case → 数据集；不急着做 judge。JD 问的是“怎么证明改动没退化”，不是“打分多高”。
+1. **Trace 面板/span 聚合**：已接 `/runs/<run_id>`（概览 / Live SSE / Trace / Stats）+ 消息级运行卡 + `get_run.trace`；`trace.html` 只作导出/降级；下一步把 span 细化到工具参数/回执，并考虑 OTel/Langfuse 导出。
+2. **评测闭环**：P4 deterministic + grounding 已接固定命令和本地 `--gate`；补 1–2 个 bad case → 数据集/CI；不急着做 judge。JD 问的是“怎么证明改动没退化”，不是“打分多高”。
 3. **记忆 schema**：先把“用户偏好/最近 runs/content hash/skill 版本”写成一份显式 schema 和读写接口；不要一上来做向量库。JD 问的是“记忆怎么分层、怎么过期、怎么冲突”，不是“用了什么数据库”。
 4. **任务调度边界**：给 StateGraph 补失败分类、超时/重试、partial 状态、恢复路径；不要为了“多 agent”加 supervisor。现有 planner-executor 是合法编排模式，面试要能解释取舍。
 
@@ -61,7 +61,7 @@
 - **不要为了 JD 加 editor/checker/supervisor**：与“一个产物一次 writer”冲突；面试时讲清楚“为什么不是 supervisor”比堆角色加分。
 - **不要造 RAG/向量库全栈**：内容稿就是上下文；如果目标 JD 明确要 RAG，再做 style/reference 检索 + retrieval eval，不假装是 RAG 项目。
 - **不要伪造 pass@k/线上 A/B/judge 校准**：没有就跑，没跑就不写。
-- **不要堆 MCP 工具数量**：工具有真实 consumer 才加；12 个已经够讲清“工具是产品接口”。
+- **不要堆 MCP 工具数量**：工具有真实 consumer 才加；13 个已经够讲清“工具是产品接口”。
 
 ## 4. 面试叙事（30 秒版，按 2026 关键词）
 

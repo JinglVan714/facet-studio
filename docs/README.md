@@ -1,4 +1,4 @@
-# 文档索引（2026-11-07）
+# 文档索引（2026-11-09）
 
 > **项目现名：Facet Studio（原 LunoGraph）**。当前代码/文档已统一更名；`docs/_frozen/`、`_archive/` 保留旧名/旧路径，只作历史。
 > 目的：区分 **current（当前产品/实现）** 与 **historical（旧设计/旧 JD/旧 handoff）**，避免后续 session 把历史当基线。
@@ -14,7 +14,9 @@
 | [writing-v5-architecture.md](writing-v5-architecture.md) | 当前写作引擎（writing_v4）：planner/orchestrator/writer/skills/tools/bundle；不是产品壳 |
 | [jd-mapping-2026-11.md](jd-mapping-2026-11.md) | 2026 JD 真实含义、产品 consumer、评测口径（数据集/指标/校准/回归/pass^k） |
 | [jd-keywords-2026-11-08.md](jd-keywords-2026-11-08.md) | 2026-11-08 外部关键词复核：多 Agent/记忆/规划/评测/Trace/Harness；项目证据 vs 缺口 |
-| [observability-2026-11.md](observability-2026-11.md) | 可观测设计：运行中/复盘两段、说人话配置、每条 trace 可展开；本地轻量，不自建 Langfuse |
+| [observability-2026-11.md](observability-2026-11.md) | 可观测设计：运行中/复盘两段、消息级运行卡、逐帧审计、Trace/Stats；本地轻量，不自建 Langfuse |
+| [runtime-evidence-2026-11-09.md](runtime-evidence-2026-11-09.md) | 2026-11-09 运行时证据：P4 10 cases、最新 E2E、/runs 聚合；含不可引用口径 |
+| [github-resume-checklist-2026-11-09.md](github-resume-checklist-2026-11-09.md) | GitHub/简历发布前检查：LICENSE、demo、P4 fixture、素材版权、CI、可写/不可写 |
 | [visual-strategy-2026-11.md](visual-strategy-2026-11.md) | 视觉策略：关键帧极紧门槛、图注默认不加、语义绘图/原生组件优先 |
 | [reuse-stack-2026-11.md](reuse-stack-2026-11.md) | LibreChat / MCP / LangGraph / Pandoc / md2wechat / 卡片库复用与 license |
 | [integrations/librechat/](../integrations/librechat/README.md) | P1/P2 LibreChat + MCP + preview server 配置/启动/验收；外部 clone 主题/工具名补丁 |
@@ -31,7 +33,7 @@
 |---|---|
 | [STATE.md](../STATE.md) | 当前分支/代码/测试/未做项事实 |
 | [HANDOFF.md](../HANDOFF.md) | 当前接手点/下一步 |
-| [handoffs/2026-11-08/NEXT_SESSION_PROMPT.md](../handoffs/2026-11-08/NEXT_SESSION_PROMPT.md) | **最新快照**：发布级闭环、P5 真 E2E、P4 评测/轨迹/报告、待用户验收项 |
+| [handoffs/2026-11-09/NEXT_SESSION_PROMPT.md](../handoffs/2026-11-09/NEXT_SESSION_PROMPT.md) | **最新快照**：架构 → JD 校准 → 代码阅读 → 收尾判断；当前事实、证据、GitHub/简历清单 |
 | [handoffs/2026-11-07/NEXT_SESSION_PROMPT_P5.md](../handoffs/2026-11-07/NEXT_SESSION_PROMPT_P5.md) | 方法入口：产品/方法/纪律/自检/风险/整体推进分析 |
 | [handoffs/2026-11-07/NEXT_SESSION_PROMPT.md](../handoffs/2026-11-07/NEXT_SESSION_PROMPT.md) | 旧 P2 快照（历史，保留不改） |
 | [handoffs/2026-11-07/ROUND_REVIEW.md](../handoffs/2026-11-07/ROUND_REVIEW.md) | 旧 P2 自检（历史） |

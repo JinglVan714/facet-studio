@@ -1,6 +1,6 @@
 # 产品 v1：Facet Studio 聊天式内容工作台
 
-> 状态：2026-11-06 产品定义已确认；**P1 原型已跑通**（LibreChat + MCP + preview + review）；**P2 排版/导出/UI 已完成原型（2026-11-07）**：公众号复制 HTML、小红书 3:4 卡片（阅读页纵向展示，可保存/导入）+ 导入包、深度总结 PDF。当前代码见 [architecture.md](../architecture.md) §4；启动见 [integrations/librechat/README.md](../integrations/librechat/README.md)。
+> 状态：2026-11-06 产品定义已确认；P1/P2 原型已跑通；**P3 workflow 原型、P4 deterministic/grounding harness、P5 证据层已接**；2026-11-09 聊天侧改为后台 run + 消息级运行卡 + 右侧预览抽屉，默认 `auto_plan=True` 直写，计划卡仅在用户明确要求时出现。当前代码/事实见 [architecture.md](../architecture.md) §4、[STATE.md](../STATE.md)；启动见 [integrations/librechat/README.md](../integrations/librechat/README.md)。
 > 上位：[AGENTS.md](../AGENTS.md)；系统架构见 [architecture.md](../architecture.md)；写作引擎见 [writing-v5-architecture.md](writing-v5-architecture.md)；JD 见 [jd-mapping-2026-11.md](jd-mapping-2026-11.md)；复用栈见 [reuse-stack-2026-11.md](reuse-stack-2026-11.md)。
 > 本文只定义产品/UX/数据边界，不复制写作方法。方法/纪律看 [writing-rebuild-brief.md](writing-rebuild-brief.md) §2/§3。
 
@@ -48,9 +48,9 @@ Facet Studio 是一个聊天式内容工作台：你把视频和写作要求丢�
 
 缺省规则：用户没说的用默认；最多问一个澄清问题，不弹长表单。
 
-### 3.2 写前计划卡
+### 3.2 写前计划卡（仅在用户要求时）
 
-写之前给一张 3 行计划卡：
+默认不弹计划卡：用户给 BV + 形态后，Agent 直接启动后台 workflow，聊天里的运行卡显示读取/规划/写作/排版。只有用户明确说“先看计划 / 给我计划 / 确认后再写”时，才出 3 行计划卡：
 
 - 形态 + 角度；
 - 读者 + 读完能得到什么；
@@ -60,10 +60,10 @@ Facet Studio 是一个聊天式内容工作台：你把视频和写作要求丢�
 
 ### 3.3 写作与执行过程
 
-- 读取内容：显示来源、内容字数、图数、content hash；现阶段用缓存内容，不重跑视频。
+- 读取内容：默认缓存优先；新视频可 `ingest_source`，长视频先用 CLI；写作层仍只读 `content.md`。
 - 规划：Lead Planner 决定角度/brief/图；不是固定章节模板。
 - 写作：一个产物一次 writer；没有 editor/checker/草稿阶段。
-- 执行过程：聊天内可折叠的“思考/工具/消耗”面板，显示阶段、工具调用、tokens、时延、错误；默认折叠。需要详情时打开 `trace.html`（stages/LLM calls/tool calls/decisions/机器检查/grounding 候选）；它不是写作质量分页。
+- 运行卡：聊天里每个 assistant 消息只渲染一张运行卡，显示阶段轨、当前步骤/已用时间、计划、视觉审计结论、字数/卡片/关键帧；右侧抽屉打开成品。原始 JSON 和内部 ID 只在 `/runs/<run_id>`（Live SSE / Trace / Stats）；`trace.html` 仅导出/降级，不是写作质量分页。
 - 失败：partial/failed 显式显示，不静默截断；单产物失败不影响其他请求。
 
 ### 3.4 产物与预览
@@ -112,8 +112,8 @@ Chat-first，不是首页卡片流：
 ```text
 ┌ 侧栏 ─────┬ 聊天 ────────────────────────┬ 预览 ─────────────┐
 │ 最近 runs │ 用户：用 BV17 写公众号…       │ 阅读页 / 公众号   │
-│ 内容库    │ Agent：计划卡                 │ 手机预览 / 小红书 │
-│ 设置      │ Agent：执行过程（可折叠）      │ 卡片 / PDF        │
+│ 内容库    │ Agent：运行卡                 │ 手机预览 / 小红书 │
+│ 设置      │ 运行详情：/runs/<run_id>       │ 卡片 / PDF        │
 │           │ Agent：成品卡 + 操作           │                   │
 │           │ 输入框：BV/本地/要求           │                   │
 └───────────┴───────────────────────────────┴───────────────────┘
@@ -122,7 +122,7 @@ Chat-first，不是首页卡片流：
 - 桌面：聊天 + 右侧预览；移动：聊天全屏，预览 sheet。
 - 产品导航只有：聊天、历史/内容库、设置。
 - **架构页、评测页不进产品导航**；它们是开发/面试材料，放在 `docs/` 或独立 dev 页面。
-- 视觉：编辑杂志感 + 平台预览 + 技术工作台；技术工作台是聊天里的执行过程面板，不是独立产品页。
+- 视觉：编辑杂志感 + 平台预览 + 技术工作台；技术工作台是消息级运行卡 + `/runs/<run_id>`，不是独立产品页。
 
 ### 4.1 三个体验目标
 
@@ -144,7 +144,7 @@ Markdown 是编辑源；HTML/PDF/卡片是成品。最终排版复用开源，�
 
 | 层 | 给谁 | 内容 | 放在哪 |
 |---|---|---|---|
-| **用户实时可观测** | 产品用户 | run 状态、来源、模型、调用次数、tokens、时延、成本、工具调用、计划、错误、验收状态 | 聊天里的执行过程面板 |
+| **用户实时可观测** | 产品用户 | run 状态、阶段、计划、视觉审计、字数/卡片/关键帧、验收状态 | 消息级运行卡 + 右侧预览抽屉 |
 | **开发评测数据** | 开发/面试 | 数据集、指标、回归、judge 校准、A/B、bad case、成本分布 | 独立 eval report/dashboard，不进产品 |
 | **简历数据** | 面试官 | task success、pass@1/pass^k、事实保真、平台适配、baseline 胜率、时延/成本、人工验收 | eval report / 作品集页 |
 
@@ -152,7 +152,7 @@ Markdown 是编辑源；HTML/PDF/卡片是成品。最终排版复用开源，�
 
 ## 7. 内容选择
 
-现阶段**不重跑视频**，用已有缓存内容；转录模块最后接。
+默认缓存优先；新视频可 `ingest_source`（长视频先用 CLI）；写作层仍只读内容稿。
 
 新视频选择标准（等接入时用）：
 
@@ -182,11 +182,11 @@ Markdown 是编辑源；HTML/PDF/卡片是成品。最终排版复用开源，�
 | 阶段 | 内容 | 验收 |
 |---|---|---|
 | P0 | 产品/UI/架构/复用/JD 文档收口（本文件 + ui-design + architecture + reuse + jd） | 后续 session 不再把 bundle 当产品 |
-| P1 | LibreChat + MCP 工具服务原型：缓存内容 → 聊天 → 计划卡 → 一次 writer → 聊天内预览 **已完成原型 2026-11-06**（见 [integrations/librechat](../integrations/librechat/README.md)） | 一条 BV 能走完；run 数据可见；不自动发布 |
+| P1 | LibreChat + MCP 工具服务原型：缓存内容 → 聊天 → 一次 writer → 运行卡/预览 **已完成原型 2026-11-06**（见 [integrations/librechat](../integrations/librechat/README.md)） | 一条 BV 能走完；run 数据可见；不自动发布 |
 | P2 | 排版/导出：阅读 HTML + PDF；公众号 HTML；小红书卡片 **已完成原型 2026-11-07**（见 [xhs](../integrations/xhs/README.md) / [pdf](../integrations/pdf/README.md)） | 成品可读/可复制/可下载；移动端可用 |
 | P3 | LangGraph 工作流 + HITL + 观测：状态/checkpoint/stream/interrupt；trace/token/cost **原型已接 2026-11-07** | 可暂停/恢复/验收；run 数据可查 |
 | P4 | 评测（先预留）：runtime/grounding 指标、回归/pass^k **deterministic + grounding harness 已接 2026-11-07** | 有可复跑报告；不评 writing 质量、不伪造真人 reader test |
-| P5 | 视频转录接入 **证据层已迁移 2026-11-07** | 用户提供新视频后可跑通；真实网络/API 验收待做 |
+| P5 | 视频转录接入 **证据层已迁移 2026-11-07；真实下载/ASR/VLM/content/workflow 已跑通 2026-11-08** | 用户提供新视频后可跑通；剩用户验收与长视频体验 |
 
 ## 9.1 已知内容层待改（不阻塞 P2 壳）
 
@@ -206,7 +206,7 @@ Markdown 是编辑源；HTML/PDF/卡片是成品。最终排版复用开源，�
 
 - 产品 = 聊天式内容工作台；**不是** bundle 工厂/作品集/架构页。
 - 产品壳 = **LibreChat**（MIT）；写作逻辑 = Python MCP 服务；编排 = LangGraph；排版 = 开源模板。
-- **一次一个形态**；写前计划卡；最多一个澄清问题；修改 = 新 writer 请求。
+- **一次一个形态**；默认直写，只有用户明确要求时出计划卡；最多一个澄清问题；修改 = 新 writer 请求。
 - 评测先预留；产品原型稳定后再做；不跑 30 judge。
-- 现阶段用缓存内容，不重跑视频；视频转录最后接；新视频最后换。
+- 默认缓存优先；新视频走证据层接入；写作层不感知视频/证据层。
 - 嵌入代码优先 MIT/BSD/Apache；AGPL/BUSL 只作设计参考，除非用户同意合规。

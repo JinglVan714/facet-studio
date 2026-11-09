@@ -1,14 +1,15 @@
 # STATE — 2026-11-09
 
 - **新 session 入口**：[handoffs/2026-11-09/NEXT_SESSION_PROMPT.md](handoffs/2026-11-09/NEXT_SESSION_PROMPT.md)（判断 + 收尾）；上一轮：[handoffs/2026-11-08/NEXT_SESSION_PROMPT.md](handoffs/2026-11-08/NEXT_SESSION_PROMPT.md)；方法入口：[handoffs/2026-11-07/NEXT_SESSION_PROMPT_P5.md](handoffs/2026-11-07/NEXT_SESSION_PROMPT_P5.md)；旧 P2 快照：[NEXT_SESSION_PROMPT.md](handoffs/2026-11-07/NEXT_SESSION_PROMPT.md)、[ROUND_REVIEW.md](handoffs/2026-11-07/ROUND_REVIEW.md)（历史）。
-- **2026-11-09 聊天/可观测重做（本 session）**：端到端默认后台 run + `wait_workflow`；消息级单张运行卡轮询 `/api/card`，显示阶段/计划/视觉审计/字数/交付物，右侧抽屉预览；删除重复的 `FacetRunLinks`/空按钮/“执行过程”分组；按完整 run_id 去重，截断片段不再生成第二张卡；Trace 把 4 次视觉审计逐帧标成 `fig-01.jpg 未通过：水印/画面质量`。SVG 只保留 flow/tree/timeline；旧公众号第一张 two-axis 关系图已从 md/HTML/文件删除并重新排版。最新端到端 run `20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note`（793 字 / 1 张卡片 / 0 关键帧 / 6 calls / 8,922 tokens / 44.6s / 待验收）。测试 617 passed。
+- **2026-11-09 聊天/可观测重做（本 session）**：端到端默认后台 run + `wait_workflow`；消息级单张运行卡轮询 `/api/card`，显示阶段/计划/视觉审计/字数/交付物，右侧抽屉预览；删除重复的 `FacetRunLinks`/空按钮/“执行过程”分组；按完整 run_id 去重，截断片段不再生成第二张卡；Trace 把 4 次视觉审计逐帧标成 `fig-01.jpg 未通过：水印/画面质量`。SVG 只保留 flow/tree/timeline；旧公众号第一张 two-axis 关系图已从 md/HTML/文件删除并重新排版。最新端到端 run `20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note`（793 字 / 1 张卡片 / 0 关键帧 / 6 calls / 15,862 tokens（含视觉审计）/ 51.2s 墙钟（intake→typeset；LLM 调用合计 44.6s） / 待验收）。测试：clean clone 315 passed；本地全量 619（含未发布的 legacy v2 tests）。
+- **2026-11-09 harness/runtime 快照**：最近复跑 `report-20261109T135534Z` + `grounding-20261109T135557Z`：10 cases / 9 unique runs，contract 1.0、trajectory 30/30、error 0、manual 0.7（7/10 cases，6/9 unique）、planner trace 0.6、p50/p95 52,421 / 92,738 ms、tokens 222,498、grounding 9 artifacts / 16 flags（candidate，不是幻觉率）。最新单 run report `run-report-20261109T131911Z...`；可观测 `/api/runs` 修正未验收计数后 checks 393/460（37 runs，含失败/重复，不是生产 SLA）。证据见 [docs/runtime-evidence-2026-11-09.md](docs/runtime-evidence-2026-11-09.md)，发布清单见 [docs/github-resume-checklist-2026-11-09.md](docs/github-resume-checklist-2026-11-09.md)。
 - **2026-11-09 上一 session 快照**：链路/正文/图/预览/可观测收口，交接给新 session 做“判断 + 收尾”。真实 run `20261108T154015Z_BV1B5411A7ax_wechat_article`（公众号，2 calls / 36,619 tokens / 105.4s / checks 15/15 / grounding 0 / 2,288 字 / 内容稿 10 图 / 正文引用 0）待验收；P4 10/10 cases、contract 10/10、trajectory 30/30、manual 7/10；测试 608 passed（2026-11-08 全量）；工作树约 100 个修改/未跟踪文件，未 commit/push。详见 [handoffs/2026-11-09/NEXT_SESSION_PROMPT.md](handoffs/2026-11-09/NEXT_SESSION_PROMPT.md)。
 - **2026-11-08 SKILL 清理 + 通用验证（上一 session）**：
   - active skills（`video-article` / `wechat-article` / `xiaohongshu-note` / `bundle-planner`）去掉具体视频/产品/人物/单篇数字例子；技术实现细节规则改成“仅技术/工具类内容”条件化；关键帧/图注策略统一。
   - `reader_first_explainer` 的 examples/references 清掉具体技术/人物例子，视觉参考改成“关键帧默认 0–1、图注默认不加、不用生成写实图”；manifest hash 重算。
   - 新增通用规则：中文标点统一；`can_skip` 不放核心证据；不给内容里的做法另起模型知识标签（避免把“控制反转”叫成“反模式”）。
   - 通用验证（未按单篇调参）：`BV1qoHe6mEx6`（Agent Memory，未进过旧 INDEX）× long/wechat/xhs；`BV1znXSBqEUP`（公关/观点）× wechat；产物在 `runs/_skill_check_2026-11-08/`（gitignored），grounding 4 artifacts / 42 candidate flags（候选，不是幻觉率）。
-  - 测试：**617 passed**（补装 `mcp<2`、`langgraph`、`langgraph-checkpoint-sqlite`、`markdown-it-py`、`pypdf`；`pyproject.toml` 已补 `langgraph` / `langgraph-checkpoint-sqlite` 并把 `mcp` 锁在 `<2`；`pip check` clean）。
+  - 测试：**clean clone 315 / 本地全量 619**（补装 `mcp<2`、`langgraph`、`langgraph-checkpoint-sqlite`、`markdown-it-py`、`pypdf`；`pyproject.toml` 已补 `langgraph` / `langgraph-checkpoint-sqlite` 并把 `mcp` 锁在 `<2`；`pip check` clean）。
   - 新增 [docs/jd-keywords-2026-11-08.md](docs/jd-keywords-2026-11-08.md)：2026 外部 JD 关键词复核（多 Agent/记忆/规划/评测/Trace/Harness），含项目证据 vs 缺口。
   - 预览渲染（2026-11-08）：`_render_reader` 加 hero/目录/阅读元信息/卡片式正文/表格滚动/代码块；`_render_wechat` 改 520px 手机预览卡 + 元信息 + 衬线 H2 + 表格固定列宽/代码样式；`_render_xhs` 文字封面改居中（kicker + 强调线），不再是大块空白；用 `playwright-core` + 本机 Edge 截图验证（`runs/_skill_check_2026-11-08/*/reader_top.png`、`wechat_top2.png`、`xhs_top3.png`）。截图工具在 `runs/_tools/shot/`（gitignored，不是产品依赖）。
   - Trace/可观测（2026-11-08）：新增 `src/facet_studio/observability.py` + `observability_ui.py` + `preview_server` 路由；主界面 `/runs/<run_id>`（Live SSE / Trace / Stats）和 `/runs` 看板；`typeset_article` 生成 `trace.json` / `trace.html`（trace.html 仅导出/降级）；`get_run.trace` 返回摘要；workflow 把每个 stage 写成 tool/step span，并记录 plan/approval/review 决策；`tool_calls.jsonl` / `decision_records.jsonl` 由 workflow 产出；真实 run `20261108T154015Z_BV1B5411A7ax_wechat_article` 已验证（2 calls / 36,619 tokens / 6 tool spans / 3 decisions / checks 15/15 / grounding 0 / 2,288 字 / 10 图，待验收）。可观测 v2：Run Detail（Live SSE / Trace / Stats）+ `/runs` 看板（最近 runs + p50/p95/tokens/error/checks/grounding）；去掉 Story/说人话层；聊天 UI 已实测：tool card 出现“运行数据”按钮，点击打开 `/runs/<run_id>`（截图 `runs/product_v1/_ui_chat_run_link.png` / `_ui_run_detail_from_chat4.png`）；设计见 [docs/observability-2026-11.md](docs/observability-2026-11.md)。**不在本地跑 Langfuse**。测试 **608 passed**。
@@ -22,7 +23,7 @@
   - **纠偏**：不把单篇（尤其 BV17）的数字/技术教程问题写成通用 skill 规则；SKILL 清理是下一 session 的首要方向。
   - 测试：**608 passed**（2026-11-08）。UI/LibreChat 本轮未重启。
 - 以下为 2026-11-07 及更早快照，保留作历史。
-- 分支 `writing-rebuild`；最新 commit `6f3246d`（P5 证据层迁移）；工作树有本轮交接文档更新（未提交）；本地 commits 未 push。
+- 历史：当时分支 `writing-rebuild`、HEAD `6f3246d`（P5 证据层迁移）、本地 commits 未 push；当前 HEAD 以 `git log` 为准。
 - **产品 v1 已定义（2026-11-06）**：聊天式内容工作台。用户给一条视频 + 写作要求，Agent 按需写一种形态（深度总结 / 公众号 / 小红书），聊天内预览/修改/验收。见 [docs/product-v1-chat-studio.md](docs/product-v1-chat-studio.md)。
 - **目标壳**：LibreChat（MIT）+ MCP + LangGraph + 排版/导出 + 人工验收。见 [architecture.md](architecture.md) §0–§9；复用见 [docs/reuse-stack-2026-11.md](docs/reuse-stack-2026-11.md)。
 - **项目名已统一为 Facet Studio**：包名 `src/facet_studio`，品牌/文档/环境变量前缀 `FACET_STUDIO_`。历史文档里的 LunoGraph 是旧名。
@@ -58,4 +59,4 @@
 - 文档收口（2026-11-07）：STATE/HANDOFF/architecture/product/UI/integrations 已同步 Facet Studio 与 P2 状态；历史文档保留旧名并标注。
 - JD：2026 评测口径见 [docs/jd-mapping-2026-11.md](docs/jd-mapping-2026-11.md) §4；P4 只测 runtime/grounding，不评 writing 质量，不做 judge 校准。
 - 未做项：3 个新 machine run 待用户验收、P4 pass^k/多 trial、完整模型配置 UI、部署/鉴权/真实 Mongo、完整 stream/cost 面板；后续内容/视觉待修见 [docs/backlog-2026-11.md](docs/backlog-2026-11.md)。
-- substrate v1 未改；`data/cookies/` 未读；本地 commits（最新 `6f3246d`）未 push；工作树干净。
+- substrate v1 未改；`data/cookies/` 未读；历史当时本地 commits（`6f3246d`）未 push、工作树干净；当前状态以顶部快照为准。

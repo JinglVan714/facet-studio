@@ -37,6 +37,9 @@ venv/
 .DS_Store
 Thumbs.db
 
+# Claude Code 本地状态
+.claude/
+
 # 历史归档：仅用于人工追溯，新 session 不读
 _archive/
 

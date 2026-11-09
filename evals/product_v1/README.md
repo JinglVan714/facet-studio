@@ -76,16 +76,19 @@ PYTHONPATH=src PYTHONUTF8=1 python -m facet_studio.evals.run_report \
 
 把 `workflow.json` 轨迹、`llm_calls.jsonl`（如果该 run 有）、产物合同检查、grounding flags 合成一份 developer run report；只读，不写 run 目录。
 
-## 当前基线（2026-11-08）
+## 当前基线（2026-11-09 复跑）
 
-- cases：10 run / 10 total，0 missing（6 capability + 4 regression）。
-- `contract_pass_rate`：1.0（10/10）。
-- `trajectory_pass_rate`：1.0（30/30 checks）。
+- 最新报告：`evals/product_v1/reports/report-20261109T135534Z.json` + `.md`；grounding：`grounding-20261109T135557Z.json` + `.md`。
+- cases：10 cases / 9 unique runs，0 missing（6 capability + 4 regression；`reg_pdf_code_block` 与 `cap_bv17_long` 指向同一 run）。
+- `contract_pass_rate`：1.0（10/10 cases；含 artifact/trajectory 检查，**不含 manual acceptance**）。
+- `trajectory_pass_rate`：1.0（30/30 checks；30 = 4 个 workflow case ×6 项 + 6 个 legacy case ×1 项）。
 - `error_rate`：0.0。
-- `manual_acceptance_rate`：0.7（7/10；3 个新 machine run 待用户验收：BV1ix long/wechat、P5 新视频 wechat）。
+- `planner_trace_rate`：0.6（6/10；旧 P1/P2 run 没有 planner trace，单独记录，不算造假）。
+- `manual_acceptance_rate`：0.7（7/10 cases，6/9 unique；3 个新 machine run 待用户验收：BV1ix long/wechat、P5 新视频 wechat）。
 - `deterministic_pass_rate`：0.7（含待验收；不是 writing quality）。
-- p50/p95 latency：52,421 / 92,738 ms；tokens total 215,273。
+- p50/p95 latency：52,421 / 92,738 ms（plan+write，不含视觉审计/排版/排队）；tokens total 222,498（10 cases；9 unique runs 为 201,350，重复 long run 多算一次）。
 - grounding：9 artifacts / 16 candidate flags（引语 7 / 范围 6 / 专名 3；数字 0 after the CJK-adjacent number fix）；不是幻觉率。
+- 最新端到端 UI run `20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note` 的单 run report 已生成，但**不在 10 个固定 cases 内**；它的 review 仍是 missing，不能拿来抬高 manual acceptance。
 
 ## 后续
 

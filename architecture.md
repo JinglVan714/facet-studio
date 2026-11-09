@@ -78,27 +78,27 @@ Artifacts: 阅读 HTML / 公众号 HTML / 小红书卡片 / PDF / Markdown
 | 产物 | `runs/writing_v5/bundle_BV17_social_05/`、`bundle_BV1ix_social_04/`；P1/P2 产物在 `runs/product_v1/` |
 | P5 证据层 | `src/facet_studio/evidence_layer/`（从 `知识底稿核心-clean` 迁移：acquire/audio/frames/VLM/ASR/substrate）、`src/facet_studio/ingest.py`（新视频 → content.md + figures） |
 | P1/P2 + P3 产品原型 | `src/facet_studio/mcp_server.py`（FastMCP 13 tools：ingest/list/resolve/compile/plan/write/typeset/get_run/review + start/wait/resume/get_workflow）、`src/facet_studio/workflow.py`（LangGraph StateGraph + SQLite checkpoint + interrupt + trace）、`src/facet_studio/preview_server.py`（FastAPI reader 预览）、`integrations/librechat/`、`integrations/xhs/`（Playwright 卡片）、`integrations/pdf/`（Tectonic 模板） |
-| 测试 | **617 passed**（2026-11-09 实测；含 MCP server / 排版 / PDF / 验收状态 / 视觉模板 / workflow / eval / trajectory / run report / grounding / ingest / 路径配置 / visual svg / PDF SVG 测试） |
-| 未接 | 3 个新 machine run 待用户验收；eval pass^k/多 trial；完整模型配置 UI；部署 |
+| 测试 | **315 passed clean clone / 619 local**（2026-11-09 实测；含 MCP server / 排版 / PDF / 验收状态 / 视觉模板 / workflow / eval / trajectory / run report / grounding / ingest / 路径配置 / visual svg / PDF SVG 测试） |
+| 未接 | P4 3 个 pending + 2026-11-09 两个 xhs run 未回填 cases.json；eval pass^k/多 trial；完整模型配置 UI；公网部署/鉴权；公开 demo fixture |
 
 ## 5. 当前 vs 目标
 
 | 能力 | 当前 | 目标 |
 |---|---|---|
-| 产品入口 | CLI `run_bundle` / `run_form` | LibreChat chat + Agents（**P1 原型已跑通**） |
-| 生成方式 | 固定 bundle（可 `--forms`） | 按需一种形态；多形态 = 多次请求（**P1 已按需**） |
-| 编排 | P3 workflow 原型：LangGraph StateGraph + SQLite checkpoint + plan/review interrupt；P2 逐工具流程仍可用 | 完整 stream/cost 面板 + 默认迁移到 workflow |
-| 工具 | orchestrator 调 ToolRegistry | 聊天 agent 用 function calling 调 MCP 工具（**P1 已跑通**） |
-| 预览/导出 | Markdown + 旧 articles-only site | 阅读 HTML（P1）；公众号复制 HTML、小红书 3:4 图集 + 导入包、PDF（**P2 已接原型**） |
-| 观测 | JSONL/run manifest + `trace.html`（stages/llm_calls/tool_calls/decisions/checks/grounding） | LibreChat tool calls + `get_run` summary + 预览页“运行数据”；Trace Viewer/Token 统计待接 |
-| 评测 | P4 deterministic harness + grounding candidate audit + `evals/product_v1/reports` | runtime/grounding 指标、回归/pass^k；不评 writing 质量、不伪造真人 reader test |
-| 发布 | 无 | 人工验收 `publish_review.json`（**P1 已跑通**） |
+| 产品入口 | LibreChat chat + Agents（**P1/P2/P3 已跑通**）；CLI 仅调试 | 公开 demo / 更完整的模型配置 UI |
+| 生成方式 | 按需一种形态（**P1/P3 已按需**）；bundle 只作内部/调试 | 保持单形态；多形态 = 多次请求 |
+| 编排 | P3 已默认：LangGraph StateGraph + SQLite checkpoint + background + `auto_plan=True`；P2 逐工具流程仍作 fallback | 失败分类/超时/重试/重规划；cost 面板 |
+| 工具 | 聊天 agent 用 function calling 调 MCP 13 tools（**P1/P3 已跑通**）；orchestrator ToolRegistry 只用于内部 bundle | 工具参数/回执级 span；权限/超时 |
+| 预览/导出 | 阅读 HTML；公众号复制 HTML；小红书 3:4 卡片 + 导入包；PDF（**P2 已接**）；聊天右侧预览抽屉 | 公网/移动端体验；更多平台模板 |
+| 观测 | 消息级运行卡 + `/runs` 看板 + `/runs/<run_id>`（Live SSE / Trace / Stats）+ JSONL/`trace.html`（导出/降级） | OTel/Langfuse 可选导出；生产级告警/采样 |
+| 评测 | P4 deterministic + grounding harness + 本地 `--gate` + `evals/product_v1/reports`；contract 1.0 / trajectory 30/30 | CI 门禁、bad case 闭环、fixture；不评 writing 质量、不伪造 reader test |
+| 发布 | 人工验收 `publish_review.json`（**P1/P3 已跑通**）；不自动发布 | 发布前 checklist/权限；仍以人工为门 |
 
 ## 6. 数据分层
 
 | 层 | 给谁 | 内容 | 位置 |
 |---|---|---|---|
-| 用户实时可观测 | 产品用户 | run 状态、来源、模型、calls、tokens、时延、成本、工具调用、计划、错误、验收 | 聊天执行过程面板 |
+| 用户实时可观测 | 产品用户 | run 状态、阶段、计划、视觉审计、字数/卡片/关键帧、验收 | 消息级运行卡 + 右侧预览抽屉 + `/runs/<run_id>` |
 | 开发评测 | 开发/面试 | 数据集、指标、回归、judge 校准、A/B、bad case | 独立 eval report/dashboard |
 | 简历数据 | 面试官 | task success、pass@1/pass^k、事实保真、平台适配、baseline 胜率、时延/成本 | eval report |
 
@@ -117,11 +117,11 @@ Artifacts: 阅读 HTML / 公众号 HTML / 小红书卡片 / PDF / Markdown
 | 阶段 | 内容 | 验收 |
 |---|---|---|
 | P0 | 文档收口（本文件 + product + UI + reuse + jd）**已完成 2026-11-06** | 后续 session 不再把 bundle 当产品 |
-| P1 | LibreChat + MCP 工具服务原型：缓存内容 → 聊天 → 计划卡 → 一次 writer → 聊天内预览 **已完成原型 2026-11-06** | 一条 BV 走完；run 数据可见；不自动发布 |
+| P1 | LibreChat + MCP 工具服务原型：缓存内容 → 聊天 → 一次 writer → 运行卡/预览 **已完成原型 2026-11-06** | 一条 BV 走完；run 数据可见；不自动发布 |
 | P2 | 排版/导出：阅读 HTML + PDF；公众号 HTML；小红书卡片 **已完成原型 2026-11-07** | 成品可读/可复制/可下载；移动端可用 |
-| P3 | LangGraph workflow + HITL + 观测 **原型已接 2026-11-07** | 可暂停/恢复/验收；trace/token/cost 可查 |
-| P4 | 评测：deterministic harness + grounding candidate audit **已接 2026-11-07**；回归门禁/pass^k 后续 | 可复跑报告；不评 writing 质量、不伪造真人 reader test |
-| P5 | 视频转录接入 **证据层已迁移 2026-11-07** | 用户提供新视频后可跑通；需真实网络/API 验收 |
+| P3 | LangGraph workflow + HITL + 观测 **已默认 2026-11-09** | 可暂停/恢复/验收；trace/token/latency 可查；cost 未配费率 |
+| P4 | 评测：deterministic harness + grounding candidate audit **已接；本地 --gate 已接 2026-11-09**；CI/pass^k 后续 | 可复跑报告；不评 writing 质量、不伪造真人 reader test |
+| P5 | 视频转录接入 **已迁移 2026-11-07；真实下载/ASR/VLM/content/workflow 已跑通 2026-11-08** | 用户提供新视频后可跑通；剩用户验收与长视频体验 |
 
 ## 9. JD 映射
 

@@ -48,13 +48,13 @@ ingest_source(target)
 - `lmind.audio` / `acquire_local`：本地视频登记可用；`source.json` 写入成功，`media_has_av_streams=True`。
 - `run_ingest` 在缓存 metadata 上复用已有 frames/ASR/VLM/contract/assertions，无模型调用；manifest checks 正常。
 - `content_manuscript` 从证据层数据重建 BV17：**4,213 字 / 10 图**（与缓存 `content_final_v3` 一致）。
-- 集成测试：`tests/writing_v4/test_ingest.py`（mock acquisition/ingest/content）通过；全量 **580 passed**。
+- 集成测试：`tests/writing_v4/test_ingest.py`（mock acquisition/ingest/content）通过；2026-11-09 clean clone **315 passed** / 本地全量 619（含未发布 legacy v2）。
 
-## 5. 尚未验证 / 注意
+## 5. 已验证 / 注意
 
 - **真实新视频下载 + DashScope ASR 3.1 + VLM + content + workflow 已验证**（BV1brgs6mE7a，2 分钟；2026-11-08）：下载/抽帧成功，ASR 3.1 成功，VLM 成功，content 1,577 字 / 4 图（短画面参考重建后 1,052 字 / 4 图）。
 - **ASR 模型已切到 `qwen-audio-3.1-asr-flash-streaming`**：3.0 的免费额度返回 `status=44, free quota exhausted`；3.1 在同一端点直接可用（2 分钟音频 40.9s，rtf 0.339，9 句，字级时间戳可用）。不使用本地 ASR/OCR；非 200 响应就是显式失败。
-- 已用 3.1 重新生成 BV1brgs6mE7a：content 1,577 字 / 4 图（短画面参考重建后 1,052 字 / 4 图）。审计前 workflow run `20261108T052817Z`（1,981 字 / 2 图 / 24,563 tokens）；审计后产品 run `20261108T095810Z`（审计 4/0、1 SVG、1,720 字 / 31,223 tokens）。旧的 local fallback transcript 只作本地审计，不进入产品路径。
+- 已用 3.1 重新生成 BV1brgs6mE7a：content 1,577 字 / 4 图（短画面参考重建后 1,052 字 / 4 图）。审计前 workflow run `20261108T052817Z`（1,981 字 / 2 图 / 24,563 tokens）；审计后产品 run `20261108T095810Z`（审计 4/0、1 SVG、1,720 字 / 7 calls / 32,363 tokens / 74.6s）。旧的 local fallback transcript 只作本地审计，不进入产品路径。
 - 产品默认 `ingest_source(..., include_evidence=False)` → `run_ingest(content_only=True)`：跳过 contract/L1（写作层只消费 transcript + frames + VLM captions）。完整证据层用 `include_evidence=True`。
 - 源项目没有 CLI；入口是 Python API。`run_ingest` 不负责下载，必须先 acquire。
 - `run_ingest` 的 VLM 失败批次默认拒绝继续；显式 `allow_partial_vlm=True` 才接受 partial。

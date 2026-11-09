@@ -2,9 +2,17 @@
 
 把一条视频变成可发布的文章/笔记：用户在聊天框里给视频和写作要求，Agent 按需写一种形态（深度总结 / 公众号 / 小红书），在聊天里预览、修改、验收。
 
-> **2026-11-09 收尾轮**：聊天侧重做——端到端默认后台 run（`start_workflow(background=True, auto_plan=True)`），消息级只显示一张运行卡，不再倒 JSON、不再显示重复按钮/空按钮和“执行过程”分组；卡里展示阶段、当前步骤、计划、视觉审计结论、字数与交付物；右侧抽屉预览阅读页/公众号/PDF。`wait_workflow` 只返回压缩摘要，最终回复按 `assets` 说“N 张卡片 / M 张关键帧”，不把封面卡说成视频关键帧。Run Detail 的 Trace 把视觉审计逐帧标成“fig-01.jpg 未通过：水印/画面质量”，不再是一串内部 ID。SVG 只保留 flow/tree/timeline；旧公众号的第一张 two-axis 关系图已从 md/HTML/文件删除并重新排版。最新验收候选：`20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note`（793 字 / 1 张卡片 / 0 关键帧，待人工验收）。测试 617 passed。
+## 30 秒版
+
+- **输入**：一条 B 站视频（新视频走证据层：下载/抽帧/ASR/VLM → content.md）或缓存内容 + 写作要求。
+- **链路**：LibreChat 聊天 → MCP 13 tools → LangGraph `intake → plan → approval → write → typeset → review`（后台 run + 消息级运行卡）→ reader / 公众号 HTML / 小红书 3:4 卡片 / PDF。
+- **约束**：一个产物一次 writer；Lead Planner 只编排；没有 editor/checker；Writer 只读内容稿、不知道来源；人工验收是唯一发布门。
+- **证据**：P4 deterministic + grounding harness（10 cases / 9 unique runs；contract 1.0、trajectory 30/30、error 0、manual 0.7、pass@k=null）；run trace + `/runs` 看板；数字见 [runtime evidence](docs/runtime-evidence-2026-11-09.md)。
+- **限制**：本地 demo，不是生产部署；`runs/`/`data/` 不入库；没有真实用户、线上 A/B、幻觉率或 writing quality 分数。
+
+> **2026-11-09 收尾轮**：聊天侧重做——端到端默认后台 run（`start_workflow(background=True, auto_plan=True)`），消息级只显示一张运行卡，不再倒 JSON、不再显示重复按钮/空按钮和“执行过程”分组；卡里展示阶段、当前步骤、计划、视觉审计结论、字数与交付物；右侧抽屉预览阅读页/公众号/PDF。`wait_workflow` 只返回压缩摘要，最终回复按 `assets` 说“N 张卡片 / M 张关键帧”，不把封面卡说成视频关键帧。Run Detail 的 Trace 把视觉审计逐帧标成“fig-01.jpg 未通过：水印/画面质量”，不再是一串内部 ID。SVG 只保留 flow/tree/timeline；旧公众号的第一张 two-axis 关系图已从 md/HTML/文件删除并重新排版。最新验收候选：`20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note`（793 字 / 1 张卡片 / 0 关键帧，待人工验收）。测试：clean clone 315 passed；本地全量 619（含未发布的 legacy v2 tests）。
 >
-> **2026-11-08 上一轮状态**：产品 v1 已定义（[docs/product-v1-chat-studio.md](docs/product-v1-chat-studio.md)）；目标壳是 **LibreChat + MCP + LangGraph + 排版/导出**。P1/P2 产品原型、P3 workflow 原型、P4 deterministic/grounding harness、P5 证据层均已接；**P5 新视频下载 + DashScope ASR（Qwen-Audio 3.1）+ VLM + content + workflow 已端到端跑通**（BV1brgs6mE7a，2 分钟）；**视觉策略 + deepseek-flash 视觉审计**已接：关键帧极紧、图注默认不加、SVG/表格优先。P4 10/10 cases、contract 10/10、trajectory 30/30；3 个新 machine run 待用户验收。详见 [architecture.md](architecture.md) §4、[docs/visual-strategy-2026-11.md](docs/visual-strategy-2026-11.md)、[integrations/librechat/README.md](integrations/librechat/README.md)、[docs/evidence-layer-2026-11.md](docs/evidence-layer-2026-11.md)、[docs/evidence-2026-11.md](docs/evidence-2026-11.md)。
+> **2026-11-08 上一轮状态**：产品 v1 已定义（[docs/product-v1-chat-studio.md](docs/product-v1-chat-studio.md)）；目标壳是 **LibreChat + MCP + LangGraph + 排版/导出**。P1/P2 产品原型、P3 workflow 原型、P4 deterministic/grounding harness、P5 证据层均已接；**P5 新视频下载 + DashScope ASR（Qwen-Audio 3.1）+ VLM + content + workflow 已端到端跑通**（BV1brgs6mE7a，2 分钟）；**视觉策略 + deepseek-flash 视觉审计**已接：关键帧极紧、图注默认不加、SVG/表格优先。P4 10/10 cases、contract 10/10、trajectory 30/30；3 个新 machine run 待用户验收。详见 [architecture.md](architecture.md) §4、[docs/visual-strategy-2026-11.md](docs/visual-strategy-2026-11.md)、[integrations/librechat/README.md](integrations/librechat/README.md)、[docs/evidence-layer-2026-11.md](docs/evidence-layer-2026-11.md)、[docs/evidence-2026-11.md](docs/evidence-2026-11.md)、[docs/runtime-evidence-2026-11-09.md](docs/runtime-evidence-2026-11-09.md)、[docs/github-resume-checklist-2026-11-09.md](docs/github-resume-checklist-2026-11-09.md)。
 > 三种形态：深度总结（long_article）/ 公众号（wechat_article）/ 小红书（xiaohongshu_note）。短视频脚本暂不做。
 > **bundle 是内部/调试产物，不是产品默认输出。** 产品按需生成一种形态；用户 run 数据、开发评测数据、简历数据分开。
 
@@ -12,7 +20,7 @@
 
 用户：用 BV17DHC6CELr 写一篇公众号，给普通技术读者，2500 字左右，语气克制，重点讲“分数为什么低但排名可靠”。
 
-Agent：确认来源/形态/读者/长度 → 读取内容（缓存）→ 计划卡 → 一次 writer → 排版 → 聊天内预览 → 修改 / 导出 / 验收。
+Agent：确认来源/形态/读者/长度 → 后台 workflow（读取内容缓存 → 规划/视觉审计 → 一次 writer → 排版）→ 消息级运行卡 → 右侧预览 → 修改 / 导出 / 人工验收。默认不出计划卡；用户明确要求“先看计划”时才暂停在计划门。
 
 **不是**：作品集网站；一次生成所有形态的 bundle 工厂；架构/评测演示页；自动发布工具；editor/checker 多轮改稿链。
 
@@ -33,8 +41,10 @@ Agent：确认来源/形态/读者/长度 → 读取内容（缓存）→ 计划
 5. [docs/reuse-stack-2026-11.md](docs/reuse-stack-2026-11.md) — LibreChat/MCP/LangGraph/排版/卡片复用与 license。
 6. [docs/evidence-layer-2026-11.md](docs/evidence-layer-2026-11.md) — P5 证据层链路/配置/已验证/未验证。
 7. [evals/product_v1/README.md](evals/product_v1/README.md) — P4 deterministic + grounding；不评 writing 质量。
-8. [STATE.md](STATE.md)、[HANDOFF.md](HANDOFF.md) — 当前快照/接手点。
-9. 方法/纪律：[docs/writing-rebuild-brief.md](docs/writing-rebuild-brief.md) §2/§3、[AGENTS.md](AGENTS.md) §5。
+8. [docs/runtime-evidence-2026-11-09.md](docs/runtime-evidence-2026-11-09.md) — 本轮实际跑出的 P4/E2E/运行时数字，含不可引用口径。
+9. [docs/github-resume-checklist-2026-11-09.md](docs/github-resume-checklist-2026-11-09.md) — GitHub/简历发布前还缺什么。
+10. [STATE.md](STATE.md)、[HANDOFF.md](HANDOFF.md) — 当前快照/接手点。
+11. 方法/纪律：[docs/writing-rebuild-brief.md](docs/writing-rebuild-brief.md) §2/§3、[AGENTS.md](AGENTS.md) §5。
 
 ## 当前代码
 
@@ -60,7 +70,7 @@ cp .env.example .env
 # 填入 DEEPSEEK_API_KEY / DASHSCOPE_API_KEY；可选 Langfuse、成本费率、外部工具路径
 
 # 3) 测试（不依赖 data/ 或 runs/）
-PYTHONPATH=src PYTHONUTF8=1 python -m pytest tests -q
+PYTHONPATH=src PYTHONUTF8=1 python -m pytest tests
 
 # 4) MCP server（stdio；LibreChat 配置见 integrations/librechat/README.md）
 PYTHONPATH=src python -m facet_studio.mcp_server
@@ -110,6 +120,6 @@ PYTHONPATH=src python -m facet_studio.evals.grounding --cases evals/product_v1/c
 - **不写死数量/数字**：字数、H2 数、段落数都跟 request/内容相关；request 优先，没 request 用默认。
 - **active skill 不出现具体视频/产品/人物**；例子匿名；≥2 视频/文体复现才改通用层；不按单篇调参。
 - **用户验收**：质量和架构由用户判断；测试绿/跑通都不等于通过。
-- **未做**：公网部署/鉴权/限流/成本上限、完整模型配置 UI、用户画像记忆、3 个新 machine run 的用户验收、P4 pass^k/多 trial（回归门禁 `--gate` 已接）。
+- **未做**：公网部署/鉴权/限流/成本上限、完整模型配置 UI、用户画像记忆、3 个 P4 pending + 2026-11-09 两个 xhs run 的用户验收、P4 pass^k/多 trial/CI（本地 `--gate` 已接）、公开 demo fixture。
 - 不自动发布；不 commit/push；不改 substrate；不读 `data/cookies/`。
 - 复用优先；嵌入代码优先 MIT/BSD/Apache；AGPL/BUSL 只作设计参考，除非用户同意合规。
