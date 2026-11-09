@@ -2,7 +2,7 @@
   "id": "wechat-article",
   "form": "wechat_article",
   "name": "公众号文章",
-  "description": "把一件事的完整内容写成公众号文章：结论先行、短段、默认 2–4 个 H2、真实图示/SVG、一个控制性 idea；不写成材料报告或摘要。",
+  "description": "把一件事的完整内容写成公众号文章：结论先行、短段、按内容选 H2、优先表格/代码/清单/SVG、图注默认不加、一个控制性 idea；不写成材料报告或摘要。",
   "version": "0.2.0",
   "kind": "form",
   "extends": "../video-article",

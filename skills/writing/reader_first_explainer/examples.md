@@ -1,249 +1,249 @@
 # Examples：reader-first explainer
 
-> 原创好/坏对照，用来锚定标题、TOC、视频等价、视觉、来源归属、证据纪律、边界和声音；不是模板，也不含第三方原文。
-> 这些例子是通用模式，不绑定任何具体视频/产品。
+> Original good/bad pairs that anchor title, TOC, video-equivalence, visuals, attribution, evidence discipline, boundaries and voice. They are patterns, not templates, and contain no third-party text.
+> These examples are generic patterns; they are not tied to any specific video, product or person.
 
-## 1. 标题：主体 + 冲突/payoff
+## 1. Title: subject + conflict/payoff
 
-**坏**
+**Bad**
 
 > ## 一个方法：三个步骤和四个原则
 
-**好**
+**Good**
 
-> ## 一句话能把分数从 0.8 拉到 0.756：为什么排名反而更可靠？
+> ## 把一步拆成两步：为什么反而更快？
 
-**为什么**：标题不是分类标签，也不是清单。读者要在点开前知道“写谁/写什么/冲突是什么”。不要用“她/他/这个工具”让主体匿名。
+**Why**: A title is not a category label or a list. Before clicking, the reader should know who/what the piece is about and what the conflict or payoff is. Do not make the subject anonymous (“她/他/这个工具”).
 
-## 2. TOC：H2 是目录，不是话题清单
+## 2. TOC: H2s are a table of contents, not a topic list
 
-**坏**
+**Bad**
 
 > ## 背景
 > ## 它是什么
 > ## 使用
 > ## 总结
 
-**好**
+**Good**
 
-> ## 模型只会说话，工具让它能行动
-> ## 工具多了以后，难点从“调用”变成“编排”
-> ## 编排的代价落在上下文、权限和失败重试
-> ## 真正决定体验的是它愿不愿意暴露失败
+> ## 问题看起来出在最后一步
+> ## 真正的限制在中间
+> ## 代价落在三个地方
+> ## 决定体验的是它愿不愿意暴露失败
 
-**为什么**：只看 H2 就应该知道文章怎么推进。不要用“背景/介绍/总结/其他”；每节要有具体对象/动作/判断。
+**Why**: Reading only the H2s should show how the piece advances. Avoid “背景/介绍/总结/其他”; each section needs a concrete object, action or judgment.
 
-## 3. 视频等价：写“看见了什么”，不是“介绍了什么”
+## 3. Video-equivalence: write what was seen, not what was “introduced”
 
-**坏**
+**Bad**
 
 > 视频介绍了四种工作模式，并进行了对比。
 
-**好**
+**Good**
 
-> 同一套运行框架加载不同的配置，就能切换成不同的 Agent。某模式下，发给模型的请求里只剩一个执行入口：模型写一段脚本，把中间几个步骤串起来一次执行，模型往返从 N 次降到 M 次。省下的不只是调用次数，中间细节也不再进上下文。
+> 同一个流程换一种组织方式，原本要逐步确认的环节被合并成一个动作；往返次数明显下降，中间细节也不再全部进入上下文。省下的不只是次数，读者也能看清每一步在做什么。
 
-**为什么**：读者没看视频，也要能“看见”演示里发生了什么：谁加载了什么、请求里剩什么、调用次数怎么变。抽象成“介绍了几种模式”等于没写。
+**Why**: A reader who did not watch the video should be able to “see” what happened in the demo: what changed, what remained, and what the cost was. “Introduced four modes” is not writing.
 
-## 4. 视觉优先：能表格/图说清的，不写成一段
+## 4. Visual-first: what a table/diagram can say, do not write as a paragraph
 
-**坏**
+**Bad**
 
-> 方案 A 有完整的工具集和逐步选择；方案 B 保留了这些能力，但把调用方式改成写脚本；方案 C 只保留两个工具和一句话提示词；方案 D 还能查看插件并组装新模式。
+> 方案 A 有完整的步骤和逐步选择；方案 B 保留了这些能力，但把多个步骤合并成一次执行；方案 C 只保留最小入口；方案 D 还能在执行中调整。
 
-**好**
+**Good**
 
 | 方案 | 改了什么 | 代价/边界 |
 |---|---|---|
-| A | 完整工具集，模型逐步选工具 | 调用次数多，中间细节进上下文 |
-| B | 模型写脚本串联工具 | 脚本出错会返工，可能更贵 |
-| C | 只留两个工具和一句话提示词 | 靠模型自身能力，适合测试 |
-| D | Agent 可查看并组装插件 | 过程不稳定，示例只跑了两轮 |
+| A | 保留完整步骤，逐步选择 | 次数多，中间细节进上下文 |
+| B | 多个步骤合并成一次执行 | 出错会返工，可能更贵 |
+| C | 只保留最小入口 | 依赖执行者自身能力，适合测试 |
+| D | 可在执行中查看并调整 | 过程不稳定，示例只跑了两轮 |
 
-**为什么**：几种方案的差异是天然表格；用长段文字逐项复述，读者要在句子里找维度。表格不能成为全节唯一内容：表前后要有一句“看什么/所以呢”。
+**Why**: Differences between approaches are a natural table; a long paragraph forces the reader to hunt for dimensions. A table must not be the only content of a section: add one sentence before or after saying what to notice.
 
-## 5. 来源归属：让内容作主语
+## 5. Attribution: let the content be the subject
 
-**坏**
+**Bad**
 
 > 视频作者认为这个工具适合自动化任务。
 
-**好**
+**Good**
 
-> 这个工具适合自动化任务；脚本出错会打回重改，反而增加调用。
+> 这个工具适合自动化任务；出错会打回重改，反而增加调用。
 
-**为什么**：读者关心的是“它适合什么、代价是什么”，不是“谁认为”。只有需要区分观点/事实或指向具体演示时，才把视频/作者放到主语。
+**Why**: The reader cares about what it is good for and what it costs, not who thinks so. Put the video/author in the subject only when distinguishing opinion from fact, or pointing to a specific demo.
 
-## 6. 来源归属：不要每句挂“未核实”
+## 6. Attribution: do not attach “unverified” to every sentence
 
-**坏**
+**Bad**
 
-> 视频称该模型支持文字、图片、音频和视频（未核实），维度是 768（视频称，未核实），并且放在同一个空间里（待核）。
+> 视频称该方法支持多种输入（未核实），处理方式是某个固定数字（视频称，未核实），并且放在同一个空间里（待核）。
 
-**好**
+**Good**
 
-> 视频演示的模型把文字、图片、音频和视频都变成 768 个数字，放在同一个空间里。它是不是官方能力、支持到什么程度，视频没有展开；来源行只记视频出处。
+> 视频演示的做法把多种输入转换成同一种表示，放在同一个空间里。它是不是官方能力、支持到什么程度，视频没有展开；来源行只记视频出处。
 
-**为什么**：写“视频演示的模型”已经说清了归属。每句“未核实/待核”会把文章写成体检报告，读者读不下去。只有一句话可能被误读成“官方已证实”时，才在那句用“视频里/作者说”或一句限定；其余交给来源行。
+**Why**: “视频演示的……” already carries attribution. “未核实/待核” on every sentence turns the article into an audit report. Use “视频里/作者说” once only where a sentence could be misread as an official confirmation; let the source line carry the rest.
 
-## 7. 来源归属：不要升级成“官方/已证实”
+## 7. Attribution: do not upgrade to “official/confirmed”
 
-**坏**
+**Bad**
 
-> 官方开源了这个多模态模型，支持四种模态。
+> 官方发布了这个工具，支持多种输入。
 
-**好**
+**Good**
 
-> 视频里说，这个多模态模型昨晚开源；文章只按视频演示的范围写，官方文档和发布日期未核实。
+> 视频里说，这个工具昨晚发布；文章只按视频演示的范围写，官方文档和发布日期未核实。
 
-**为什么**：视频说“开源”不等于官方文档确认。不是每句加“未核实”，而是不要把它写成“官方/已证实”；需要时用“视频里说”一次，来源行兜底。
+**Why**: “The video says open source” is not the same as official documentation. Do not write it as “official/confirmed”; use “视频里说” once where needed, and let the source line cover provenance.
 
-## 8. 说话人：不知道就不要猜
+## 8. Speaker: if you do not know, do not guess
 
-**坏**
+**Bad**
 
 > 她说：“这个我就不太同意了。”
 
-**好**
+**Good**
 
 > 对话里有一句“这个我就不太同意了”；源文本没有逐句 speaker 标签，不能确认是谁说的。
 
-**为什么**：没有 speaker label 时，按“最近的人名”归属是伪造。写“对话里/视频里”；只有源文本明确“X 说”或第三人称称呼（“X，你……”）时才归给名字。反过来，如果上下文明确是某人在说（“咱都是打小过来的”），也不要为了保守把所有“他”都改成“对话里”，那会把文章写平。
+**Why**: Without a speaker label, assigning the line to the nearest name is fabrication. Write “对话里/视频里”; assign a name only when the source explicitly says “X 说” or uses a third-person address (“X，你……”). Conversely, if the context clearly identifies the speaker, do not flatten every line to “对话里”.
 
-## 9. ASR 噪声：删掉问候/预告/赞助
+## 9. ASR noise: remove greetings/previews/sponsors
 
-**坏**
+**Bad**
 
 > 大家好，我是某某，今天咱们来聊一个特别有意思的话题，记得一键三连，下面我们进入正题。
 
-**好**
+**Good**
 
 > 问题不在于工具能不能用，而在于出错之后谁来收拾。
 
-**为什么**：问候、自我介绍、预告、频道 logistics 不服务 central question；删掉它们，直接进入读者的问题。
+**Why**: Greetings, self-introductions, previews and channel logistics do not serve the central question; cut them and start with the reader's problem.
 
-## 10. 边界：读者向，不是证据清单
+## 10. Boundary: reader-facing, not an evidence checklist
 
-**坏**
+**Bad**
 
-> 两个 encoder 内部如何对齐，视频里还没有答案；也没有 benchmark，没有多数据集，没有消融实验。
+> 这两类表示内部如何对齐，视频里还没有答案；也没有独立测试，没有更大范围的数据，没有对比实验。
 
-**好**
+**Good**
 
-> 在这组证据里，只能确定同一查询下的排序仍然可用；encoder 内部结构不是这次能回答的。换一批数据是否还成立，视频没有复测。
+> 在这组证据里，只能确定同一条件下的排序仍然可用；内部结构不是这次能回答的。换一批数据是否还成立，视频没有复测。
 
-**为什么**：边界要说“读者能从证据得出什么/不能得出什么”，而不是列“证据缺什么”。边界只在影响判断/行动时出现。
+**Why**: A boundary says what the reader can and cannot conclude from the evidence, not what the evidence lacks. It appears only when it changes judgment or action.
 
-## 11. 引号纪律：精确才加引号
+## 11. Quote discipline: quote only exact words
 
-**坏**
+**Bad**
 
 > 它说“可以自动处理所有任务”。
 
-**好**
+**Good**
 
 > 它能处理其中一部分任务；超出范围时仍要人工接手。
 
-**为什么**：如果原文只说“部分任务”，转述成“所有任务”再加引号就是伪造引文。引号只包精确原文；转述不加引号。近似的 ASR 变体不是精确引文，去引号改写。
+**Why**: If the source only says “some tasks”, turning it into “all tasks” and adding quotation marks is fabricated quotation. Quotation marks wrap exact source text only; paraphrase without quotes. An approximate ASR variant is not an exact quote.
 
-## 12. 重复与 coverage dump
+## 12. Repetition and coverage dump
 
-**坏**
+**Bad**
 
-> 首先讲了工具调用，其次讲了上下文管理，然后讲了权限，最后讲了重试。每个部分都很重要。
+> 首先讲了准备，其次讲了处理，然后讲了检查，最后讲了收尾。每个部分都很重要。
 
-**好**
+**Good**
 
-> 工具调用让模型能行动；真正的难点是行动之后——上下文变长、权限要收、错误要重试。这三件事决定了它能不能稳定干活。
+> 准备让材料能进入下一步；真正的难点是进入下一步之后——条件是否满足、顺序是否对、出错怎么回退。这三件事决定了能不能稳定完成。
 
-**为什么**：读者要的是一条机制链，不是章节清单。把并列项组织成因果/依赖关系；不要平均用力。
+**Why**: The reader wants a mechanism chain, not a chapter list. Organize parallel items into cause/dependency relations; do not give every item equal weight.
 
-## 13. 屏幕文字：frame marker 是 OCR，不是画面语义
+## 13. Screen text: a frame marker is OCR, not visual semantics
 
-**坏**
+**Bad**
 
-> 画面里写着：1 收到问题 2 转发给大模型 3 工具调用 4 返回结果。所以流程就是这样。
+> 画面里写着：1 接收 2 处理 3 检查 4 返回。所以流程就是这样。
 
-**好**
+**Good**
 
-> 一次调用要经过四步：先把问题交给模型，模型决定调用哪个工具，工具返回结果，再把结果交回模型。真正的成本在第二到第三步之间——每一次往返都要重新带上上下文。
+> 一次流程要经过四步：先接收，再处理，然后检查，最后返回。真正的成本在第二到第三步之间——每一次检查都要重新确认前面的条件。
 
-**为什么**：frame line / OCR 是整屏文字，不是画面语义；不要把屏幕文字直接当正文。理解它，再用自己的话解释机制。
+**Why**: A frame line / OCR is whole-screen text, not visual semantics; do not paste it as body text. Understand it, then explain the mechanism in your own words.
 
-## 14. 结论：synthesis + 自然出口
+## 14. Conclusion: synthesis + natural exit
 
-**坏**
+**Bad**
 
 > 总结一下：本文讲了 A、B、C 三个方面。
 
-**好**
+**Good**
 
-> 真正决定体验的，不是模型多强，而是这套运行框架愿不愿意把失败暴露出来：调用失败、上下文超长、权限不足，只有被看见，才有机会被修。
+> 真正决定体验的，不是单个步骤多强，而是这套流程愿不愿意把失败暴露出来：条件不满足、步骤超时、权限不足，只有被看见，才有机会被修。
 >
-> 来源：B 站视频 BV...（频道名）；标题/日期未提供。
+> 来源：视频标题（频道）；标题/日期未提供。
 
-**为什么**：结论要新增综合/判断/决策；逐节 recap 不产生新信息。来源行短、自然、只记出处；不是核实报告。
+**Why**: A conclusion should add synthesis/judgment/decision; a section-by-section recap adds no information. The source line is short and natural, provenance only, not an audit report.
 
-## 15. 术语首次出现：保留术语，一句定义
+## 15. Term at first use: keep the term, one definition
 
-**坏**
+**Bad**
 
-> PTC 即 Programmatic Tool Calling，是一种通过程序化方式调用工具的范式。
+> 这个指标叫 F1，是精确率和召回率的调和平均。
 
-**好**
+**Good**
 
-> 它让模型写一小段脚本，把几个工具串起来；这样中间步骤不必每一步都回到模型。代价是脚本本身可能出错，要打回重写。
+> 先看两个数：一个是有多少判断是对的，一个是有多少该找到的找到了。把这两个数合起来看，就是这个指标。代价是它只反映这两件事，不告诉你错在哪里。
 
-**为什么**：先用读者语言解释“它做什么、代价是什么”，再给术语；不要用更难的术语定义术语。`how_much`：已知就跳过，承重就一句，真陌生就加一个类比/反例。
+**Why**: Explain in reader language what it does and what it costs, then give the term; do not define a term with a harder term. If the reader already knows it, skip; if it is load-bearing, one sentence; if truly unfamiliar, add one analogy or counterexample.
 
-## 16. 模型知识：解释/类比可以，伪装成视频事实不行
+## 16. Model knowledge: explanation/analogy yes, pretending to be video fact no
 
-**坏**
+**Bad**
 
 > 视频说这套系统采用了微内核架构。
 
-**好**
+**Good**
 
-> 可以把它理解成“微内核 + 插件”的思路：核心只保留最小调度，能力都从插件来。视频本身没有用“微内核”这个词；它展示的是同一套运行框架加载不同配置。
+> 可以把它理解成“核心 + 外挂”的思路：核心只保留最小部分，能力都从外部来。视频本身没有用“微内核”这个词；它展示的是同一套系统换不同配置。
 
-**为什么**：模型知识可以做解释/类比/背景；不能写成视频里的事实或原话。来源归属要诚实，但不用每句加“未核实”。
+**Why**: Model knowledge may explain, analogize or provide background; it must not become a video fact or quote. Attribution should be honest, but not on every sentence.
 
-## 17. 声音：像人写，不像报告/AI 八股
+## 17. Voice: like a person, not a report/AI boilerplate
 
-**坏**
+**Bad**
 
 > 首先，AI 正在重塑我们的工作方式。其次，它带来了效率提升。最后，值得注意的是，我们需要拥抱变化。这，就是 AI 的力量。
 
-**好**
+**Good**
 
 > 我们组三个工程师，过去半年有两个把日常调试交给了模型。真正的变化不是“写代码更快”，而是调试从“自己一行行看”变成“先让模型解释它为什么这么改”，再决定信不信。
 
-**为什么**：删“首先/其次/最后/值得注意的是”，删“这，就是…的力量”，删排比三件套；用具体的人/数字/场景。长短句交错，不像模板。
+**Why**: Cut “首先/其次/最后/值得注意的是”, “这，就是…的力量”, and rule-of-three parallelism; use concrete people/numbers/scenes. Vary sentence length so it does not read like a template.
 
-## 18. 标题引语：标题里的引号必须逐字出现在正文
+## 18. Title quotation: a quote in the title must appear verbatim in the body
 
-**坏**
+**Bad**
 
 > ## 「你们永远不用毕业」
 >
-> ……（正文只写“不用毕业的小朋友”，没有原句。）
+> ……（正文只写了近似意思，没有原句。）
 
-**好**
+**Good**
 
-> ## 「咱们直播间就是一个幼儿园」
+> ## 「原话就是这一句」
 >
 > ……正文出现同一句原话，并说明它是在什么语境下说的。
 
-**为什么**：标题用引语，正文必须逐字出现；否则去掉引号，改成不冒充引语的写法。
+**Why**: If the title uses a quotation, the body must contain that exact line; otherwise remove the quotation marks and stop pretending it is a quote.
 
-## 19. 不要说“视频里”每段都来一次
+## 19. Do not say “视频里” in every paragraph
 
-**坏**
+**Bad**
 
 > 视频里说……视频里还提到……视频里最后说……
 
-**好**
+**Good**
 
 > 先看第一个演示：……。第二段把问题推到……。最后，作者回到开头那个问题：……。
 
-**为什么**：文章是独立文章，不是视频笔记。只有在区分观点/事实、指向具体演示、或说话人不确定时，才用“视频里/作者说”。
+**Why**: The article is a standalone piece, not video notes. Use “视频里/作者说” only when distinguishing opinion from fact, pointing to a specific demo, or when the speaker is uncertain.

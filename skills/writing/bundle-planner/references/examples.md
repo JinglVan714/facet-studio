@@ -10,14 +10,14 @@
       "reason": "内容有完整机制和步骤，适合公众号长文展开。",
       "angle": "从反常识切入，讲清机制和边界。",
       "brief": "先给反常识结论；用一条机制链解释为什么；保留一个具体例子和边界。",
-      "must_use_figures": ["fig-01.jpg"]
+      "must_use_figures": []
     },
     {
       "form": "xiaohongshu_note",
       "reason": "有一个能立刻上手的动作，适合小红书短笔记。",
       "angle": "只保留最反直觉的动作和判断标准。",
       "brief": "用一条主线覆盖整体，不要写成全文摘要；标题给主题 + 一个收益；正文短。",
-      "must_use_figures": ["fig-02.jpg"]
+      "must_use_figures": []
     }
   ],
   "shared_constraints": [

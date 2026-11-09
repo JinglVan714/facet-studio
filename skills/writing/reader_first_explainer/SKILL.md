@@ -37,8 +37,8 @@ If a brief is present, use its angle/title/spine/cut as the starting point, but 
 - No anonymous “她/他/这个工具”; no list subtitle (“A：B、C和D”); no “如何…” mechanism list; no absolute word (“只是/唯一/真正/第一次/所有/任何”) unless the video supports that scope.
 - The first paragraph must deliver the title's promise.
 - If the title uses a quotation, the exact quote must appear in the body; otherwise remove the quotation marks.
-- Good: `文字搜照片：0.756 的蝙蝠，为什么能排在第一？` / `1805岁的菜菜子，为什么孩子愿意把不敢跟父母说的话说给她听？`
-- Bad: `一个方法：三个步骤和四个原则` / `她为什么最后改变了想法？` / `DeepSeek Harness 的四种模式` (a label, not a promise).
+- Good: `把一步拆成两步：为什么反而更快？` / `同一个工具，换一种用法为什么结果就反了？`
+- Bad: `一个方法：三个步骤和四个原则` / `她为什么最后改变了想法？` / `三种模式：A、B 和 C` (a label, not a promise).
 
 ## Structure
 
@@ -51,7 +51,7 @@ If a brief is present, use its angle/title/spine/cut as the starting point, but 
 
 ## Video-equivalent detail
 
-- Include the concrete examples, demos, visual moments, numbers, and meaningful dialogue that make the video memorable. “介绍了四种模式” is not writing; “同一套框架加载四份插件清单，极简模式只剩两个工具” is.
+- Include the concrete examples, demos, visual moments, numbers, and meaningful dialogue that make the video memorable. “介绍了四种模式” is not writing; “同一个流程换一种组织方式，原本要逐步确认的环节被合并成一个动作，往返次数明显下降” is.
 - Reconstruct the teaching/experience flow: what problem, why the simple view is insufficient, what the core idea is, how it works, what the example shows, what to retain.
 - Use the speaker's exact words at turning points when the evidence gives them — a joke, a promise, a refusal, an admission. Surround only exact evidence text with quotation marks; paraphrase without quotes otherwise.
 - A table may replace an enumeration or comparison, but the section still needs a short scene and a sentence saying what to notice. Do not put the section's only concrete example inside a table cell.

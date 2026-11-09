@@ -1,6 +1,6 @@
 # STATUS：v2.0.0 draft，judge/reader test pending
 
-> 2026-11-04：skill 重写为 v2.0.0。上一版 v1.1.0 的 runs（`runs/_diag/BV17_workflow_v7`、`BV1AC_workflow_v14`、`BV1yb_workflow_v3`）**不是 v2 的证据**；v2 还没跑过模型。
+> 2026-11-04：skill 重写为 v2.0.0。上一版 v1.1.0 的 runs **不是 v2 的证据**；v2 还没跑过模型。
 > 质量门是 LLM-as-Judge（5 persona）× 真人 reader test（未来）；确定性测试只是地板。
 
 ## 这一版改了什么
@@ -15,14 +15,14 @@
 
 ## 未完成
 
-- v2 还没在 3 个旧 dev（BV17/BV1AC/BV1yb）+ 2 个新 dev（BV13/BV1ix）上跑。
+- v2 还没在 3 个旧 dev + 2 个新 dev 上跑。
 - 还没做粗评（对照 `runs/_reader_test_2026-11-03/llm_judge/problems.md` 的 30 条典型问题）。
 - 还没跑 30 份 LLM-as-Judge；没有真人 reader test。
 - 下一轮要把 writer prompt/brief/verifier/repair 也按 v2 的“写作优先、编辑最小”哲学改；当前 pipeline 仍是 v1 的 9 轴 verifier + full rewrite repair。
 
 ## 下一步
 
-1. 用 v2 skill 跑 5 个 dev（3 旧 + BV13/BV1ix），先不跑 judge。
+1. 用 v2 skill 跑 5 个 dev（3 旧 + 2 新），先不跑 judge。
 2. 粗评：对照 `problems.md` 的 top 10 + 版本特异问题，标出“同类/新问题”。
 3. 若粗评显示 v2 在 title/voice/source/visual 上有改善，再重建 judge pack（旧 current vs v2）跑 30 份。
 4. 然后改 pipeline：brief 缩短；verifier 只查 fidelity/attribution/consistency；repair 只做最小 patch 或交给人；去掉“未证实”blocking。
