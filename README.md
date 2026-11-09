@@ -13,7 +13,7 @@
 |---|---|---|
 | <img src="docs/assets/run-live-7.png" width="360"> | <img src="docs/assets/ui-preview-drawer.png" width="360"> | <img src="docs/assets/run-trace-new.png" width="360"> |
 
-> 截图来自开发机的最新验证 run（公众号，926 字，等待验收；4 个候选帧 0 通过，所以 0 图）。运行数据页的“延迟”是 LLM 调用合计，不是墙钟；该 run 不在固定评测集里，所以“检查”显示为 —。
+> 截图来自开发机的最新验证 run（公众号，926 字，等待验收；4 个候选帧 0 通过，所以 0 图）。预览页的 623 字是阅读页口径，run 卡的 926 字是 writer 输出口径；运行数据页的“延迟”是 LLM 调用合计，不是墙钟；该 run 不在固定评测集里，所以“检查”显示为 —。
 
 ## 它解决什么问题
 
