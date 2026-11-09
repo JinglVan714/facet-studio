@@ -1,7 +1,7 @@
 # LibreChat P1/P2 integration
 
-> 状态：2026-11-06 P1 原型已跑通；2026-11-07 P2 排版/导出/UI 已接。LibreChat 是外部 clone，不 vendored 进本仓库；这里放可复现配置。
-> 目标：聊天 → 计划卡 → 一次 writer → 聊天内预览/导出 → 用户验收。缓存内容，不重跑视频。
+> 状态：2026-11-06 P1 原型已跑通；2026-11-07 P2 排版/导出/UI 已接；2026-11-09 端到端运行卡/后台 run/右侧预览已接。LibreChat 是外部 clone，不 vendored 进本仓库；这里放可复现配置。
+> 目标：聊天 → 一次 writer → 聊天内运行卡/预览/导出 → 用户验收。默认不在计划卡停；缓存内容，不重跑视频。
 > 产品定义：[docs/product-v1-chat-studio.md](../../docs/product-v1-chat-studio.md)；架构：[architecture.md](../../architecture.md)。
 
 ## 1. 本地环境（已验证）
@@ -72,7 +72,8 @@ cd <LibreChat> && npm run backend
   - `typeset_article_mcp_facet_studio`
   - `get_run_mcp_facet_studio`
   - `review_artifact_mcp_facet_studio`
-  - `start_workflow_mcp_facet_studio`（P3：LangGraph 工作流，默认停在计划卡）
+  - `start_workflow_mcp_facet_studio`（P3：后台启动 LangGraph 工作流，默认 `auto_plan=True` 端到端直写，只在最终验收暂停；立即返回 run_id）
+  - `wait_workflow_mcp_facet_studio`（P3：等待到下一个门，返回摘要/资产数/下一步，不返回完整正文）
   - `resume_workflow_mcp_facet_studio`（P3：确认计划卡/最终验收后恢复）
   - `get_workflow_mcp_facet_studio`（P3：阶段、暂停点、usage、trace）
 - instructions: 见 [agent-instructions.md](agent-instructions.md)
@@ -82,8 +83,9 @@ cd <LibreChat> && npm run backend
 
 LibreChat clone 里只改主题/展示层，不改核心 pipeline：
 
-- `client/src/utils/toolLabels.ts`：`FACET_MCP_TOOL_LABELS` 把 12 个工具映射成中文动作名（接入新视频/查看来源/读取视频/规划/写作/排版/运行数据/验收/启动工作流/继续工作流/工作流状态）。
-- `client/src/components/Chat/Messages/Content/ToolCall.tsx`、`ToolCallGroup.tsx`、`FacetRunLinks.tsx`：解析 MCP tool output 的 `trace_url / preview_url / wechat_url / pdf_url`，在聊天 tool card/group 上渲染“运行数据/预览/公众号/PDF”按钮；使用中文动作名；Facet 工具不再显示“来自 facet_studio”。
+- `client/src/utils/toolLabels.ts`：`FACET_MCP_TOOL_LABELS` 把 13 个工具映射成中文动作名（接入新视频/查看来源/读取视频/规划/写作/排版/运行数据/验收/启动工作流/等待工作流/继续工作流/工作流状态）。
+- `client/src/utils/facet.ts`、`client/src/components/Facet/FacetActivity.tsx`、`FacetRunCard.tsx`、`FacetPreviewPanel.tsx`：消息级只渲染一张运行卡；卡轮询 `/runs/<id>/api/card` 显示阶段、计划、视觉审计、字数和交付物；右侧抽屉预览阅读页/公众号/PDF。Facet tool parts 不再渲染原始 JSON 或“执行过程”分组；`ToolCall.tsx` 只保留中文动作名。
+- `start_workflow` 的 MCP 输出很大时会被 LibreChat 截断；`facet.ts` 从截断前缀恢复 `run_id/form/status/trace_url`，详细内容由 card API 补；不完整 run_id 的片段会被丢弃，避免出现第二张重复卡。
 - `client/src/components/Chat/Input/ConversationStarters.tsx`：三张引导卡 + 模型配置提示。
 - `client/index.html`、`client/src/locales/zh-Hans/translation.json`：品牌/标题/中文 UI。
 - `librechat.yaml`：`facet-studio` 暖纸主题、`facet_studio` MCP、欢迎语。
@@ -97,15 +99,16 @@ git apply <project>/integrations/librechat/patches/client-ui.patch
 npm run frontend
 ```
 
-补丁含 7 个展示层文件（含新增 `FacetRunLinks.tsx`）；`librechat.yaml` 主题/MCP 配置用 `librechat.yaml.example`，不放进 patch。
+补丁含展示层文件（含新增 `client/src/utils/facet.ts`、`client/src/components/Facet/*`）；`librechat.yaml` 主题/MCP 配置用 `librechat.yaml.example`，不放进 patch。
 
 ## 4.2 P3 workflow（原型）
 
 `src/facet_studio/workflow.py` 用 LangGraph StateGraph 串 `intake → plan → approval → write → typeset → review`：
 
-- `start_workflow`：默认在计划卡处 `interrupt`，返回 `run_id` + `interrupt.plan`；`auto_approve=true` 时不暂停。
-- `resume_workflow(run_id, decision)`：计划卡/最终验收恢复；`decision=approved/changes_requested/rejected`。
-- `get_workflow(run_id)`：`workflow.json` 里的 `status/next/stages/events/usage/cost_estimate`。
+- `start_workflow`：默认 `background=True`，立即返回 `run_id` + `status=running`；`auto_plan=True` 时跳过计划卡直接写，只在最终验收 `interrupt`。用户明确要计划时才传 `auto_plan=False`。
+- `wait_workflow(run_id)`：轮询到计划门/验收门/终态；返回压缩后的 `summary/assets/plan/typeset/preview_url`，不返回完整正文，避免 MCP 输出被截断后模型读错。
+- `resume_workflow(run_id, decision)`：计划卡/最终验收恢复；`decision=approved/changes_requested/rejected`。人工验收仍是唯一发布门。
+- `get_workflow(run_id)`：`workflow.json` 里的 `status/next/stages/events/usage/cost_estimate`；MCP 返回同样压缩。
 - checkpoint：`runs/product_v1/_workflow_checkpoints.sqlite`；run 目录写 `workflow.json`，`get_run` 也会带回。
 - 可选成本：`.env` 里填 `FACET_STUDIO_INPUT_COST_PER_MTOK` / `FACET_STUDIO_OUTPUT_COST_PER_MTOK`；未填时 `cost_estimate=null`。
 

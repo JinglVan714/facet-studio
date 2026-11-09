@@ -63,6 +63,7 @@ mcpServers:
       # 替换为项目根目录
       PYTHONPATH: '__PROJECT_ROOT__/src'
       FACET_STUDIO_PROJECT_ROOT: '__PROJECT_ROOT__'
+      FACET_STUDIO_LIBRECHAT_ROOT: '__LIBRECHAT_ROOT__'
       PYTHONUTF8: '1'
       PYTHONIOENCODING: 'utf-8'
     timeout: 300000

@@ -84,387 +84,69 @@ index d6d4604..3691947 100644
    if (!conversation_starters.length) {
      return null;
    }
-diff --git a/client/src/components/Chat/Messages/Content/FacetRunLinks.tsx b/client/src/components/Chat/Messages/Content/FacetRunLinks.tsx
-new file mode 100644
-index 0000000..9eb3357
---- /dev/null
-+++ b/client/src/components/Chat/Messages/Content/FacetRunLinks.tsx
-@@ -0,0 +1,373 @@
-+import { useMemo } from 'react';
-+
-+type FacetLink = [string, string];
-+type FacetSummary = {
-+  title: string;
-+  chips: string[];
-+  meta: string[];
-+  links: FacetLink[];
-+};
-+
-+const LINK_LABELS: Record<string, string> = {
-+  trace_url: '运行数据',
-+  preview_url: '预览',
-+  wechat_url: '公众号',
-+  pdf_url: 'PDF',
-+};
-+
-+const STATUS_TEXT: Record<string, string> = {
-+  awaiting_plan_approval: '等待计划确认',
-+  awaiting_review: '等待验收',
-+  planned: '已规划',
-+  written: '已写完',
-+  typeset: '已排版',
-+  partial: '部分完成',
-+  approved: '已验收',
-+  rejected: '已拒绝',
-+  changes_requested: '待修改',
-+  failed: '失败',
-+};
-+
-+const REVIEW_TEXT: Record<string, string> = {
-+  approved: '已验收',
-+  draft: '未验收',
-+  stale: '待重新验收',
-+  changes_requested: '待修改',
-+  rejected: '已拒绝',
-+};
-+
-+function safeParse(text: string): unknown {
-+  try {
-+    return JSON.parse(text);
-+  } catch {
-+    // Some tool outputs wrap JSON in prose or a stringified content part.
-+  }
-+  const start = text.indexOf('{');
-+  const end = text.lastIndexOf('}');
-+  if (start >= 0 && end > start) {
-+    try {
-+      return JSON.parse(text.slice(start, end + 1));
-+    } catch {
-+      // Fall through to URL-only rendering.
-+    }
-+  }
-+  return null;
-+}
-+
-+function findFacetObject(value: unknown, depth = 0): Record<string, any> | null {
-+  if (!value || depth > 4) {
-+    return null;
-+  }
-+  if (typeof value === 'string') {
-+    return findFacetObject(safeParse(value), depth + 1);
-+  }
-+  if (typeof value !== 'object') {
-+    return null;
-+  }
-+  if (Array.isArray(value)) {
-+    for (const item of value) {
-+      const found = findFacetObject(item, depth + 1);
-+      if (found) {
-+        return found;
+diff --git a/client/src/components/Chat/Messages/Content/ContentParts.tsx b/client/src/components/Chat/Messages/Content/ContentParts.tsx
+index 628197b..a6d72b1 100644
+--- a/client/src/components/Chat/Messages/Content/ContentParts.tsx
++++ b/client/src/components/Chat/Messages/Content/ContentParts.tsx
+@@ -51,6 +51,7 @@ import { selectToolCallUIResources } from '~/utils/mcpApps';
+ import PendingSkillCall from './Parts/PendingSkillCall';
+ import ActivityPhaseGroup from './ActivityPhaseGroup';
+ import { hasPendingApprovalInPart } from '~/utils';
++import { isFacetPart } from '~/utils/facet';
+ import EditContentParts from './EditContentParts';
+ import { EmptyText, AgentUpdate } from './Parts';
+ import ApprovalProvider from './ApprovalContext';
+@@ -584,12 +585,20 @@ const ContentPartsBody = memo(function ContentPartsBody({
+   );
+ 
+   const foldsLiveTail = foldLiveActivity && isLast && effectiveIsSubmitting;
++  /** Facet runs have their own card. Leaving their tool parts in the activity
++   *  phase scan would also render a second "执行过程" group above that card;
++   *  null them out (index-preserving) so phase labels and text still land at
++   *  the same absolute indices. */
++  const phaseEligibleContent = useMemo(
++    () => content?.map((part) => (isFacetPart(part) ? undefined : part)),
++    [content],
++  );
+   const phaseSegments = useMemo(
+     () =>
+       nestedActivityPhase
+         ? undefined
+-        : groupActivityPhases(content, messageLaneGroups, foldsLiveTail),
+-    [nestedActivityPhase, content, messageLaneGroups, foldsLiveTail],
++        : groupActivityPhases(phaseEligibleContent, messageLaneGroups, foldsLiveTail),
++    [nestedActivityPhase, phaseEligibleContent, messageLaneGroups, foldsLiveTail],
+   );
+   /** Every file a phase's parts produced, in transcript order, deduplicated
+    *  across parts that share a tool call. */
+@@ -957,6 +966,25 @@ const ContentPartsBody = memo(function ContentPartsBody({
+ 
+   const renderGroups = (groups: ReturnType<typeof groupParts>, lastContentIdx: number) =>
+     groups.flatMap((group) => {
++      // Facet tool calls are rendered once by the message-level FacetActivity
++      // card; do not also render the generic tool rows / raw output.
++      if (group.type === 'single' && isFacetPart(group.part.part)) {
++        return [];
 +      }
-+    }
-+    return null;
-+  }
-+  const obj = value as Record<string, any>;
-+  if (obj.run_id || obj.preview_url || obj.trace_url || obj.interrupt) {
-+    return obj;
-+  }
-+  for (const key of ['output', 'result', 'content', 'data', 'tool_call']) {
-+    const found = findFacetObject(obj[key], depth + 1);
-+    if (found) {
-+      return found;
-+    }
-+  }
-+  return null;
-+}
-+
-+/** Tool outputs arrive as raw JSON, nested under `tool_call.output`, or inside
-+ *  a stringified part. URLs are the fallback when the payload is unparseable. */
-+function urlsFromOutput(output: string | null | undefined): FacetLink[] {
-+  if (!output) {
-+    return [];
-+  }
-+  const links: FacetLink[] = [];
-+  for (const [key, label] of Object.entries(LINK_LABELS)) {
-+    const at = output.indexOf(key);
-+    if (at < 0) {
-+      continue;
-+    }
-+    // Look just past the key, whether the payload is raw JSON or an escaped
-+    // stringified part. Avoids a fragile template-built RegExp.
-+    const tail = output.slice(at, at + 600);
-+    const match = tail.match(/https?:\/\/[^"\\\s]+/);
-+    if (match?.[0]) {
-+      links.push([label, match[0].replace(/\/trace\.html$/, '')]);
-+    }
-+  }
-+  return links;
-+}
-+
-+function linksFromObject(obj: Record<string, any>): FacetLink[] {
-+  const links: FacetLink[] = [];
-+  for (const [key, label] of Object.entries(LINK_LABELS)) {
-+    const value = obj[key];
-+    if (typeof value === 'string' && /^https?:\/\//.test(value)) {
-+      links.push([label, value.replace(/\/trace\.html$/, '')]);
-+    }
-+  }
-+  return links;
-+}
-+
-+/** Collect links from nested tool payloads (artifacts/typeset/write/review). */
-+function collectLinks(value: unknown, depth = 0): FacetLink[] {
-+  if (!value || depth > 4) {
-+    return [];
-+  }
-+  if (typeof value === 'string') {
-+    if (!value.startsWith('{')) {
-+      return [];
-+    }
-+    return collectLinks(safeParse(value), depth + 1);
-+  }
-+  if (typeof value !== 'object') {
-+    return [];
-+  }
-+  if (Array.isArray(value)) {
-+    return value.flatMap((item) => collectLinks(item, depth + 1));
-+  }
-+  const obj = value as Record<string, any>;
-+  const links = linksFromObject(obj);
-+  for (const item of Object.values(obj)) {
-+    if (item && typeof item === 'object') {
-+      links.push(...collectLinks(item, depth + 1));
-+    }
-+  }
-+  return links;
-+}
-+
-+function firstValue(obj: Record<string, any>, keys: string[], depth = 0): string {
-+  if (!obj || depth > 3) {
-+    return '';
-+  }
-+  for (const key of keys) {
-+    const value = obj[key];
-+    if (typeof value === 'string' && value) {
-+      return value;
-+    }
-+    if (typeof value === 'number') {
-+      return String(value);
-+    }
-+  }
-+  for (const value of Object.values(obj)) {
-+    if (value && typeof value === 'object' && !Array.isArray(value)) {
-+      const found = firstValue(value as Record<string, any>, keys, depth + 1);
-+      if (found) {
-+        return found;
-+      }
-+    }
-+  }
-+  return '';
-+}
-+
-+function stringField(output: string, key: string): string {
-+  const at = output.indexOf(`"${key}"`);
-+  if (at < 0) {
-+    return '';
-+  }
-+  const tail = output.slice(at, at + 1200);
-+  const match = tail.match(/:\s*"([^"]*)"/);
-+  if (match?.[1]) {
-+    return match[1];
-+  }
-+  const num = tail.match(/:\s*(-?\d+)/);
-+  return num?.[1] || '';
-+}
-+
-+/** The tool payload may be truncated in the chat part; derive the stable
-+ *  preview/export URLs from run_id + form + trace_url instead of relying on a
-+ *  nested `typeset.preview_url` that may be cut off. */
-+function derivedLinks(runId: string, form: string, traceUrl: string): FacetLink[] {
-+  if (!runId || !form) {
-+    return [];
-+  }
-+  const base = traceUrl || `http://127.0.0.1:8765/runs/${runId}`;
-+  const links: FacetLink[] = [['预览', `${base}/${form}/reader.html`]];
-+  if (form === 'wechat_article') {
-+    links.push(['公众号', `${base}/${form}/wechat.html`]);
-+  }
-+  if (form === 'long_article') {
-+    links.push(['PDF', `${base}/${form}/article.pdf`]);
-+  }
-+  return links;
-+}
-+
-+function summarize(output: string | null | undefined): FacetSummary | null {
-+  const text = output || '';
-+  const obj = findFacetObject(safeParse(text));
-+  const runId = String(obj?.run_id || stringField(text, 'run_id') || '').trim();
-+  const formId = String(
-+    obj?.form || stringField(text, 'form') || firstValue(obj || {}, ['form']) || '',
-+  ).trim();
-+  const formLabel = String(
-+    obj?.form_label ||
-+      stringField(text, 'form_label') ||
-+      firstValue(obj || {}, ['form_label']) ||
-+      formId,
-+  ).trim();
-+  const traceUrl = String(obj?.trace_url || stringField(text, 'trace_url') || '')
-+    .replace(/\/trace\.html$/, '')
-+    .trim();
-+  const rawLinks = [
-+    ...(obj ? collectLinks(obj) : []),
-+    ...urlsFromOutput(text),
-+    ...derivedLinks(runId, formId, traceUrl),
-+  ];
-+  const unique = new Map<string, string>();
-+  for (const [label, href] of rawLinks) {
-+    if (!unique.has(label)) {
-+      unique.set(label, href);
-+    }
-+  }
-+  const links = Array.from(unique.entries());
-+  if (!obj && !links.length) {
-+    return null;
-+  }
-+  if (!obj) {
-+    return { title: '', chips: [], meta: [], links };
-+  }
-+
-+  const plan = obj.interrupt?.plan || obj.plan || {};
-+  const title = String(
-+    plan.central_idea ||
-+      plan.angle ||
-+      plan.reader_goal ||
-+      stringField(text, 'central_idea') ||
-+      '',
-+  ).trim();
-+  const status = obj.status || stringField(text, 'status');
-+  const review =
-+    obj.review_status ||
-+    obj.review?.decision ||
-+    stringField(text, 'review_status') ||
-+    firstValue(obj, ['review_status', 'decision']);
-+  const chips = [formLabel, STATUS_TEXT[String(status || '')], REVIEW_TEXT[String(review || '')]].filter(
-+    Boolean,
-+  ) as string[];
-+
-+  const meta: string[] = [];
-+  const charsRaw =
-+    obj.output_chars ??
-+    obj.write?.output_chars ??
-+    stringField(text, 'output_chars') ??
-+    firstValue(obj, ['output_chars']);
-+  const chars = Number(charsRaw || 0);
-+  if (chars > 0) {
-+    meta.push(`${chars.toLocaleString()} 字`);
-+  }
-+  const figures = obj.figures_referenced ?? obj.write?.figures_referenced;
-+  if (Array.isArray(figures)) {
-+    meta.push(`引用 ${figures.length} 图`);
-+  } else if (typeof figures === 'number') {
-+    meta.push(`引用 ${figures} 图`);
-+  }
-+  const tokensRaw = obj.usage?.total_tokens ?? stringField(text, 'total_tokens');
-+  const tokens = Number(tokensRaw || 0);
-+  if (tokens > 0) {
-+    meta.push(`${tokens.toLocaleString()} tokens`);
-+  }
-+  const candidates = obj.title_candidates ?? obj.write?.title_candidates;
-+  if (Array.isArray(candidates) && candidates.length > 0) {
-+    meta.push(`${candidates.length} 个标题候选`);
-+  }
-+
-+  return { title, chips, meta, links };
-+}
-+
-+/** Turn a Facet Studio tool result into a compact artifact card. The raw JSON
-+ *  stays in the run detail/trace; chat shows what the user can act on. */
-+export default function FacetRunLinks({
-+  outputs,
-+}: {
-+  outputs: Array<string | null | undefined>;
-+}) {
-+  const summary = useMemo(() => {
-+    const seen = new Map<string, string>();
-+    let best: FacetSummary | null = null;
-+    for (const output of outputs) {
-+      const item = summarize(output);
-+      if (!item) {
-+        continue;
-+      }
-+      for (const [label, href] of item.links) {
-+        if (!seen.has(label)) {
-+          seen.set(label, href);
++      if (group.type === 'tool-group') {
++        const facetTools = group.parts.filter((item) => isFacetPart(item.part));
++        const otherTools = group.parts.filter(
++          (item) =>
++            item.part?.type === 'tool_call' && !isFacetPart(item.part),
++        );
++        /** A Facet run groups its reasoning + calls into one "执行过程"
++         *  block. The card already tells that story, so hide the entire
++         *  block when every tool in it belongs to Facet. A mixed group stays:
++         *  its non-Facet calls still need their rows. */
++        if (facetTools.length > 0 && otherTools.length === 0) {
++          return [];
 +        }
 +      }
-+      if (!best || item.title) {
-+        best = item;
-+      }
-+    }
-+    if (!best) {
-+      return null;
-+    }
-+    return { ...best, links: Array.from(seen.entries()) };
-+  }, [outputs]);
-+
-+  if (!summary) {
-+    return null;
-+  }
-+
-+  return (
-+    <div
-+      className="border-border-light bg-surface-secondary mt-2 rounded-lg border p-3"
-+      data-testid="facet-run-card"
-+    >
-+      {summary.chips.length > 0 && (
-+        <div className="flex flex-wrap items-center gap-1.5">
-+          {summary.chips.map((chip) => (
-+            <span
-+              key={chip}
-+              className="border-border-light bg-surface-primary text-text-secondary rounded-full border px-2 py-0.5 text-[11px] font-medium"
-+            >
-+              {chip}
-+            </span>
-+          ))}
-+        </div>
-+      )}
-+      {summary.title && (
-+        <div className="text-text-primary mt-1.5 text-sm leading-relaxed">{summary.title}</div>
-+      )}
-+      {summary.meta.length > 0 && (
-+        <div className="text-text-secondary mt-1 text-xs">{summary.meta.join(' · ')}</div>
-+      )}
-+      {summary.links.length > 0 && (
-+        <div className="mt-2 flex flex-wrap gap-2">
-+          {summary.links.map(([label, href]) => (
-+            <a
-+              key={label}
-+              href={href}
-+              target="_blank"
-+              rel="noopener noreferrer"
-+              className="border-border-light bg-surface-primary text-text-secondary hover:text-text-primary inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium no-underline transition-colors"
-+            >
-+              {label}
-+            </a>
-+          ))}
-+        </div>
-+      )}
-+    </div>
-+  );
-+}
-+
-+/** True for a Facet run/tool payload. Used to keep raw JSON out of the chat. */
-+export function isFacetOutput(output: string | null | undefined): boolean {
-+  if (!output) {
-+    return false;
-+  }
-+  return (
-+    /"run_id"\s*:/.test(output) &&
-+    /"(preview_url|wechat_url|pdf_url|trace_url|interrupt|form_label)"\s*:/.test(output)
-+  );
-+}
+       const first = group.type === 'single' ? group.part : group.parts[0];
+       const firstIdx = first?.idx ?? -1;
+       const nodes: ReactElement[] = [];
 diff --git a/client/src/components/Chat/Messages/Content/ToolCall.tsx b/client/src/components/Chat/Messages/Content/ToolCall.tsx
-index e467390..ed9deb4 100644
+index e467390..7f67139 100644
 --- a/client/src/components/Chat/Messages/Content/ToolCall.tsx
 +++ b/client/src/components/Chat/Messages/Content/ToolCall.tsx
 @@ -21,7 +21,7 @@ import {
@@ -480,7 +162,7 @@ index e467390..ed9deb4 100644
  import { AttachmentGroup } from './Parts';
  import ToolCallInfo from './ToolCallInfo';
  import ProgressText from './ProgressText';
-+import FacetRunLinks, { isFacetOutput } from './FacetRunLinks';
++import { isFacetToolName } from '~/utils/facet';
  import { ToolAuthWarning } from './auth';
  import { firstErrorLine } from './live';
  
@@ -505,9 +187,9 @@ index e467390..ed9deb4 100644
      () => (args?.length ?? 0) > 0 || (output?.length ?? 0) > 0,
      [args, output],
    );
-+  /** Facet results render as an artifact card; keep the raw JSON in Run Detail
-+   *  instead of dumping it into the chat transcript. */
-+  const facetOutput = useMemo(() => isFacetOutput(output), [output]);
++  /** Facet results are shown by the message-level run card; never dump the raw
++   *  MCP JSON into the chat transcript. */
++  const facetTool = useMemo(() => isFacetToolName(function_name), [function_name]);
    /** The preference opens a card once it has output; a sole call opens on
     *  its arguments too, so a call that returned nothing still shows them. */
    const soleTool = useContext(SoleToolContext) === true;
@@ -516,7 +198,7 @@ index e467390..ed9deb4 100644
  
    const [expandedInfo, setShowInfo] = useToolExpansion(
 -    soleTool ? hasInfo : (output?.length ?? 0) > 0,
-+    !facetOutput && (soleTool ? hasInfo : (output?.length ?? 0) > 0),
++    !facetTool && (soleTool ? hasInfo : (output?.length ?? 0) > 0),
    );
    /** The only call of its group, settled successfully: the group header is the
     *  row, so the panel stands alone and stays open. An MCP or action call keeps
@@ -539,72 +221,695 @@ index e467390..ed9deb4 100644
  
    /** Model-authored live label, streamed as the first args key (injected by
     *  the `tool_intents` capability); persists as the settled label —
-@@ -464,18 +475,19 @@ export default function ToolCall({
+@@ -464,8 +475,8 @@ export default function ToolCall({
                  isAnimating={phase === 'running'}
                />
              }
 -            hasInput={hasInfo}
 -            isExpanded={showInfo}
-+            hasInput={hasInfo && !facetOutput}
-+            isExpanded={showInfo && !facetOutput}
++            hasInput={hasInfo && !facetTool}
++            isExpanded={showInfo && !facetTool}
            />
          </div>
        )}
-+      <FacetRunLinks outputs={[output]} />
-       <div
-         style={expandStyle}
-         onTransitionEnd={handleTransitionEnd}
+@@ -475,7 +486,7 @@ export default function ToolCall({
          data-tool-call-output-id={toolCallId}
        >
          <div className="overflow-hidden" ref={expandRef}>
 -          {hasInfo && shouldRenderBody && (
-+          {hasInfo && shouldRenderBody && !facetOutput && (
++          {hasInfo && shouldRenderBody && !facetTool && (
              <div
                className={cn(
                  toolPanelSpacingClassName,
-diff --git a/client/src/components/Chat/Messages/Content/ToolCallGroup.tsx b/client/src/components/Chat/Messages/Content/ToolCallGroup.tsx
-index 8edc733..32de30b 100644
---- a/client/src/components/Chat/Messages/Content/ToolCallGroup.tsx
-+++ b/client/src/components/Chat/Messages/Content/ToolCallGroup.tsx
-@@ -35,6 +35,7 @@ import { useMessagePartsHost } from '~/Providers/MessagePartsHostContext';
- import { ToolAuthWarning, ToolAuthWarningContext } from './auth';
- import { useMCPIconMap, useMCPServerNames } from '~/hooks/MCP';
- import { AttachmentGroup, ReasoningCompact } from './Parts';
-+import FacetRunLinks from './FacetRunLinks';
- import { getOutcomeStatus, summarizeSpan } from './outcome';
- import { MCPAppViews } from '~/components/MCPUIResource';
- import { parseToolName } from '~/utils/toolLabels';
-@@ -122,6 +123,22 @@ export default function ToolCallGroup({
-     );
-     return parts.map(({ part }) => summary.metaOf(part)).filter((m): m is ToolMeta => m != null);
-   }, [parts, attachmentsByToolCallId]);
-+  /** Tool outputs are the only place run/preview URLs live; read them at the
-+   *  group level so the actions remain visible while the group is collapsed. */
-+  const facetOutputs = useMemo(
-+    () =>
-+      parts
-+        .filter(({ part }) => part.type === ContentTypes.TOOL_CALL)
-+        .map(({ part }) => {
-+          try {
-+            return JSON.stringify(part);
-+          } catch {
-+            return null;
-+          }
-+        })
-+        .filter((output): output is string => Boolean(output)),
-+    [parts],
+diff --git a/client/src/components/Chat/Messages/MessageParts.tsx b/client/src/components/Chat/Messages/MessageParts.tsx
+index 7dcc96d..49e804e 100644
+--- a/client/src/components/Chat/Messages/MessageParts.tsx
++++ b/client/src/components/Chat/Messages/MessageParts.tsx
+@@ -25,6 +25,7 @@ import { ErrorSourceProvider } from '~/components/Messages/Content/Error/source'
+ import MessageIcon from '~/components/Chat/Messages/MessageIcon';
+ import { showThinkingAtom } from '~/store/showThinking';
+ import ContentParts from './Content/ContentParts';
++import FacetActivity from '~/components/Facet/FacetActivity';
+ import { AuthorContext } from '~/Providers';
+ import HoverButtons from './HoverButtons';
+ import store from '~/store';
+@@ -200,6 +201,13 @@ function MessageParts(props: TMessageProps) {
+                 isLatestMessage={messageId === latestMessageId}
+                 content={message.content as Array<TMessageContentParts | undefined>}
+               />
++              {isCreatedByUser !== true && (
++                <FacetActivity
++                  content={message.content as Array<TMessageContentParts | undefined>}
++                  messageId={message.messageId}
++                  isLatestMessage={messageId === latestMessageId}
++                />
++              )}
+             </ErrorSourceProvider>
+           </AuthorContext.Provider>
+         </MessageRow>
+diff --git a/client/src/components/Facet/FacetActivity.tsx b/client/src/components/Facet/FacetActivity.tsx
+new file mode 100644
+index 0000000..922c66d
+--- /dev/null
++++ b/client/src/components/Facet/FacetActivity.tsx
+@@ -0,0 +1,29 @@
++import { useMemo } from 'react';
++import { useChatContext } from '~/Providers/ChatContext';
++import { collectFacetRuns } from '~/utils/facet';
++import FacetRunCard from './FacetRunCard';
++
++/** One product-level run card per assistant message, not one per tool call. */
++export default function FacetActivity({
++  content,
++  messageId,
++  isLatestMessage,
++}: {
++  content: Array<any> | null | undefined;
++  messageId?: string;
++  isLatestMessage: boolean;
++}) {
++  const { latestMessageId } = useChatContext();
++  const isLatest = latestMessageId && messageId ? messageId === latestMessageId : isLatestMessage;
++  const runs = useMemo(() => collectFacetRuns(content), [content]);
++  if (!isLatest || runs.length === 0) {
++    return null;
++  }
++  return (
++    <div className="mt-2 space-y-2" data-testid="facet-activity">
++      {runs.map((run) => (
++        <FacetRunCard key={run.runId} run={run} />
++      ))}
++    </div>
 +  );
-   const count = toolMetadata.length;
-   const phaseSole = useContext(SoleToolContext);
-   /** Approval state is read from the RAW parts, not `toolMetadata`: a pending
-@@ -711,6 +728,7 @@ export default function ToolCallGroup({
-           />
-         )}
-       </div>
-+      <FacetRunLinks outputs={facetOutputs} />
-       <div
-         style={expandStyle}
-         onTransitionEnd={handleTransitionEnd}
++}
+diff --git a/client/src/components/Facet/FacetPreviewPanel.tsx b/client/src/components/Facet/FacetPreviewPanel.tsx
+new file mode 100644
+index 0000000..5b246c4
+--- /dev/null
++++ b/client/src/components/Facet/FacetPreviewPanel.tsx
+@@ -0,0 +1,100 @@
++import { useEffect, useState } from 'react';
++import { createPortal } from 'react-dom';
++import { ExternalLink, X } from 'lucide-react';
++
++export type FacetPreviewItem = { label: string; url: string };
++
++export default function FacetPreviewPanel({
++  open,
++  title,
++  items,
++  onClose,
++}: {
++  open: boolean;
++  title: string;
++  items: FacetPreviewItem[];
++  onClose: () => void;
++}) {
++  const [active, setActive] = useState(0);
++
++  useEffect(() => {
++    if (open) {
++      setActive(0);
++    }
++  }, [open]);
++
++  useEffect(() => {
++    if (!open) {
++      return;
++    }
++    const onKey = (event: KeyboardEvent) => {
++      if (event.key === 'Escape') {
++        onClose();
++      }
++    };
++    window.addEventListener('keydown', onKey);
++    return () => window.removeEventListener('keydown', onKey);
++  }, [open, onClose]);
++
++  if (!open || items.length === 0) {
++    return null;
++  }
++  const current = items[Math.min(active, items.length - 1)];
++
++  return createPortal(
++    <div className="fixed inset-0 z-[100] flex justify-end" data-testid="facet-preview-panel">
++      <div className="absolute inset-0 bg-black/30" onClick={onClose} aria-hidden="true" />
++      <section className="bg-surface-primary border-border-light relative flex h-full w-full max-w-[820px] flex-col border-l shadow-2xl">
++        <header className="border-border-light flex items-center justify-between gap-3 border-b px-4 py-3">
++          <div className="min-w-0">
++            <div className="text-text-primary truncate text-sm font-semibold">{title}</div>
++            <div className="text-text-secondary text-xs">Facet Studio · 成品预览</div>
++          </div>
++          <div className="flex items-center gap-1">
++            {items.map((item, index) => (
++              <button
++                key={item.label}
++                type="button"
++                onClick={() => setActive(index)}
++                className={`rounded-full px-2.5 py-1 text-xs ${
++                  index === Math.min(active, items.length - 1)
++                    ? 'bg-surface-tertiary text-text-primary font-medium'
++                    : 'text-text-secondary hover:text-text-primary'
++                }`}
++              >
++                {item.label}
++              </button>
++            ))}
++            <a
++              href={current.url}
++              target="_blank"
++              rel="noopener noreferrer"
++              className="text-text-secondary hover:text-text-primary ml-1 inline-flex h-8 w-8 items-center justify-center rounded-full"
++              title="在新标签打开"
++            >
++              <ExternalLink className="size-4" />
++            </a>
++            <button
++              type="button"
++              onClick={onClose}
++              className="text-text-secondary hover:text-text-primary inline-flex h-8 w-8 items-center justify-center rounded-full"
++              title="关闭"
++            >
++              <X className="size-4" />
++            </button>
++          </div>
++        </header>
++        <div className="min-h-0 flex-1 bg-white">
++          <iframe
++            key={current.url}
++            src={current.url}
++            title={current.label}
++            className="h-full w-full border-0"
++            allow="clipboard-read; clipboard-write"
++          />
++        </div>
++      </section>
++    </div>,
++    document.body,
++  );
++}
+diff --git a/client/src/components/Facet/FacetRunCard.tsx b/client/src/components/Facet/FacetRunCard.tsx
+new file mode 100644
+index 0000000..93faf4f
+--- /dev/null
++++ b/client/src/components/Facet/FacetRunCard.tsx
+@@ -0,0 +1,474 @@
++import { useEffect, useMemo, useState } from 'react';
++import { ChevronDown } from 'lucide-react';
++import { facetArtifactUrl, type FacetRun } from '~/utils/facet';
++import FacetPreviewPanel, { type FacetPreviewItem } from './FacetPreviewPanel';
++
++const FORM_LABEL: Record<string, string> = {
++  long_article: '深度总结',
++  wechat_article: '公众号',
++  xiaohongshu_note: '小红书',
++};
++
++const STATUS_LABEL: Record<string, string> = {
++  starting: '正在启动',
++  running: '正在进行',
++  intake: '读取内容',
++  plan: '规划中',
++  planned: '规划完成',
++  written: '初稿完成',
++  typeset: '等待验收',
++  partial: '部分完成',
++  awaiting_plan_approval: '等待计划确认',
++  awaiting_review: '等待验收',
++  approved: '已验收',
++  changes_requested: '要修改',
++  rejected: '已拒绝',
++  failed: '失败',
++  cancelled: '已取消',
++};
++
++const STAGE_LABEL: Record<string, string> = {
++  intake: '读取内容',
++  plan: '规划',
++  approval: '确认计划',
++  write: '写作',
++  typeset: '排版',
++  review: '验收',
++};
++
++const STOP_STATUSES = new Set([
++  'awaiting_plan_approval',
++  'awaiting_review',
++  'typeset',
++  'partial',
++  'approved',
++  'changes_requested',
++  'rejected',
++  'failed',
++  'cancelled',
++]);
++
++const DONE_STAGE = new Set([
++  'succeeded',
++  'typeset',
++  'approved',
++  'auto_approved',
++  'auto_accepted',
++  'completed',
++]);
++
++function seconds(value: number) {
++  const total = Math.max(0, Math.round(value / 1000));
++  if (total < 60) {
++    return `${total} 秒`;
++  }
++  const minutes = Math.floor(total / 60);
++  const rest = total % 60;
++  return rest ? `${minutes} 分 ${rest} 秒` : `${minutes} 分`;
++}
++
++function toneFor(status: string) {
++  if (status === 'approved') {
++    return 'border-green-200 bg-green-50 text-green-700';
++  }
++  if (status === 'failed' || status === 'rejected') {
++    return 'border-red-200 bg-red-50 text-red-700';
++  }
++  if (
++    status === 'awaiting_plan_approval' ||
++    status === 'awaiting_review' ||
++    status === 'typeset' ||
++    status === 'partial'
++  ) {
++    return 'border-amber-200 bg-amber-50 text-amber-700';
++  }
++  return 'border-border-light bg-surface-primary text-text-secondary';
++}
++
++export default function FacetRunCard({ run }: { run: FacetRun }) {
++  const { runId, payload } = run;
++  const [trace, setTrace] = useState<Record<string, any> | null>(null);
++  const [error, setError] = useState('');
++  const [expanded, setExpanded] = useState(true);
++  const [previewOpen, setPreviewOpen] = useState(false);
++
++  const base =
++    trace?.trace_url ||
++    payload.trace_url ||
++    `http://127.0.0.1:8765/runs/${encodeURIComponent(runId)}`;
++
++  useEffect(() => {
++    let timer: ReturnType<typeof setTimeout> | null = null;
++    let cancelled = false;
++
++    const load = async () => {
++      try {
++        const response = await fetch(`${base}/api/card`, { cache: 'no-store' });
++        if (!response.ok) {
++          throw new Error(`HTTP ${response.status}`);
++        }
++        const data = (await response.json()) as Record<string, any>;
++        if (cancelled) {
++          return;
++        }
++        setTrace(data);
++        setError('');
++        const status = String(data.workflow_status || data.status || '');
++        if (!STOP_STATUSES.has(status)) {
++          timer = setTimeout(load, 1500);
++        }
++      } catch {
++        if (!cancelled) {
++          setError('运行服务未连接，稍后重试');
++          timer = setTimeout(load, 2500);
++        }
++      }
++    };
++
++    load();
++    return () => {
++      cancelled = true;
++      if (timer) {
++        clearTimeout(timer);
++      }
++    };
++  }, [base]);
++
++  const rawStatus = String(
++    trace?.workflow_status || trace?.status || payload.status || 'starting',
++  );
++  const status = rawStatus === 'unknown' ? 'starting' : rawStatus;
++  const phase =
++    status === 'failed' || status === 'cancelled'
++      ? 'failed'
++      : status === 'approved' || status === 'rejected' || status === 'changes_requested'
++        ? 'done'
++        : status === 'awaiting_plan_approval'
++          ? 'waiting_plan'
++          : status === 'awaiting_review' || status === 'typeset' || status === 'partial'
++            ? 'waiting_review'
++            : status === 'starting'
++              ? 'starting'
++              : 'running';
++
++  const form = String(trace?.form || payload.form || '');
++  const formLabel = String(trace?.form_label || payload.form_label || FORM_LABEL[form] || '文章');
++  const context = trace?.context || {};
++  const title = String(
++    context.central_idea || payload.plan?.central_idea || payload.request || '本次写作',
++  );
++  const stages: Array<Record<string, any>> = trace?.stages || [];
++  const stageMap = useMemo(() => new Map(stages.map((item) => [item.name, item])), [stages]);
++  const story: Array<Record<string, any>> = trace?.story || [];
++  const activeStage = stages.find((item) => !DONE_STAGE.has(String(item.status || '')));
++  const currentLabel =
++    STAGE_LABEL[String(activeStage?.name || '')] ||
++    (Number(context.visual_audit?.candidate_count || 0) > 0 ? '检查候选图' : '读取内容');
++  const usage = trace?.usage || {};
++  const tokens = Number(usage.total_tokens || payload.usage?.total_tokens || 0);
++  const latency = Number(trace?.latency_ms || payload.latency_ms || 0);
++  const outputChars = Number(context.output_chars || payload.write?.output_chars || 0);
++  const payloadRefs = payload.write?.figures_referenced;
++  const payloadKeyframes = Array.isArray(payloadRefs)
++    ? payloadRefs.filter((item: string) => !String(item).toLowerCase().endsWith('.svg')).length
++    : Number(payloadRefs || 0);
++  const figures = Number(context.keyframes_referenced ?? payloadKeyframes ?? 0);
++  const svgCount = Number(
++    context.svg_count ??
++      (Array.isArray(payload.write?.svg_assets) ? payload.write.svg_assets.length : 0),
++  );
++  const cardCount = Number(context.card_count || 0);
++  const visualAudit = context.visual_audit || payload.visual_audit || {};
++  const auditCandidates = Number(visualAudit.candidate_count || 0);
++  const auditApproved = Number(visualAudit.approved_count || 0);
++  const auditReasons = Object.keys(visualAudit.reasons || {});
++  const auditLine =
++    auditApproved > 0
++      ? `视觉审计：${auditCandidates} 张候选，${auditApproved} 张采用`
++      : auditCandidates > 0
++        ? `视觉审计：${auditCandidates} 张候选都没通过（${auditReasons[0] || '画面不合适'}${
++            auditReasons.length > 1 ? '等' : ''
++          }），这次不用视频截图`
++        : '';
++  const planAngle = String(context.plan_angle || payload.plan?.angle || payload.angle || '');
++  const planReader = String(
++    context.plan_reader || payload.plan?.reader_goal || payload.reader_goal || '',
++  );
++  const request = String(context.request || payload.request || '');
++  const artifacts = trace?.artifacts || payload.artifacts || {};
++  const previewItems: FacetPreviewItem[] = [];
++  const addPreview = (label: string, value: unknown) => {
++    const href = facetArtifactUrl(typeof value === 'string' ? value : '', base);
++    if (href && !previewItems.some((item) => item.url === href)) {
++      previewItems.push({ label, url: href });
++    }
++  };
++  addPreview('阅读页', artifacts.preview_url || artifacts.reader_html);
++  addPreview('公众号', artifacts.wechat_url || artifacts.wechat_html);
++  addPreview('PDF', artifacts.pdf_url);
++  const canPreview = phase === 'waiting_review' || phase === 'done';
++  const reviewDecision = String(trace?.review?.decision || payload.review_status || '');
++  const statusLabel = STATUS_LABEL[status] || status;
++
++  useEffect(() => {
++    if (phase === 'done' || phase === 'failed') {
++      setExpanded(false);
++    } else if (phase === 'waiting_review' || phase === 'waiting_plan' || phase === 'running') {
++      setExpanded(true);
++    }
++  }, [phase]);
++
++  const steps = [
++    { name: 'intake', label: '读取' },
++    { name: 'plan', label: '规划' },
++    { name: 'write', label: '写作' },
++    { name: 'typeset', label: '排版' },
++  ];
++  const stepState = (name: string) => {
++    const stage = stageMap.get(name);
++    if (stage) {
++      return DONE_STAGE.has(String(stage.status || '')) ? 'done' : 'current';
++    }
++    if (phase === 'waiting_review' || phase === 'done') {
++      return 'done';
++    }
++    if (phase === 'waiting_plan' && name === 'plan') {
++      return 'done';
++    }
++    return 'todo';
++  };
++  const currentLine =
++    phase === 'waiting_plan'
++      ? '计划已生成，等你确认'
++      : phase === 'waiting_review'
++        ? `草稿 · 等你验收${outputChars ? ` · ${outputChars.toLocaleString()} 字` : ''}`
++        : phase === 'done'
++          ? `${reviewDecision === 'approved' ? '已验收' : statusLabel}${
++              outputChars ? ` · ${outputChars.toLocaleString()} 字` : ''
++            }`
++          : phase === 'failed'
++            ? error || '运行失败'
++            : phase === 'starting'
++              ? '正在读取内容和准备计划'
++              : `正在${currentLabel}${latency ? ` · 已用 ${seconds(latency)}` : ''}`;
++
++  return (
++    <section
++      className="border-border-light bg-surface-secondary mt-2 overflow-hidden rounded-xl border"
++      data-testid="facet-run-card"
++      data-run-id={runId}
++    >
++      <button
++        type="button"
++        className="hover:bg-surface-tertiary flex w-full items-start justify-between gap-3 px-3.5 py-3 text-left transition-colors"
++        onClick={() => setExpanded((value) => !value)}
++      >
++        <div className="min-w-0">
++          <div className="flex flex-wrap items-center gap-2 text-[11px]">
++            <span className="text-text-secondary font-semibold tracking-wide">FACET STUDIO</span>
++            <span className="border-border-light bg-surface-primary text-text-secondary rounded-full border px-2 py-0.5">
++              {formLabel}
++            </span>
++            <span className={`rounded-full border px-2 py-0.5 ${toneFor(status)}`}>{statusLabel}</span>
++          </div>
++          <div className="text-text-primary mt-1.5 line-clamp-2 text-sm font-semibold leading-relaxed">
++            {title}
++          </div>
++          <div className="text-text-secondary mt-1 text-xs">{currentLine}</div>
++        </div>
++        <ChevronDown
++          className={`text-text-secondary mt-0.5 size-4 shrink-0 transition-transform ${
++            expanded ? 'rotate-180' : ''
++          }`}
++        />
++      </button>
++
++      {expanded && (
++        <div className="border-border-light border-t px-3.5 py-3">
++          <div className="flex items-center gap-1.5">
++            {steps.map((step, index) => {
++              const state = stepState(step.name);
++              return (
++                <div key={step.name} className="flex min-w-0 flex-1 items-center gap-1.5">
++                  <div
++                    className={`flex min-w-0 flex-1 items-center gap-1.5 rounded-lg px-2 py-1 text-[11px] ${
++                      state === 'done'
++                        ? 'bg-green-50 text-green-700'
++                        : state === 'current'
++                          ? 'bg-amber-50 text-amber-700'
++                          : 'bg-surface-primary text-text-secondary'
++                    }`}
++                  >
++                    <span
++                      className={`inline-block size-1.5 shrink-0 rounded-full ${
++                        state === 'done'
++                          ? 'bg-green-500'
++                          : state === 'current'
++                            ? 'bg-amber-500'
++                            : 'bg-gray-300'
++                      }`}
++                    />
++                    <span className="truncate">{step.label}</span>
++                  </div>
++                  {index < steps.length - 1 && (
++                    <span className="text-gray-400 shrink-0 text-[10px]">→</span>
++                  )}
++                </div>
++              );
++            })}
++          </div>
++
++          {story.length > 0 && phase === 'running' && (
++            <div className="mt-3 space-y-1.5">
++              {story.map((item, index) => (
++                <div key={`${item.step}-${index}`} className="text-text-secondary flex gap-2 text-xs">
++                  <span className="text-text-tertiary w-3 shrink-0">{index + 1}.</span>
++                  <span className="min-w-0">
++                    <span className="text-text-primary font-medium">{item.step}</span>
++                    {item.detail ? ` · ${item.detail}` : ''}
++                  </span>
++                </div>
++              ))}
++            </div>
++          )}
++
++          {(planAngle || planReader || request) && (
++            <details className="mt-3" open={phase === 'waiting_plan'}>
++              <summary className="text-text-secondary cursor-pointer text-xs">本次计划</summary>
++              <div className="text-text-secondary mt-2 space-y-1 text-xs leading-relaxed">
++                {planAngle && (
++                  <div>
++                    <span className="text-text-primary font-medium">角度：</span>
++                    {planAngle}
++                  </div>
++                )}
++                {planReader && (
++                  <div>
++                    <span className="text-text-primary font-medium">读者收获：</span>
++                    {planReader}
++                  </div>
++                )}
++                {request && (
++                  <div>
++                    <span className="text-text-primary font-medium">你的要求：</span>
++                    {request}
++                  </div>
++                )}
++              </div>
++            </details>
++          )}
++
++          {auditLine && (
++            <div className="text-text-secondary bg-surface-primary mt-2 rounded-lg px-2.5 py-2 text-xs">
++              {auditLine}
++            </div>
++          )}
++
++          {phase === 'waiting_plan' && (
++            <div className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
++              回复「确认，开始写」继续；要调整就直接说「改：……」。
++            </div>
++          )}
++
++          {phase === 'waiting_review' && canPreview && previewItems.length > 0 && (
++            <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
++              <div className="text-text-secondary text-xs">
++                {outputChars > 0 ? `${outputChars.toLocaleString()} 字` : '正文已生成'}
++                {form === 'xiaohongshu_note'
++                  ? ` · ${cardCount} 张卡片 · ${figures} 张关键帧`
++                  : ` · ${figures} 图`}
++                {svgCount > 0 ? ` · ${svgCount} 个图表` : ''}
++                <span className="ml-2">{' '}· 草稿，未验收</span>
++              </div>
++              <div className="flex items-center gap-2">
++                <button
++                  type="button"
++                  className="bg-text-primary text-surface-primary inline-flex items-center rounded-full px-3 py-1.5 text-xs font-medium"
++                  onClick={() => setPreviewOpen(true)}
++                >
++                  打开成品
++                </button>
++                <a
++                  href={base}
++                  target="_blank"
++                  rel="noopener noreferrer"
++                  className="text-text-secondary hover:text-text-primary text-xs underline-offset-2 hover:underline"
++                >
++                  运行详情
++                </a>
++              </div>
++            </div>
++          )}
++
++          {phase === 'waiting_review' && (
++            <div className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
++              回复「通过」验收；要改就说「改：……」；不要了就回「不要了」。
++            </div>
++          )}
++
++          {phase === 'done' && canPreview && previewItems.length > 0 && (
++            <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
++              <div className="text-xs text-green-700">
++                {reviewDecision === 'approved' ? '你已验收' : statusLabel}
++                {outputChars > 0 ? ` · ${outputChars.toLocaleString()} 字` : ''}
++              </div>
++              <div className="flex items-center gap-2">
++                <button
++                  type="button"
++                  className="bg-text-primary text-surface-primary inline-flex items-center rounded-full px-3 py-1.5 text-xs font-medium"
++                  onClick={() => setPreviewOpen(true)}
++                >
++                  打开成品
++                </button>
++                <a
++                  href={base}
++                  target="_blank"
++                  rel="noopener noreferrer"
++                  className="text-text-secondary hover:text-text-primary text-xs underline-offset-2 hover:underline"
++                >
++                  运行详情
++                </a>
++              </div>
++            </div>
++          )}
++
++          {phase === 'failed' && (
++            <div className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">
++              {error || trace?.errors?.[0] || '运行失败，请打开运行详情查看原因。'}
++            </div>
++          )}
++
++          <details className="text-text-secondary mt-3 text-[11px]">
++            <summary className="cursor-pointer">技术信息</summary>
++            <div className="mt-1.5 space-y-1 break-all">
++              <div>run：{runId}</div>
++              <div>
++                调用 {Number(trace?.calls_total || payload.calls_total || 0)} 次
++                {tokens > 0 ? ` · ${tokens.toLocaleString()} tokens` : ''}
++                {latency > 0 ? ` · ${seconds(latency)}` : ''}
++              </div>
++              {auditReasons.length > 0 && (
++                <div>
++                  审计明细：
++                  {Object.entries(visualAudit.reasons || {})
++                    .map(([key, value]) => `${key} ${value}`)
++                    .join(' · ')}
++                </div>
++              )}
++              <a href={base} target="_blank" rel="noopener noreferrer" className="underline">
++                打开运行详情
++              </a>
++            </div>
++          </details>
++        </div>
++      )}
++
++      <FacetPreviewPanel
++        open={previewOpen}
++        title={title}
++        items={previewItems}
++        onClose={() => setPreviewOpen(false)}
++      />
++    </section>
++  );
++}
+diff --git a/client/src/components/Messages/ContentRender.tsx b/client/src/components/Messages/ContentRender.tsx
+index 6f74cdc..6ec4c73 100644
+--- a/client/src/components/Messages/ContentRender.tsx
++++ b/client/src/components/Messages/ContentRender.tsx
+@@ -26,6 +26,7 @@ import ResumeAuthorHeader from '~/components/Chat/Messages/Content/Parts/ResumeA
+ import ToolCallLimitNotice from '~/components/Chat/Messages/Content/ToolCallLimitNotice';
+ import { ErrorSourceProvider } from '~/components/Messages/Content/Error/source';
+ import ContentParts from '~/components/Chat/Messages/Content/ContentParts';
++import FacetActivity from '~/components/Facet/FacetActivity';
+ import { PrivateText } from '~/components/Chat/Messages/PrivateText';
+ import HoverButtons from '~/components/Chat/Messages/HoverButtons';
+ import MessageIcon from '~/components/Chat/Messages/MessageIcon';
+@@ -258,6 +259,9 @@ const ContentRender = memo(function ContentRender({
+           )}
+         </ErrorSourceProvider>
+       </AuthorContext.Provider>
++      {!msg.isCreatedByUser && (
++        <FacetActivity content={msg.content} messageId={msg?.messageId} isLatestMessage={isLatestMessage} />
++      )}
+       {/** A turn that ran out of agent steps is incomplete, not broken. Rendered
+        *   here rather than inside `ContentParts` because it is a message-level
+        *   outcome, and `ContentParts` also serves surfaces (subagent panels,
 diff --git a/client/src/locales/zh-Hans/translation.json b/client/src/locales/zh-Hans/translation.json
 index 3316633..720fe44 100644
 --- a/client/src/locales/zh-Hans/translation.json
@@ -647,11 +952,187 @@ index 3316633..720fe44 100644
 +  "com_ui_duration_announced_minutes_one": "耗时 {{value}} 分钟",
 +  "com_ui_duration_announced_minutes_other": "耗时 {{value}} 分钟"
  }
+diff --git a/client/src/utils/facet.ts b/client/src/utils/facet.ts
+new file mode 100644
+index 0000000..b3a67dc
+--- /dev/null
++++ b/client/src/utils/facet.ts
+@@ -0,0 +1,170 @@
++/** Facet Studio chat helpers: parse MCP tool parts without showing raw JSON. */
++
++export const FACET_TOOLS = new Set([
++  'ingest_source',
++  'list_sources',
++  'resolve_source',
++  'compile_content',
++  'plan_article',
++  'write_form',
++  'typeset_article',
++  'get_run',
++  'review_artifact',
++  'start_workflow',
++  'wait_workflow',
++  'resume_workflow',
++  'get_workflow',
++]);
++
++export function isFacetToolName(name: string | null | undefined): boolean {
++  if (!name) {
++    return false;
++  }
++  if (name.includes('_mcp_facet_studio')) {
++    return true;
++  }
++  return FACET_TOOLS.has(name);
++}
++
++/** A tool payload truncated by LibreChat can end inside the run id. That
++ *  fragment must not become a second card; every run id this product creates
++ *  is `timestamp_video_form`. */
++export function isFacetRunId(value: unknown): value is string {
++  const text = typeof value === 'string' ? value : '';
++  return /^\d{8}T\d{6}Z_.+_(long_article|wechat_article|xiaohongshu_note)$/.test(text);
++}
++
++export function isFacetPart(part: any): boolean {
++  if (!part || part.type !== 'tool_call') {
++    return false;
++  }
++  const tc = part.tool_call || part;
++  return isFacetToolName(tc?.name);
++}
++
++export function safeParse(text: string): unknown {
++  try {
++    return JSON.parse(text);
++  } catch {
++    // Tool output can be wrapped in prose or stringified content parts.
++  }
++  const start = text.indexOf('{');
++  const end = text.lastIndexOf('}');
++  if (start >= 0 && end > start) {
++    try {
++      return JSON.parse(text.slice(start, end + 1));
++    } catch {
++      // fall through
++    }
++  }
++  return null;
++}
++
++export function findFacetObject(value: unknown, depth = 0): Record<string, any> | null {
++  if (!value || depth > 5) {
++    return null;
++  }
++  if (typeof value === 'string') {
++    return findFacetObject(safeParse(value), depth + 1);
++  }
++  if (typeof value !== 'object') {
++    return null;
++  }
++  if (Array.isArray(value)) {
++    for (const item of value) {
++      const found = findFacetObject(item, depth + 1);
++      if (found) {
++        return found;
++      }
++    }
++    return null;
++  }
++  const obj = value as Record<string, any>;
++  if (obj.run_id || obj.preview_url || obj.trace_url || obj.interrupt) {
++    return obj;
++  }
++  for (const key of ['output', 'result', 'content', 'data', 'tool_call']) {
++    const found = findFacetObject(obj[key], depth + 1);
++    if (found) {
++      return found;
++    }
++  }
++  return null;
++}
++
++function stringField(text: string, key: string): string {
++  const at = text.indexOf(`"${key}"`);
++  if (at < 0) {
++    return '';
++  }
++  const tail = text.slice(at, at + 600);
++  const match = tail.match(/:\s*"([^"]*)"/);
++  return match?.[1] || '';
++}
++
++/** LibreChat may truncate a large MCP payload before it reaches the client.
++ *  run_id/form/status/trace_url are near the top, so recover them without
++ *  pretending the truncated JSON parsed. Full details come from /api/card. */
++function truncatedFacetPayload(text: string): Record<string, any> | null {
++  const runId = stringField(text, 'run_id');
++  if (!runId) {
++    return null;
++  }
++  return {
++    run_id: runId,
++    form: stringField(text, 'form'),
++    form_label: stringField(text, 'form_label'),
++    status: stringField(text, 'status'),
++    trace_url: stringField(text, 'trace_url'),
++    video_id: stringField(text, 'video_id'),
++  };
++}
++
++export type FacetRun = {
++  runId: string;
++  payload: Record<string, any>;
++};
++
++/** Scan a message's content parts and merge every Facet payload by run_id. */
++export function collectFacetRuns(content: Array<any> | null | undefined): FacetRun[] {
++  const runs = new Map<string, Record<string, any>>();
++  for (const part of content || []) {
++    if (!part || part.type !== 'tool_call') {
++      continue;
++    }
++    const tc = part.tool_call || part;
++    if (!isFacetToolName(tc?.name) || !tc?.output) {
++      continue;
++    }
++    const payload =
++      findFacetObject(safeParse(tc.output)) || truncatedFacetPayload(tc.output);
++    if (!payload?.run_id || !isFacetRunId(payload.run_id)) {
++      continue;
++    }
++    const runId = String(payload.run_id);
++    const previous = runs.get(runId) || {};
++    runs.set(runId, {
++      ...previous,
++      ...payload,
++      plan: payload.plan || previous.plan,
++      write: payload.write || previous.write,
++      typeset: payload.typeset || previous.typeset,
++      interrupt: payload.interrupt || previous.interrupt,
++      review: payload.review || previous.review,
++    });
++  }
++  return Array.from(runs.entries()).map(([runId, payload]) => ({ runId, payload }));
++}
++
++export function facetArtifactUrl(
++  value: string | null | undefined,
++  base: string,
++): string {
++  if (!value) {
++    return '';
++  }
++  if (/^https?:\/\//.test(value)) {
++    return value;
++  }
++  return `${base.replace(/\/+$/, '')}/${value.replace(/^\/+/, '')}`;
++}
 diff --git a/client/src/utils/toolLabels.ts b/client/src/utils/toolLabels.ts
-index 190df41..cc6d964 100644
+index 190df41..fc35838 100644
 --- a/client/src/utils/toolLabels.ts
 +++ b/client/src/utils/toolLabels.ts
-@@ -31,6 +31,26 @@ export const TOOL_FRIENDLY_NAME_KEYS: Record<string, TranslationKeys> = {
+@@ -31,6 +31,27 @@ export const TOOL_FRIENDLY_NAME_KEYS: Record<string, TranslationKeys> = {
    read_file: 'com_ui_tool_name_read_file',
  };
  
@@ -667,6 +1148,7 @@ index 190df41..cc6d964 100644
 +  get_run: '运行数据',
 +  review_artifact: '验收',
 +  start_workflow: '启动工作流',
++  wait_workflow: '等待工作流',
 +  resume_workflow: '继续工作流',
 +  get_workflow: '工作流状态',
 +};
@@ -678,7 +1160,7 @@ index 190df41..cc6d964 100644
  export interface ParsedToolName {
    /** Original tool id (unchanged). */
    raw: string;
-@@ -85,7 +105,7 @@ export function getToolDisplayLabel(
+@@ -85,7 +106,7 @@ export function getToolDisplayLabel(
    knownServerNames?: readonly string[],
  ): string {
    const parsed = parseToolName(rawName, knownServerNames);
