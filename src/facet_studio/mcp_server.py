@@ -697,7 +697,7 @@ def _render_wechat(
         "img": "max-width:100%;max-height:520px;width:auto;height:auto;display:block;margin:18px auto;border-radius:6px;",
         "figure": "margin:24px 0;",
         "figcaption": "font-size:13px;color:#8a847a;text-align:center;margin-top:6px;",
-        "table": "width:100%;min-width:560px;border-collapse:collapse;margin:20px 0;font-size:15px;",
+        "table": "width:100%;border-collapse:collapse;margin:20px 0;font-size:15px;",
         "th": "border:1px solid #d8d3c8;background:#f1ede4;padding:10px 12px;text-align:left;font-weight:650;",
         "td": "border:1px solid #d8d3c8;padding:10px 12px;text-align:left;font-variant-numeric:tabular-nums;",
         "blockquote": "margin:20px 0;padding:14px 18px;border-left:4px solid #c96442;background:#fbf4ef;color:#4a433c;border-radius:0 10px 10px 0;",
@@ -736,12 +736,28 @@ def _render_wechat(
         flags=re.DOTALL,
     )
     # Wide tables should scroll on a phone instead of forcing the column wider.
-    body = body.replace(
-        "<table>",
-        '<div class="table-hint copy-ui" style="font-size:12px;color:#8a847a;margin:16px 0 6px;">表格可左右滑动</div>'
-        '<div style="overflow-x:auto;border:1px solid #e5ded3;border-radius:10px;margin:20px 0;">'
-        "<table>",
-    ).replace("</table>", "</table></div>")
+    # Two-column tables fit the 520px preview; only 3+ columns need a min-width.
+    def _wrap_wechat_table(match: re.Match[str]) -> str:
+        table = match.group(0)
+        columns = len(re.findall(r"<th(?:\s|>)", table))
+        min_width = 560 if columns >= 4 else 480 if columns == 3 else 0
+        if min_width:
+            table = table.replace(' style="', f' style="min-width:{min_width}px;', 1)
+            hint = (
+                '<div class="table-hint copy-ui" style="font-size:12px;color:#8a847a;'
+                'margin:16px 0 6px;">表格可左右滑动</div>'
+            )
+        else:
+            hint = ""
+        return (
+            hint
+            + '<div style="overflow-x:auto;border:1px solid #e5ded3;border-radius:10px;'
+            'margin:20px 0;">'
+            + table
+            + "</div>"
+        )
+
+    body = re.sub(r"<table[^>]*>.*?</table>", _wrap_wechat_table, body, flags=re.DOTALL)
     total, minutes = _reading_stats(markdown)
     meta = f"{total:,} 字 · 约 {minutes} 分钟"
     return f"""<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
