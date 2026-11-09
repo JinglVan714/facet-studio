@@ -76,9 +76,7 @@ def extract_wav(media: Path, wav_path: Path, limit_s: float | None = None) -> di
     }
 
 
-def transcribe(wav_path: Path, model: str = DEFAULT_ASR_MODEL,
-               ws_endpoint: str = DEFAULT_ASR_WS_ENDPOINT) -> dict:
-    """调用百炼 ASR，返回**原稿**（含字级时间戳与完整原始元数据）。"""
+def _transcribe_dashscope(wav_path: Path, model: str, ws_endpoint: str) -> dict:
     certifi_path = apply_ssl_shim()
     import dashscope
     from dashscope.audio.asr import Recognition
@@ -126,6 +124,16 @@ def transcribe(wav_path: Path, model: str = DEFAULT_ASR_MODEL,
         "missing_words_reason": None,           # 字级时间戳缺失时在这里写原因，不许留空沉默
         "sentences": sentences,
     }
+
+
+def transcribe(wav_path: Path, model: str = DEFAULT_ASR_MODEL,
+               ws_endpoint: str = DEFAULT_ASR_WS_ENDPOINT) -> dict:
+    """Transcribe with DashScope (Qwen-Audio 3.1 ASR).
+
+    A non-200 response is an explicit failure; there is no local ASR fallback
+    in the product path.
+    """
+    return _transcribe_dashscope(wav_path, model, ws_endpoint)
 
 
 def write_transcript(doc: dict, out_dir: Path, stem: str = "transcript") -> dict[str, str]:

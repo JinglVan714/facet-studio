@@ -12,6 +12,7 @@ import json
 import os
 import subprocess
 import sys
+import urllib.request
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -85,7 +86,8 @@ def acquire_url(url: str, max_height: int = 1080) -> dict:
         raise RuntimeError(f"yt-dlp download failed: {p.stderr[-500:]}")
 
     media = _pick_media(raw_dir)
-    info = _source_record(vid, url, meta, media, max_height)
+    cover = _download_cover(meta, vid)
+    info = _source_record(vid, url, meta, media, max_height, cover)
     (DATA_DIR / vid / "source.json").write_text(json.dumps(info, ensure_ascii=False, indent=2),
                                                 encoding="utf-8")
     return info
@@ -110,6 +112,7 @@ def acquire_local(path_str: str) -> dict:
         "audio_only_path": None,
         "max_height_requested": None,
         "extractor": None,
+        "cover_path": None,
     }
     (DATA_DIR / vid).mkdir(parents=True, exist_ok=True)
     (DATA_DIR / vid / "source.json").write_text(json.dumps(info, ensure_ascii=False, indent=2),
@@ -141,7 +144,36 @@ def _pick_media(raw_dir: Path) -> Path:
     return candidates[0]
 
 
-def _source_record(vid: str, url: str, meta: dict, media: Path, max_height: int) -> dict:
+def _download_cover(meta: dict, vid: str) -> Path | None:
+    """Save the platform thumbnail as the video cover (used by PDF title pages)."""
+    url = meta.get("thumbnail")
+    if not url:
+        thumbs = meta.get("thumbnails") or []
+        url = next((item.get("url") for item in reversed(thumbs) if item.get("url")), None)
+    if not url:
+        return None
+    target = DATA_DIR / vid / "cover.jpg"
+    try:
+        request = urllib.request.Request(
+            url,
+            headers={
+                "User-Agent": "Mozilla/5.0",
+                "Referer": "https://www.bilibili.com/",
+            },
+        )
+        with urllib.request.urlopen(request, timeout=30) as response:
+            data = response.read()
+        if not data:
+            return None
+        target.write_bytes(data)
+        return target
+    except Exception:  # noqa: BLE001 - cover is optional metadata
+        return None
+
+
+def _source_record(
+    vid: str, url: str, meta: dict, media: Path, max_height: int, cover: Path | None = None
+) -> dict:
     raw_dir = media.parent
     all_media = sorted((f for f in raw_dir.iterdir()
                         if f.suffix.lower() in {".mp4", ".mkv", ".webm", ".flv", ".m4a"}),
@@ -164,4 +196,5 @@ def _source_record(vid: str, url: str, meta: dict, media: Path, max_height: int)
         "raw_files": [f.name for f in all_media],
         "max_height_requested": max_height,
         "extractor": meta.get("extractor"),
+        "cover_path": rel(cover) if cover else None,
     }

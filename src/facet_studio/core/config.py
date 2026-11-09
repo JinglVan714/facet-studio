@@ -12,6 +12,11 @@ from pathlib import Path
 
 _ENV_LOADED = False
 
+#: Cached content manuscript directory under the runs root.  Kept in one
+#: place so the MCP server, the ingest bridge and the preview/eval tools do
+#: not disagree when ``FACET_STUDIO_RUNS_ROOT`` is overridden.
+CONTENT_CACHE_DIRNAME = "writing_rebuild_2026-11-04"
+
 
 def project_root() -> Path:
     override = os.getenv("FACET_STUDIO_PROJECT_ROOT")

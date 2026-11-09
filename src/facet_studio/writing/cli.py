@@ -5,14 +5,14 @@ Dry-run is the default; pass ``--run`` to perform one Writer call.
 Example::
 
     python -m facet_studio.writing.cli \\
-      --request evals/writing/requests/BV17.json \\
+      --request evals/writing/requests/<video_id>.json \\
       --skill-dir skills/writing/reader_first_explainer \\
-      --index runs/_consume_index/BV17.json \\
-      --edited-text runs/m1_light/BV17/light_text.txt \\
-      --pack runs/m1_light/BV17/light_pack.json \\
-      --sentences runs/v3_poc/BV17_transcript/sentences.json \\
-      --source-map runs/m1_light/BV17/source_map.json \\
-      --out-dir runs/_writing/BV17
+      --index runs/_consume_index/<video_id>.json \\
+      --edited-text runs/m1_light/<video_id>/light_text.txt \\
+      --pack runs/m1_light/<video_id>/light_pack.json \\
+      --sentences runs/v3_poc/<video_id>_transcript/sentences.json \\
+      --source-map runs/m1_light/<video_id>/source_map.json \\
+      --out-dir runs/_writing/<video_id>
 """
 
 from __future__ import annotations

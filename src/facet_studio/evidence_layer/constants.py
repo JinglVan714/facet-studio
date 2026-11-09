@@ -12,16 +12,6 @@ PROJECT_ROOT = Path(
     os.getenv("FACET_STUDIO_PROJECT_ROOT")
     or Path(__file__).resolve().parents[3]
 ).resolve()
-DATA_DIR = Path(
-    os.getenv("FACET_STUDIO_DATA_ROOT") or PROJECT_ROOT / "data"
-).expanduser().resolve()
-RESULTS_DIR = PROJECT_ROOT / "results"
-SETTINGS_DIR = Path(
-    os.getenv("FACET_STUDIO_SETTINGS_ROOT") or PROJECT_ROOT / "settings"
-).expanduser().resolve()
-TOOLS_DIR = PROJECT_ROOT / "tools"
-
-COOKIES_PATH = DATA_DIR / "cookies" / "bilibili.txt"
 
 
 def load_env() -> None:
@@ -45,6 +35,23 @@ def load_env() -> None:
         k, _, v = line.partition("=")
         os.environ.setdefault(k.strip(), v.strip())
 
+
+# Load the project .env before deriving paths.  A `FACET_STUDIO_DATA_ROOT`
+# that exists only in .env must be visible to DATA_DIR; deriving paths first
+# would freeze the default and silently ignore the configured root.
+load_env()
+
+DATA_DIR = Path(
+    os.getenv("FACET_STUDIO_DATA_ROOT") or PROJECT_ROOT / "data"
+).expanduser().resolve()
+RESULTS_DIR = PROJECT_ROOT / "results"
+SETTINGS_DIR = Path(
+    os.getenv("FACET_STUDIO_SETTINGS_ROOT") or PROJECT_ROOT / "settings"
+).expanduser().resolve()
+TOOLS_DIR = PROJECT_ROOT / "tools"
+
+COOKIES_PATH = DATA_DIR / "cookies" / "bilibili.txt"
+
 # ---- 音频 ----
 SAMPLE_RATE = 16000
 SAMPLE_WIDTH = 2            # s16
@@ -59,7 +66,9 @@ DEFAULT_FRAME_HEIGHT = 720
 DEFAULT_PHASH_DISTANCE = 8          # 仅用于标记重复，不删帧
 
 # ---- ASR ----
-DEFAULT_ASR_MODEL = "qwen-audio-3.0-asr-flash-streaming"
+# 3.0 free tier can be exhausted (status=44); 3.1 is the current working
+# streaming model on the same endpoint and supports word timestamps.
+DEFAULT_ASR_MODEL = "qwen-audio-3.1-asr-flash-streaming"
 DEFAULT_ASR_WS_ENDPOINT = "wss://maas.qianwenaiapi.com/api-ws/v1/inference"
 DEFAULT_VLM_MODEL = "qwen3.8-27b"
 # 额度用尽时的备选（用户提供）：同理是视觉模型，接口一致，只换 model 名

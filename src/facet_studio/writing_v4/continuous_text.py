@@ -13,6 +13,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import re
 from pathlib import Path
 from typing import Any
 
@@ -97,13 +98,63 @@ def _select_for_paragraph(
     return selected
 
 
+_UI_ONLY = {
+    "设置",
+    "插件",
+    "插件配置",
+    "插件列表",
+    "模型",
+    "通用设置",
+    "预览版",
+    "标准模式",
+    "自定义",
+    "当前使用",
+}
+
+
+def _short_note(text: str, limit: int = 80) -> str:
+    parts = [part.strip() for part in re.split(r"[；\n]+", text or "") if part.strip()]
+    parts = [
+        part.replace("[unclear]", "").strip()
+        for part in parts
+        if "bilibili" not in part.lower()
+    ]
+    parts = [part for part in parts if part and part not in _UI_ONLY]
+    deduped: list[str] = []
+    for part in sorted(parts, key=len, reverse=True):
+        if any(part in existing or existing in part for existing in deduped):
+            continue
+        deduped.append(part)
+    parts = deduped
+
+    def score(part: str) -> int:
+        value = len(part)
+        if any(char.isdigit() for char in part):
+            value += 20
+        if any(char in part for char in "：:；;|"):
+            value += 8
+        if len(part) < 4:
+            value -= 40
+        return value
+
+    ranked = sorted(range(len(parts)), key=lambda i: score(parts[i]), reverse=True)
+    keep = sorted(ranked[:2])
+    hint = "；".join(parts[index] for index in keep).strip("； ")
+    if len(hint) > limit:
+        hint = hint[:limit].rstrip() + "…"
+    return hint or "画面"
+
+
 def _visual_note(frames: list[dict[str, Any]], *, path_prefix: str) -> str:
     if not frames:
         return ""
     parts: list[str] = []
     for frame in frames:
-        text = frame["text"] if frame["text"] else "无文字"
-        parts.append(f"画面：{text}；图：`{path_prefix}{frame['path']}`")
+        text = _short_note(frame["text"]) if frame["text"] else "画面"
+        parts.append(
+            "画面参考（可选，非必用）："
+            f"{text}；图：`{path_prefix}{frame['path']}`"
+        )
     return "（" + " ｜ ".join(parts) + "）"
 
 
@@ -154,9 +205,7 @@ def build_continuous_text(
         while frame_index < len(frames) and frames[frame_index]["t_ms"] <= end:
             candidates.append(frames[frame_index])
             frame_index += 1
-        selected = _select_for_paragraph(
-            candidates, max_frames=2 if len(text) > 250 else 1
-        )
+        selected = _select_for_paragraph(candidates, max_frames=1)
         note = _visual_note(selected, path_prefix=path_prefix)
         if note:
             parts.append("")
@@ -164,7 +213,7 @@ def build_continuous_text(
         parts.append("")
 
     if frame_index < len(frames):
-        selected = _select_for_paragraph(frames[frame_index:], max_frames=2)
+        selected = _select_for_paragraph(frames[frame_index:], max_frames=1)
         note = _visual_note(selected, path_prefix=path_prefix)
         if note:
             parts.append(note)

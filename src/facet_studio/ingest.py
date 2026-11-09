@@ -11,7 +11,7 @@ import hashlib
 from pathlib import Path
 from typing import Any
 
-from .core.config import get_settings
+from .core.config import CONTENT_CACHE_DIRNAME, get_settings
 from .evidence_layer import acquire
 from .evidence_layer.ingest import run_ingest
 from .writing_v4.content_manuscript import build_content_manuscript
@@ -24,12 +24,18 @@ def ingest_source(
     force: bool = False,
     max_height: int = 1080,
     build_content: bool = True,
+    include_evidence: bool = False,
 ) -> dict[str, Any]:
     """Acquire a URL/local video and build a cached content manuscript.
 
     ``target`` is a Bilibili URL or a local video path.  The returned
     ``content_path`` is placed where the existing MCP source resolver already
     looks, so the normal plan/write/typeset flow can use it immediately.
+
+    The product path defaults to ``include_evidence=False``: the writing layer
+    only consumes transcript + frames + VLM captions, so the paid contract/L1
+    knowledge substrate is skipped.  Set ``include_evidence=True`` when the
+    evidence pipeline itself is the goal.
     """
     if profile not in {"fast", "quality"}:
         raise ValueError(f"profile 必须是 fast/quality：{profile}")
@@ -40,10 +46,15 @@ def ingest_source(
         else acquire.acquire_local(target)
     )
     video_id = str(info["video_id"])
-    ingestion = run_ingest(video_id, profile=profile, force=force)
+    ingestion = run_ingest(
+        video_id,
+        profile=profile,
+        force=force,
+        content_only=not include_evidence,
+    )
     content_path = (
         settings.runs_root
-        / "writing_rebuild_2026-11-04"
+        / CONTENT_CACHE_DIRNAME
         / video_id
         / "content_final_v3"
         / "content.md"

@@ -8,6 +8,7 @@ checker.  It adds state, checkpointing, streaming events and two human gates
 
 from __future__ import annotations
 
+import json
 import os
 import time
 import uuid
@@ -31,6 +32,7 @@ from .mcp_server import (
     typeset_article,
     write_form,
 )
+from .observability import write_trace
 
 REVIEW_DECISIONS = {"approved", "changes_requested", "rejected"}
 
@@ -88,6 +90,92 @@ def _stage(
         }
     )
     return stages
+
+
+def _write_stage_tool_calls(run_id: str, stages: list[dict[str, Any]]) -> None:
+    """Expose each workflow stage as a tool/step span in tool_calls.jsonl.
+
+    The product workflow calls Python functions directly, not the writing_v4
+    ToolRegistry.  Recording the stage boundary keeps tool/step observability
+    honest without inventing a second execution layer.
+    """
+    rows = []
+    for index, stage in enumerate(stages, start=1):
+        usage = stage.get("usage") or {}
+        rows.append(
+            {
+                "call_id": f"stage_{index}_{stage.get('name') or 'step'}",
+                "run_id": run_id,
+                "tool_name": str(stage.get("name") or "step"),
+                "actor": "workflow",
+                "status": str(stage.get("status") or ""),
+                "latency_ms": int(stage.get("duration_ms") or 0),
+                "usage": usage,
+                "error": stage.get("error"),
+                "created_at": stage.get("at") or _now(),
+            }
+        )
+    path = _run_dir(run_id) / "tool_calls.jsonl"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "\n".join(json.dumps(row, ensure_ascii=False) for row in rows) + "\n",
+        encoding="utf-8",
+    )
+
+
+def _write_stage_decisions(
+    run_id: str,
+    values: dict[str, Any],
+    stages: list[dict[str, Any]],
+) -> None:
+    """Record plan/approval/review decisions for the run trace page."""
+    rows: list[dict[str, Any]] = []
+    for stage in stages:
+        name = str(stage.get("name") or "")
+        status = str(stage.get("status") or "")
+        if name == "plan" and status == "succeeded":
+            rows.append(
+                {
+                    "decision_id": f"dec_{run_id}_plan",
+                    "run_id": run_id,
+                    "stage": "plan",
+                    "question": "这次写哪种形态？",
+                    "selected": str(values.get("form") or ""),
+                    "decided_by": "lead_planner",
+                    "basis": str((values.get("plan") or {}).get("central_idea") or ""),
+                    "created_at": stage.get("at") or _now(),
+                }
+            )
+        elif name == "approval":
+            rows.append(
+                {
+                    "decision_id": f"dec_{run_id}_approval",
+                    "run_id": run_id,
+                    "stage": "approval",
+                    "question": "确认计划卡后继续写作？",
+                    "selected": status,
+                    "decided_by": "auto_approve" if status == "auto_approved" else "user",
+                    "created_at": stage.get("at") or _now(),
+                }
+            )
+        elif name == "review":
+            rows.append(
+                {
+                    "decision_id": f"dec_{run_id}_review",
+                    "run_id": run_id,
+                    "stage": "review",
+                    "question": "产物是否验收通过？",
+                    "selected": status,
+                    "decided_by": "auto_accept" if status == "auto_accepted" else "user",
+                    "created_at": stage.get("at") or _now(),
+                }
+            )
+    path = _run_dir(run_id) / "decision_records.jsonl"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "\n".join(json.dumps(row, ensure_ascii=False) for row in rows) + "\n",
+        encoding="utf-8",
+    )
 
 
 def _decision(value: Any) -> tuple[str, str]:
@@ -341,13 +429,14 @@ def _chunk_events(chunk: Any) -> list[dict[str, Any]]:
                 if isinstance(update, (list, tuple))
                 else update
             )
-            events.append({"type": "interrupt", "value": values})
+            events.append({"type": "interrupt", "value": values, "at": _now()})
         else:
             events.append(
                 {
                     "type": "update",
                     "node": node,
                     "keys": sorted(update.keys()) if isinstance(update, dict) else [],
+                    "at": _now(),
                 }
             )
     return events
@@ -386,9 +475,19 @@ def _snapshot_result(
         for item in (getattr(snapshot, "interrupts", ()) or ())
     ]
     usage = values.get("usage") or {}
+    trace_url = None
+    if (_run_dir(run_id) / "trace.html").is_file():
+        base = str(
+            os.environ.get("FACET_STUDIO_PREVIEW_BASE", "http://127.0.0.1:8765/runs")
+        ).rstrip("/")
+        trace_url = f"{base}/{run_id}"
     return {
         "run_id": run_id,
         "thread_id": run_id,
+        "trace_url": trace_url,
+        "video_id": values.get("video_id"),
+        "form": values.get("form"),
+        "request": values.get("request"),
         "status": status,
         "next": next_nodes,
         "interrupt": interrupts[0] if interrupts else None,
@@ -435,9 +534,35 @@ def _execute(
                         on_event(event, step, 8)
                     except Exception:  # noqa: BLE001 - progress is advisory
                         pass
+            # Keep the trace page live while the workflow is still running.
+            # Checks/grounding are deliberately skipped here; they run at the
+            # end and would be noisy on an incomplete artifact.
+            live_snapshot = app.get_state(config)
+            live_result = _snapshot_result(run_id, live_snapshot, events)
+            _write_json(path, live_result)
+            meta_path = _run_dir(run_id) / "run_meta.json"
+            if meta_path.is_file():
+                write_trace(
+                    run_id,
+                    _run_dir(run_id),
+                    _read_json(meta_path),
+                    live=True,
+                    include_checks=False,
+                    include_grounding=False,
+                )
         snapshot = app.get_state(config)
         result = _snapshot_result(run_id, snapshot, events)
         _write_json(path, result)
+        _write_stage_tool_calls(run_id, result.get("stages") or [])
+        _write_stage_decisions(
+            run_id,
+            dict(snapshot.values or {}),
+            result.get("stages") or [],
+        )
+        run_dir = _run_dir(run_id)
+        meta_path = run_dir / "run_meta.json"
+        if meta_path.is_file():
+            write_trace(run_id, run_dir, _read_json(meta_path))
         return result
 
 

@@ -39,6 +39,107 @@ def _result(check_id: str, passed: bool, detail: str) -> dict[str, Any]:
     return {"check_id": check_id, "passed": bool(passed), "detail": detail}
 
 
+def sanitize_paths(value: Any, roots: list[Path]) -> Any:
+    """Replace local absolute roots in a report with ``<project>``.
+
+    Reports are committed as developer evidence; absolute machine paths add no
+    value and leak the local layout.  This is a display-time transform only.
+    """
+    if isinstance(value, dict):
+        return {key: sanitize_paths(item, roots) for key, item in value.items()}
+    if isinstance(value, list):
+        return [sanitize_paths(item, roots) for item in value]
+    if isinstance(value, str):
+        text = value
+        for root in roots:
+            text = text.replace(str(root), "<project>")
+        return text
+    return value
+
+
+def _workflow_trajectory_checks(
+    *,
+    workflow: dict[str, Any],
+    stage_names: list[str],
+    stage_status: dict[str, str],
+    planner_usage: dict[str, Any],
+    write_usage: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Trajectory checks over the LangGraph workflow trace.
+
+    These are process checks, not writing-quality scores: stage presence and
+    order, no editor/checker/repair stages, no failed stage, the human review
+    gate, and usage being recorded for plan/write.
+    """
+    checks: list[dict[str, Any]] = []
+    checks.append(
+        _result(
+            "trajectory_stages",
+            all(name in stage_names for name in REQUIRED_STAGES),
+            f"stages={stage_names}",
+        )
+    )
+    ordered = [name for name in stage_names if name in REQUIRED_STAGES]
+    checks.append(
+        _result(
+            "trajectory_order",
+            ordered == REQUIRED_STAGES,
+            f"ordered={ordered}",
+        )
+    )
+    forbidden = [name for name in stage_names if name in {"editor", "checker", "repair"}]
+    checks.append(
+        _result(
+            "trajectory_no_editor",
+            not forbidden,
+            f"forbidden={forbidden}",
+        )
+    )
+    failed = [
+        name
+        for name, status in stage_status.items()
+        if status in {"failed", "error"}
+    ]
+    workflow_errors = [str(item) for item in (workflow.get("errors") or [])]
+    checks.append(
+        _result(
+            "trajectory_failures",
+            not failed and not workflow_errors,
+            f"failed_stages={failed}, errors={workflow_errors}",
+        )
+    )
+    review_status = stage_status.get("review") or ""
+    checks.append(
+        _result(
+            "trajectory_hitl",
+            review_status in {"approved", "auto_accepted"},
+            f"review_status={review_status or 'missing'}",
+        )
+    )
+    stage_usage = {
+        str(item.get("name") or ""): item.get("usage") or {}
+        for item in (workflow.get("stages") or [])
+    }
+    plan_tokens = int(
+        stage_usage.get("plan", {}).get("total_tokens")
+        or planner_usage.get("total_tokens")
+        or 0
+    )
+    write_tokens = int(
+        stage_usage.get("write", {}).get("total_tokens")
+        or write_usage.get("total_tokens")
+        or 0
+    )
+    checks.append(
+        _result(
+            "trajectory_usage",
+            plan_tokens > 0 and write_tokens > 0,
+            f"plan_tokens={plan_tokens}, write_tokens={write_tokens}",
+        )
+    )
+    return checks
+
+
 def _check_run(
     spec: dict[str, Any],
     *,
@@ -164,13 +265,20 @@ def _check_run(
 
     stages = workflow.get("stages") or []
     stage_names = [str(item.get("name") or "") for item in stages]
+    stage_status = {
+        str(item.get("name") or ""): str(item.get("status") or "") for item in stages
+    }
     planner_trace = bool(planner_usage)
     if workflow:
-        trajectory_ok = all(name in stage_names for name in REQUIRED_STAGES)
-        trajectory_ok = trajectory_ok and not any(
-            name in {"editor", "checker", "repair"} for name in stage_names
+        checks.extend(
+            _workflow_trajectory_checks(
+                workflow=workflow,
+                stage_names=stage_names,
+                stage_status=stage_status,
+                planner_usage=planner_usage,
+                write_usage=write_usage,
+            )
         )
-        trajectory_detail = f"workflow stages={stage_names}"
     else:
         writer_calls = int(bool(write_usage))
         # Older approved runs predate planner_usage; do not call that a
@@ -181,10 +289,13 @@ def _check_run(
         trajectory_detail = (
             f"legacy planner_trace={planner_trace}, writer_calls={writer_calls}"
         )
-    checks.append(_result("trajectory", trajectory_ok, trajectory_detail))
+        checks.append(_result("trajectory", trajectory_ok, trajectory_detail))
 
-    total_tokens = int(planner_usage.get("total_tokens") or 0) + int(
-        write_usage.get("total_tokens") or 0
+    audit_usage = meta.get("visual_audit_usage") or {}
+    total_tokens = (
+        int(planner_usage.get("total_tokens") or 0)
+        + int(write_usage.get("total_tokens") or 0)
+        + int(audit_usage.get("total_tokens") or 0)
     )
     latency = int(meta.get("planner_latency_ms") or 0) + int(
         write.get("latency_ms") or 0
@@ -193,7 +304,7 @@ def _check_run(
         _result(
             "usage_present",
             total_tokens > 0 and latency > 0,
-            f"tokens={total_tokens}, latency_ms={latency}",
+            f"tokens={total_tokens} (plan+write+visual_audit), latency_ms={latency} (plan+write)",
         )
     )
 
@@ -276,6 +387,11 @@ def _check_run(
         "status": status,
         "form": form,
         "passed": all(item["passed"] for item in checks),
+        "contract_passed": all(
+            item["passed"]
+            for item in checks
+            if item["check_id"] != "manual_acceptance"
+        ),
         "checks": checks,
         "metrics": {
             "body_chars": body_chars,
@@ -306,6 +422,9 @@ def evaluate(
     results = [_check_run(spec, runs_root=runs_root) for spec in cases]
     run_results = [item for item in results if item["status"] not in {"not_run", "missing"}]
     passed = [item for item in run_results if item["passed"]]
+    contract_passed = [
+        item for item in run_results if item.get("contract_passed")
+    ]
     latencies = [
         int(item["metrics"].get("latency_ms") or 0)
         for item in run_results
@@ -321,9 +440,22 @@ def evaluate(
         for item in run_results
         if item["status"] in {"failed", "partial"}
         or any(
-            not check["passed"] and check["check_id"] in {"status_healthy", "trajectory"}
+            not check["passed"]
+            and (
+                check["check_id"] == "status_healthy"
+                or check["check_id"].startswith("trajectory")
+            )
             for check in item["checks"]
         )
+    ]
+    trajectory_checks = [
+        check
+        for item in run_results
+        for check in item["checks"]
+        if check["check_id"].startswith("trajectory")
+    ]
+    trajectory_passed = [
+        check for check in trajectory_checks if check["passed"]
     ]
     summary = {
         "cases_total": len(results),
@@ -331,6 +463,11 @@ def evaluate(
         "cases_missing": len(results) - len(run_results),
         "cases_passed": len(passed),
         "deterministic_pass_rate": round(len(passed) / len(run_results), 4)
+        if run_results
+        else None,
+        # Machine contract only; manual acceptance is reported separately
+        # because the user remains the only publish gate.
+        "contract_pass_rate": round(len(contract_passed) / len(run_results), 4)
         if run_results
         else None,
         # task-success pass@1 / pass^k need judged trials; do not label the
@@ -351,6 +488,12 @@ def evaluate(
             4,
         )
         if run_results
+        else None,
+        "trajectory_checks": len(trajectory_checks),
+        "trajectory_pass_rate": round(
+            len(trajectory_passed) / len(trajectory_checks), 4
+        )
+        if trajectory_checks
         else None,
         "p50_latency_ms": int(statistics.median(latencies)) if latencies else 0,
         "p95_latency_ms": _p95(latencies),
@@ -382,10 +525,14 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"- created_at: `{report['created_at']}`",
         f"- cases: {summary['cases_run']} run / {summary['cases_total']} total"
         f" ({summary['cases_missing']} missing)",
-        f"- deterministic pass rate: {summary['deterministic_pass_rate']}",
+        f"- deterministic pass rate (incl. manual acceptance): "
+        f"{summary['deterministic_pass_rate']}",
+        f"- contract pass rate (machine checks only): {summary['contract_pass_rate']}",
         f"- pass@1 / pass^k: not computed (needs judged trials)",
         f"- manual acceptance: {summary['manual_acceptance_rate']}",
         f"- planner trace: {summary['planner_trace_rate']}",
+        f"- trajectory checks: {summary['trajectory_checks']} "
+        f"(pass rate {summary['trajectory_pass_rate']})",
         f"- error rate: {summary['error_rate']}",
         f"- p50/p95 latency: {summary['p50_latency_ms']} / {summary['p95_latency_ms']} ms",
         f"- tokens: {summary['total_tokens']}",
@@ -413,6 +560,20 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--cases", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--runs-root", type=Path, default=None)
+    parser.add_argument(
+        "--gate",
+        action="store_true",
+        help=(
+            "exit non-zero unless all cases are run, deterministic and trajectory "
+            "pass rates meet --gate-min-pass, and error rate is zero"
+        ),
+    )
+    parser.add_argument("--gate-min-pass", type=float, default=1.0)
+    parser.add_argument(
+        "--gate-require-manual",
+        action="store_true",
+        help="also require manual acceptance rate to meet --gate-min-pass",
+    )
     args = parser.parse_args(argv)
 
     cases_payload = _read_json(args.cases)
@@ -420,6 +581,9 @@ def main(argv: list[str] | None = None) -> int:
     settings = get_settings()
     runs_root = args.runs_root or settings.runs_root
     report = evaluate(cases, runs_root=Path(runs_root))
+    report = sanitize_paths(
+        report, [settings.project_root, Path(runs_root).resolve()]
+    )
     args.out.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     json_path = args.out / f"report-{stamp}.json"
@@ -431,6 +595,24 @@ def main(argv: list[str] | None = None) -> int:
     print(json_path)
     print(md_path)
     print(json.dumps(report["summary"], ensure_ascii=False, indent=2))
+    if args.gate:
+        summary = report["summary"]
+        failures: list[str] = []
+        if summary["cases_missing"]:
+            failures.append(f"missing cases: {summary['missing_cases']}")
+        keys = ["contract_pass_rate", "trajectory_pass_rate"]
+        if args.gate_require_manual:
+            keys.append("manual_acceptance_rate")
+        for key in keys:
+            value = summary.get(key)
+            if value is None or value < args.gate_min_pass:
+                failures.append(f"{key}={value} < {args.gate_min_pass}")
+        if summary.get("error_rate"):
+            failures.append(f"error_rate={summary['error_rate']}")
+        if failures:
+            print("GATE FAILED: " + "; ".join(failures))
+            return 1
+        print(f"GATE PASSED at min pass rate {args.gate_min_pass}")
     return 0
 
 

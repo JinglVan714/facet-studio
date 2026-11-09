@@ -74,8 +74,6 @@ VOICE_REPLACEMENTS = (
     ("我保证", ""),
     ("大家相信我", ""),
     ("相信我", ""),
-    ("我的摄像头只能在这里", ""),
-    ("我这个摄像头只能在这里", ""),
     ("大家好", ""),
     ("朋友们好", ""),
     ("hello", ""),
@@ -108,6 +106,62 @@ def _normalize_ocr_numbers(text: str) -> str:
 def _figure_name(index: int, source: Path) -> str:
     suffix = source.suffix.lower() or ".jpg"
     return f"fig-{index:02d}{suffix}"
+
+
+_UI_ONLY = {
+    "设置",
+    "插件",
+    "插件配置",
+    "插件列表",
+    "模型",
+    "通用设置",
+    "预览版",
+    "标准模式",
+    "自定义",
+    "当前使用",
+}
+
+
+def _short_visual_note(text: str, limit: int = 80) -> str:
+    """Short, de-noised visual reference for the writer.
+
+    The full OCR caption stays in the evidence layer; the writer only needs a
+    hint to decide whether a keyframe is worth using.  Long OCR dumps were
+    crowding out the actual content, so rank lines by informativeness, keep at
+    most two, and hard-cap the result.
+    """
+    parts = [part.strip() for part in re.split(r"[；\n]+", text or "") if part.strip()]
+    parts = [
+        part.replace("[unclear]", "").strip()
+        for part in parts
+        if "bilibili" not in part.lower()
+    ]
+    parts = [part for part in parts if part and part not in _UI_ONLY]
+    # OCR often repeats the same line with a truncated copy; keep the longer
+    # version so the note does not repeat itself.
+    deduped: list[str] = []
+    for part in sorted(parts, key=len, reverse=True):
+        if any(part in existing or existing in part for existing in deduped):
+            continue
+        deduped.append(part)
+    parts = deduped
+
+    def score(part: str) -> int:
+        value = len(part)
+        if any(char.isdigit() for char in part):
+            value += 20
+        if any(char in part for char in "：:；;|"):
+            value += 8
+        if len(part) < 4:
+            value -= 40
+        return value
+
+    ranked = sorted(range(len(parts)), key=lambda i: score(parts[i]), reverse=True)
+    keep = sorted(ranked[:2])
+    hint = "；".join(parts[index] for index in keep).strip("； ")
+    if len(hint) > limit:
+        hint = hint[:limit].rstrip() + "…"
+    return hint or "画面"
 
 
 def build_content_manuscript(
@@ -161,28 +215,44 @@ def build_content_manuscript(
         while frame_index < len(frames) and frames[frame_index]["t_ms"] <= end:
             candidates.append(frames[frame_index])
             frame_index += 1
-        selected = _select_for_paragraph(
-            candidates, max_frames=2 if len(text) > 250 else 1
-        )
+        selected = _select_for_paragraph(candidates, max_frames=1)
         notes: list[str] = []
         for frame in selected:
             figure_number += 1
             relative = figure_path(frame, figure_number)
-            caption = _normalize_ocr_numbers(_normalize_voice(_strip_video_meta(frame["text"]))) if frame["text"] else "无文字"
-            notes.append(f"图示 {figure_number}：{caption}；图：{relative}")
+            caption = (
+                _normalize_ocr_numbers(
+                    _normalize_voice(_strip_video_meta(frame["text"]))
+                )
+                if frame["text"]
+                else ""
+            )
+            notes.append(
+                f"画面参考 {figure_number}（可选，非必用）："
+                f"{_short_visual_note(caption)}；图：{relative}"
+            )
         if notes:
             parts.append("")
             parts.append("（" + " ｜ ".join(notes) + "）")
         parts.append("")
 
     if frame_index < len(frames):
-        selected = _select_for_paragraph(frames[frame_index:], max_frames=2)
+        selected = _select_for_paragraph(frames[frame_index:], max_frames=1)
         notes = []
         for frame in selected:
             figure_number += 1
             relative = figure_path(frame, figure_number)
-            caption = _normalize_ocr_numbers(_normalize_voice(_strip_video_meta(frame["text"]))) if frame["text"] else "无文字"
-            notes.append(f"图示 {figure_number}：{caption}；图：{relative}")
+            caption = (
+                _normalize_ocr_numbers(
+                    _normalize_voice(_strip_video_meta(frame["text"]))
+                )
+                if frame["text"]
+                else ""
+            )
+            notes.append(
+                f"画面参考 {figure_number}（可选，非必用）："
+                f"{_short_visual_note(caption)}；图：{relative}"
+            )
         if notes:
             parts.append("（" + " ｜ ".join(notes) + "）")
             parts.append("")

@@ -27,6 +27,7 @@ def run_ingest(video_id: str, *, profile: str = "fast", force: bool = False,
                vlm_batch_size: int = 8,
                allow_partial_vlm: bool = False,
                scene: bool | None = None,
+               content_only: bool = False,
                print_summary: bool = True) -> dict:
     t_all = time.time()
     stages: dict[str, float] = {}
@@ -93,34 +94,42 @@ def run_ingest(video_id: str, *, profile: str = "fast", force: bool = False,
     vlm_ran = bool(vlm_jobs)
     stages["vlm"] = round(time.time() - t, 1)
 
-    # Contract: one model call over the whole transcript's units.
-    t = time.time()
+    # Contract + L1: the writing layer consumes transcript + frames + VLM
+    # captions only.  ``content_only`` skips this paid knowledge substrate for
+    # the product path; the evidence pipeline can still request it explicitly.
     contract_path = root / "substrate" / "contract.json"
-    contract_rebuilt = force or not contract_path.exists()
-    if contract_rebuilt:
-        from .contract import _linearize, build_contract, write_contract
-        from .corpus import load_corpus
-        from .extract_l1 import _client
-        from .units import build_units
-        corpus = load_corpus(video_id)
-        units, _ = build_units(corpus)
-        contract = build_contract(_client(), model, _linearize(units))
-        contract_path.parent.mkdir(parents=True, exist_ok=True)
-        write_contract(contract, contract_path.parent)
-    stages["contract"] = round(time.time() - t, 1)
-
-    # L1: chunk checkpoints make this resumable; skip if already present.
-    t = time.time()
-    assertions = root / "substrate" / "assertions.jsonl"
-    if force or contract_rebuilt or vlm_ran or not assertions.exists():
-        from .run_l1 import run_l1_units
-        report = run_l1_units(video_id, model=model, concurrency=l1_concurrency)
-        stages["l1"] = round(time.time() - t, 1)
-        l1_summary = {"assertions": report.get("assertion_count"),
-                      "relations": report.get("relation_count")}
+    if content_only:
+        stages["contract"] = 0.0
+        stages["l1"] = 0.0
+        l1_summary = {"skipped": "content_only"}
     else:
-        l1_summary = {"skipped": "assertions.jsonl exists"}
-        stages["l1"] = round(time.time() - t, 1)
+        # Contract: one model call over the whole transcript's units.
+        t = time.time()
+        contract_rebuilt = force or not contract_path.exists()
+        if contract_rebuilt:
+            from .contract import _linearize, build_contract, write_contract
+            from .corpus import load_corpus
+            from .extract_l1 import _client
+            from .units import build_units
+            corpus = load_corpus(video_id)
+            units, _ = build_units(corpus)
+            contract = build_contract(_client(), model, _linearize(units))
+            contract_path.parent.mkdir(parents=True, exist_ok=True)
+            write_contract(contract, contract_path.parent)
+        stages["contract"] = round(time.time() - t, 1)
+
+        # L1: chunk checkpoints make this resumable; skip if already present.
+        t = time.time()
+        assertions = root / "substrate" / "assertions.jsonl"
+        if force or contract_rebuilt or vlm_ran or not assertions.exists():
+            from .run_l1 import run_l1_units
+            report = run_l1_units(video_id, model=model, concurrency=l1_concurrency)
+            stages["l1"] = round(time.time() - t, 1)
+            l1_summary = {"assertions": report.get("assertion_count"),
+                          "relations": report.get("relation_count")}
+        else:
+            l1_summary = {"skipped": "assertions.jsonl exists"}
+            stages["l1"] = round(time.time() - t, 1)
 
     t = time.time()
     manifest = step_manifest(video_id)
@@ -129,10 +138,11 @@ def run_ingest(video_id: str, *, profile: str = "fast", force: bool = False,
         "video_id": video_id,
         "profile": profile,
         "scene": use_scene,
+        "content_only": content_only,
         "wall_clock_s": round(time.time() - t_all, 1),
         "stages": stages,
         "l1": l1_summary,
-        "contract": str(contract_path),
+        "contract": str(contract_path) if not content_only else "",
         "manifest": str(root / "manifest.json"),
         "checks": manifest.get("checks"),
     }

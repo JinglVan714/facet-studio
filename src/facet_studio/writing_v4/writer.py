@@ -184,7 +184,12 @@ def ensure_source_line(
         data_root=data_root, video_id=video_id, source_path=source_path
     )
     if source is None:
-        return article
+        # Cached content may have no data/<video_id>/source.json (the raw media
+        # is not committed).  Still emit a checkable Bilibili source line so a
+        # publishable article never loses attribution.
+        if not video_id.startswith("BV"):
+            return article
+        source = {"title": video_id, "uploader": ""}
     title = str(source.get("title") or video_id)
     uploader = str(source.get("uploader") or "")
     if title == video_id or (not uploader and title.startswith("BV")):

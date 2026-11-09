@@ -21,7 +21,11 @@ from typing import Any
 
 from ..core.config import get_settings
 
-NUMBER_RE = re.compile(r"(?<![\w.])\d+(?:[.,]\d+)*(?:%|％)?")
+# Chinese characters are ``\w`` in Python, so a ``(?<![\w.])`` boundary
+# silently skips numbers written next to Chinese text (``30多分钟``).  Use an
+# ASCII-only boundary so those numbers are audited, while ``V4`` stays part
+# of an entity rather than becoming a number.
+NUMBER_RE = re.compile(r"(?<![A-Za-z0-9_.])\d+(?:[.,]\d+)*(?:%|％)?")
 QUOTE_RE = re.compile(r"[「『“\"]([^」』”\"\n]{2,80})[」』”\"]")
 ENTITY_RE = re.compile(
     r"\b(?:[A-Z][A-Za-z0-9]*(?:[-.][A-Za-z0-9]+)*|[A-Z]{2,}\d*)\b"

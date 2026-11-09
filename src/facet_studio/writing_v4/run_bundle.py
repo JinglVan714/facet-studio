@@ -2,7 +2,7 @@
 
 Usage:
     PYTHONPATH=src python -m facet_studio.writing_v4.run_bundle \
-        --video-id BV17DHC6CELr \
+        --video-id <video_id> \
         --content runs/.../content.md \
         --out-root runs/writing_v5 \
         --request "生成一套内容包：公众号 + 小红书" \
