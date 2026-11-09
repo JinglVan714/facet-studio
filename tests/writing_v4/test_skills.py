@@ -24,7 +24,7 @@ def test_examples_include_core_and_platform() -> None:
     skill = load_skill(SKILLS / "wechat-article")
     assert len(skill.example_parts) == 2
     assert "匿名例子" in skill.system
-    assert "caption 要写" in skill.system
+    assert "图注默认不加" in skill.system
 
 
 def test_render_user_fills_request_and_content() -> None:

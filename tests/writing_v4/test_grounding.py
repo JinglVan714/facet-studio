@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from facet_studio.evals.grounding import _audit_run, audit
+from facet_studio.evals.grounding import _audit_run, _numbers, audit
 
 
 def _write_json(path: Path, value: dict) -> None:
@@ -44,6 +44,13 @@ def _run(tmp_path: Path) -> tuple[Path, str]:
     )
     _write_json(run_dir / "publish_review.json", {"decision": "approved"})
     return runs_root, run_id
+
+
+def test_numbers_adjacent_to_chinese_are_extracted() -> None:
+    assert "30" in _numbers("全程没有人工干预30多分钟后")
+    assert "160" in _numbers("初炸油温是160℃")
+    # Latin-adjacent digits remain part of the entity, not a separate number.
+    assert "4" not in _numbers("DeepSeek V4 Pro")
 
 
 def test_grounding_flags_ungrounded_number_quote_and_scope(tmp_path: Path) -> None:

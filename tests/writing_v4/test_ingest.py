@@ -20,8 +20,8 @@ def test_ingest_source_builds_cached_content(tmp_path: Path, monkeypatch) -> Non
         },
     )
 
-    def fake_ingest(video_id, *, profile="quality", force=False):
-        calls["ingest"] = (video_id, profile, force)
+    def fake_ingest(video_id, *, profile="quality", force=False, content_only=False):
+        calls["ingest"] = (video_id, profile, force, content_only)
         return {"video_id": video_id, "stages": {}}
 
     monkeypatch.setattr(ingest, "run_ingest", fake_ingest)
@@ -45,7 +45,34 @@ def test_ingest_source_builds_cached_content(tmp_path: Path, monkeypatch) -> Non
     )
     assert Path(result["content_path"]).is_file()
     assert result["content_sha256"]
-    assert calls["ingest"] == ("BVnew", "quality", False)
+    assert calls["ingest"] == ("BVnew", "quality", False, True)
+
+
+def test_ingest_source_can_include_evidence(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("FACET_STUDIO_RUNS_ROOT", str(tmp_path / "runs"))
+    monkeypatch.setenv("FACET_STUDIO_DATA_ROOT", str(tmp_path / "data"))
+    calls: dict[str, object] = {}
+
+    monkeypatch.setattr(ingest.acquire, "is_url", lambda target: True)
+    monkeypatch.setattr(
+        ingest.acquire,
+        "acquire_url",
+        lambda target, max_height=1080: {"video_id": "BVevidence"},
+    )
+
+    def fake_ingest(video_id, *, profile="quality", force=False, content_only=False):
+        calls["ingest"] = (video_id, profile, content_only)
+        return {"video_id": video_id, "stages": {}}
+
+    monkeypatch.setattr(ingest, "run_ingest", fake_ingest)
+    monkeypatch.setattr(
+        ingest,
+        "build_content_manuscript",
+        lambda *, video_id, data_root, out_path: ("", 0),
+    )
+
+    ingest.ingest_source("https://example.com/v", include_evidence=True)
+    assert calls["ingest"] == ("BVevidence", "quality", False)
 
 
 def test_ingest_source_rejects_unknown_profile() -> None:

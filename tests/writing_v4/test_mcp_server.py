@@ -8,6 +8,8 @@ from facet_studio.mcp_server import (
     _export_pdf,
     _normalize_form,
     _parse_xhs_note,
+    _pdf_cover,
+    _pdf_ready_markdown,
     _pdf_title,
     _render_wechat,
     _render_xhs,
@@ -55,11 +57,39 @@ def test_normalize_form_aliases() -> None:
     assert _normalize_form("wechat_article") == "wechat_article"
 
 
-def test_list_sources_contains_cached_bv17() -> None:
+def test_list_sources_finds_cached_content(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """The fixture lives under the configured runs root, not local user data."""
+    monkeypatch.setenv("FACET_STUDIO_RUNS_ROOT", str(tmp_path))
+    content = (
+        tmp_path
+        / "writing_rebuild_2026-11-04"
+        / "BVfixture"
+        / "content_final_v3"
+        / "content.md"
+    )
+    content.parent.mkdir(parents=True)
+    content.write_text("内容稿", encoding="utf-8")
+
     payload = list_sources()
-    assert payload["count"] >= 1
     ids = {item["video_id"] for item in payload["sources"]}
-    assert "BV17DHC6CELr" in ids
+    assert "BVfixture" in ids
+    assert payload["count"] == 1
+
+
+def test_content_path_honors_runs_root(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("FACET_STUDIO_RUNS_ROOT", str(tmp_path))
+    content = (
+        tmp_path
+        / "writing_rebuild_2026-11-04"
+        / "BVfixture"
+        / "content_final_v3"
+        / "content.md"
+    )
+    content.parent.mkdir(parents=True)
+    content.write_text("内容稿", encoding="utf-8")
+    assert mcp_server._content_path("BVfixture") == content
 
 
 def test_render_xhs_uses_gallery_not_sidecar_paths(tmp_path: Path) -> None:
@@ -139,8 +169,8 @@ def test_parse_xhs_note_separates_sidecars() -> None:
 
 def test_render_wechat_inlines_styles_and_copy_button(tmp_path: Path) -> None:
     html = _render_wechat("## 小节\n\n正文。", tmp_path, "标题")
-    assert 'style="font-size:21px' in html
-    assert 'style="font-size:16px' in html
+    assert 'style="font-size:22px' in html
+    assert 'style="font-size:17px' in html
     assert "copyWechat()" in html
     assert "复制正文" in html
     assert "enhanceWechatImages" in html
@@ -159,10 +189,74 @@ def test_export_pdf_reports_missing_binary(tmp_path: Path, monkeypatch) -> None:
     assert "pandoc not found" in result["error"]
 
 
+def test_pdf_cover_prefers_video_cover(tmp_path: Path) -> None:
+    source = tmp_path / "video.jpg"
+    source.write_bytes(b"cover")
+    form = tmp_path / "form"
+    (form / "figures").mkdir(parents=True)
+    cover = _pdf_cover(form, "![](figures/svg-01.png)", str(source))
+    assert cover == "figures/video-cover.jpg"
+    assert (form / "figures" / "video-cover.jpg").read_bytes() == b"cover"
+
+
+def test_pdf_cover_falls_back_to_photo(tmp_path: Path) -> None:
+    markdown = "![](figures/svg-01.png)\n![](figures/fig-01.jpg)\n"
+    assert _pdf_cover(tmp_path, markdown) == "figures/fig-01.jpg"
+
+
+def test_pdf_ready_markdown_rewrites_svg_to_png(tmp_path: Path, monkeypatch) -> None:
+    fig = tmp_path / "figures"
+    fig.mkdir()
+    (fig / "svg-01.svg").write_text("<svg></svg>", encoding="utf-8")
+    monkeypatch.setattr(mcp_server.shutil, "which", lambda _: "node")
+    monkeypatch.setattr(
+        mcp_server.subprocess,
+        "run",
+        lambda *args, **kwargs: type(
+            "Proc", (), {"returncode": 0, "stderr": "", "stdout": ""}
+        )(),
+    )
+    # The fake node does not write files; create the expected PNG.
+    (fig / "svg-01.png").write_bytes(b"png")
+    md, errors = _pdf_ready_markdown(
+        tmp_path, "图\n\n![](figures/svg-01.svg)\n"
+    )
+    assert errors == []
+    assert "figures/svg-01.png" in md
+    assert "figures/svg-01.svg" not in md
+
+
+def test_pdf_ready_markdown_reports_missing_png(tmp_path: Path, monkeypatch) -> None:
+    fig = tmp_path / "figures"
+    fig.mkdir()
+    (fig / "svg-01.svg").write_text("<svg></svg>", encoding="utf-8")
+    monkeypatch.setattr(mcp_server.shutil, "which", lambda _: "node")
+    monkeypatch.setattr(
+        mcp_server.subprocess,
+        "run",
+        lambda *args, **kwargs: type(
+            "Proc", (), {"returncode": 0, "stderr": "", "stdout": ""}
+        )(),
+    )
+    _, errors = _pdf_ready_markdown(tmp_path, "![](figures/svg-01.svg)\n")
+    assert errors and "未生成" in errors[0]
+
+
 def test_pdf_title_breaks_long_title_at_punctuation() -> None:
     value = _pdf_title("300 张没有标签的照片，输入一句话就能搜到蝙蝠")
     assert r" \\ " in value
     assert _pdf_title("短标题") == "短标题"
+
+
+def test_svg_images_fill_the_column(tmp_path: Path) -> None:
+    wechat = _render_wechat(
+        "# 标题\n\n![](figures/svg-01.svg)\n", tmp_path, "标题"
+    )
+    assert "max-height:none;width:100%" in wechat
+    reader = mcp_server._render_reader(
+        "![](figures/svg-01.svg)\n", tmp_path, "标题"
+    )
+    assert 'img[src$=".svg"]{width:100%;height:auto}' in reader
 
 
 def test_render_wechat_copy_body_excludes_title(tmp_path: Path) -> None:
@@ -206,6 +300,21 @@ def test_typeset_marks_partial_and_get_run_reports_draft(
     assert stale["review_status"] == "stale"
     assert "待重新验收" in stale["summary"]
     assert review_artifact("run_partial", "approved")["review_status"] == "approved"
+
+
+def test_typeset_writes_trace_page(tmp_path: Path, monkeypatch) -> None:
+    run_dir, _ = _write_run(tmp_path, monkeypatch, "run_trace_page")
+    monkeypatch.setattr(
+        mcp_server,
+        "_export_pdf",
+        lambda **kwargs: {"error": "tectonic not found"},
+    )
+    result = typeset_article("run_trace_page")
+    assert result["trace_url"].endswith("/run_trace_page")
+    assert (run_dir / "trace.html").is_file()
+    run = get_run("run_trace_page")
+    assert run["trace_url"].endswith("/run_trace_page")
+    assert "stages" in run["trace"]
 
 
 def test_review_artifact_rejects_untypeset_run(

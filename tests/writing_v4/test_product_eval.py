@@ -4,6 +4,7 @@ from pathlib import Path
 from PIL import Image
 
 from facet_studio.evals.product import _check_run, evaluate
+from facet_studio.evals.run_report import build_run_report, render_markdown
 
 
 def _write_json(path: Path, value: dict) -> None:
@@ -75,6 +76,101 @@ def test_eval_passes_well_formed_xhs_case(tmp_path: Path) -> None:
     )
     assert result["passed"] is True
     assert all(check["passed"] for check in result["checks"])
+
+
+def test_workflow_trajectory_checks(tmp_path: Path) -> None:
+    runs_root = _xhs_run(tmp_path)
+    run_dir = runs_root / "product_v1" / "run_xhs"
+    _write_json(
+        run_dir / "workflow.json",
+        {
+            "stages": [
+                {"name": "intake", "status": "succeeded", "usage": {}},
+                {
+                    "name": "plan",
+                    "status": "succeeded",
+                    "usage": {"total_tokens": 50},
+                },
+                {"name": "approval", "status": "approved", "usage": {}},
+                {
+                    "name": "write",
+                    "status": "succeeded",
+                    "usage": {"total_tokens": 100},
+                },
+                {"name": "typeset", "status": "succeeded", "usage": {}},
+                {"name": "review", "status": "approved", "usage": {}},
+            ],
+            "errors": [],
+        },
+    )
+    result = _check_run(
+        {
+            "case_id": "case_xhs",
+            "kind": "capability",
+            "form": "xiaohongshu_note",
+            "run_id": "run_xhs",
+            "require_approval": True,
+            "min_body_chars": 100,
+            "min_figures": 1,
+            "min_cards": 1,
+            "must_include": ["测试"],
+        },
+        runs_root=runs_root,
+    )
+    checks = {check["check_id"]: check for check in result["checks"]}
+    for check_id in (
+        "trajectory_stages",
+        "trajectory_order",
+        "trajectory_no_editor",
+        "trajectory_failures",
+        "trajectory_hitl",
+        "trajectory_usage",
+    ):
+        assert checks[check_id]["passed"], checks[check_id]
+    assert result["passed"] is True
+
+
+def test_run_report_combines_workflow_and_grounding(tmp_path: Path) -> None:
+    runs_root = _xhs_run(tmp_path)
+    run_dir = runs_root / "product_v1" / "run_xhs"
+    (run_dir / "content").mkdir()
+    (run_dir / "content" / "content.md").write_text(
+        "测试正文。", encoding="utf-8"
+    )
+    _write_json(
+        run_dir / "workflow.json",
+        {
+            "status": "typeset",
+            "next": [],
+            "stages": [
+                {"name": "intake", "status": "succeeded", "usage": {}},
+                {
+                    "name": "plan",
+                    "status": "succeeded",
+                    "usage": {"total_tokens": 50},
+                },
+                {"name": "approval", "status": "approved", "usage": {}},
+                {
+                    "name": "write",
+                    "status": "succeeded",
+                    "usage": {"total_tokens": 100},
+                },
+                {"name": "typeset", "status": "succeeded", "usage": {}},
+                {"name": "review", "status": "approved", "usage": {}},
+            ],
+            "events": [],
+            "errors": [],
+        },
+    )
+    report = build_run_report("run_xhs", runs_root=runs_root)
+    assert report["workflow"]["stages"][1]["name"] == "plan"
+    assert report["contract"]["passed"] is True
+    assert "grounding" in report
+    markdown = render_markdown(report)
+    assert "## Workflow stages" in markdown
+    assert "## LLM calls" in markdown
+    assert "## Contract checks" in markdown
+    assert "## Grounding candidates" in markdown
 
 
 def test_eval_marks_missing_case_without_faking_scores(tmp_path: Path) -> None:

@@ -5,6 +5,7 @@ import pytest
 from facet_studio.writing_v4.svg_pass import (
     PLACEHOLDER,
     SpecError,
+    build_svg_assets,
     normalize_spec,
     render_svg,
 )
@@ -70,6 +71,47 @@ def test_render_compare_keeps_two_cards() -> None:
     svg = render_svg(spec)
     ET.fromstring(svg)
     assert svg.count("<rect") == 2
+
+
+@pytest.mark.parametrize(
+    "kind",
+    ["tree", "timeline", "matrix", "cards", "cause"],
+)
+def test_render_new_visual_kinds(kind: str) -> None:
+    spec = normalize_spec(
+        {
+            "kind": kind,
+            "title": "语义图",
+            "items": [
+                {"label": "一", "detail": "第一步"},
+                {"label": "二", "detail": "第二步"},
+                {"label": "三", "detail": "第三步"},
+                {"label": "四", "detail": "第四步"},
+            ],
+        }
+    )
+    svg = render_svg(spec)
+    ET.fromstring(svg)
+    assert "<svg" in svg
+
+
+def test_build_svg_assets_omits_caption() -> None:
+    class FakeClient:
+        def complete(self, **kwargs):
+            class Response:
+                text = '{"kind":"cards","title":"三点","items":[{"label":"A","detail":"a"},{"label":"B","detail":"b"}],"caption":"示意"}'
+
+            return Response()
+
+    article, report, assets = build_svg_assets(
+        "前文\n\n<!-- svg: 三点 -->\n\n后文",
+        client=FakeClient(),
+        key_prefix="test",
+    )
+    assert len(assets) == 1
+    assert "![](figures/svg-01.svg)" in article
+    assert "![示意" not in article
+    assert "caption" in report
 
 
 def test_render_escapes_xml() -> None:

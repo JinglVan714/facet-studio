@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import facet_studio.workflow as workflow
@@ -107,6 +108,34 @@ def test_workflow_pauses_at_plan_then_review(
     ]
     assert trace["review"]["review"]["decision"] == "approved"
     assert trace["cost_estimate"] is None
+
+
+def test_workflow_writes_tool_and_decision_spans(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setenv("FACET_STUDIO_RUNS_ROOT", str(tmp_path))
+    stages = [
+        {"name": "plan", "status": "succeeded", "duration_ms": 10, "usage": {"total_tokens": 30}, "at": "t1"},
+        {"name": "approval", "status": "auto_approved", "duration_ms": 0, "usage": {}, "at": "t2"},
+        {"name": "review", "status": "auto_accepted", "duration_ms": 0, "usage": {}, "at": "t3"},
+    ]
+    workflow._write_stage_tool_calls("run_spans", stages)
+    workflow._write_stage_decisions(
+        "run_spans",
+        {"form": "wechat_article", "plan": {"central_idea": "一个想法"}},
+        stages,
+    )
+    run_dir = tmp_path / "product_v1" / "run_spans"
+    tools = [json.loads(line) for line in (run_dir / "tool_calls.jsonl").read_text(encoding="utf-8").splitlines()]
+    decisions = [
+        json.loads(line)
+        for line in (run_dir / "decision_records.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    assert [item["tool_name"] for item in tools] == ["plan", "approval", "review"]
+    assert tools[0]["usage"]["total_tokens"] == 30
+    assert [item["stage"] for item in decisions] == ["plan", "approval", "review"]
+    assert decisions[0]["selected"] == "wechat_article"
+    assert decisions[1]["selected"] == "auto_approved"
 
 
 def test_workflow_auto_approve_skips_human_gates(
