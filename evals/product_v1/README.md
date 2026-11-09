@@ -15,6 +15,23 @@
   - tokens / latency。
 - 新生成的 machine run 会标 `user review pending`；**不会自动写 approved**。
 
+## 评测协议（面试口径）
+
+| 项 | 定义 |
+|---|---|
+| 数据集版本 | `product_v1` / `product-eval-cases-v1`；固定 `cases.json`，case 指向本地 run_id |
+| 规模 | 10 cases / 9 unique runs；6 capability（2 视频 × 3 形态）+ 4 regression（PDF 代码块、公众号复制、小红书卡片、P5 新视频） |
+| `contract_pass_rate` | 产物合同 + 机器检查通过率（artifact/格式/图/字数/事实关键词/trajectory），**不含人工验收** |
+| `trajectory_pass_rate` | 过程断言：阶段存在/顺序、无 editor/checker、无 failed stage、HITL、usage；30 = 4 个 workflow case ×6 + 6 个 legacy case ×1 |
+| `manual_acceptance_rate` | `publish_review.json` decision=approved；用户发布门，不是质量分 |
+| `error_rate` | 固定 cases 中 status=failed/partial 的比例；不是所有本地 run |
+| `grounding` | candidate flags / artifact（数字/引语/专名/范围）；**不是幻觉率** |
+| `pass@1 / pass@k` | `null`；没有 judged trials 不伪造 |
+| latency | `run_meta` 的 plan+write 延迟；不含视觉审计/排版/排队，不是用户 SLA |
+| gate | `--gate`：所有 case 有 run、contract/trajectory >= 1.0、error=0；`--gate-require-manual` 才要求人工验收 |
+| bad case 闭环 | 失败/回归样本固定进 `regression`；修好后保留；当前 4 条 regression；CI 先跑合成 fixture |
+| 未测 | writing quality、judge 校准、真人 reader test、线上 A/B、pass@k、生产并发 |
+
 ## 运行
 
 ```bash
@@ -78,21 +95,21 @@ PYTHONPATH=src PYTHONUTF8=1 python -m facet_studio.evals.run_report \
 
 ## 当前基线（2026-11-09 复跑）
 
-- 最新报告：`evals/product_v1/reports/report-20261109T135534Z.json` + `.md`；grounding：`grounding-20261109T135557Z.json` + `.md`。
+- 最新报告：`evals/product_v1/reports/report-20261109T145839Z.json` + `.md`；grounding：`grounding-20261109T145839Z.json` + `.md`。
 - cases：10 cases / 9 unique runs，0 missing（6 capability + 4 regression；`reg_pdf_code_block` 与 `cap_bv17_long` 指向同一 run）。
 - `contract_pass_rate`：1.0（10/10 cases；含 artifact/trajectory 检查，**不含 manual acceptance**）。
 - `trajectory_pass_rate`：1.0（30/30 checks；30 = 4 个 workflow case ×6 项 + 6 个 legacy case ×1 项）。
 - `error_rate`：0.0。
 - `planner_trace_rate`：0.6（6/10；旧 P1/P2 run 没有 planner trace，单独记录，不算造假）。
-- `manual_acceptance_rate`：0.7（7/10 cases，6/9 unique；3 个新 machine run 待用户验收：BV1ix long/wechat、P5 新视频 wechat）。
-- `deterministic_pass_rate`：0.7（含待验收；不是 writing quality）。
+- `manual_acceptance_rate`：0.9（9/10 cases，8/9 unique；仅 BV1ix 公众号 1 个 case 待验收）。
+- `deterministic_pass_rate`：0.9（含待验收；不是 writing quality）。
 - p50/p95 latency：52,421 / 92,738 ms（plan+write，不含视觉审计/排版/排队）；tokens total 222,498（10 cases；9 unique runs 为 201,350，重复 long run 多算一次）。
 - grounding：9 artifacts / 16 candidate flags（引语 7 / 范围 6 / 专名 3；数字 0 after the CJK-adjacent number fix）；不是幻觉率。
-- 最新端到端 UI run `20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note` 的单 run report 已生成，但**不在 10 个固定 cases 内**；它的 review 仍是 missing，不能拿来抬高 manual acceptance。
+- 最新端到端 UI run `20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note` 已人工验收（review=approved，15/15 checks），但**不在 10 个固定 cases 内**，不能拿来抬高 manual acceptance。公开样本见 `examples/demo/`。
 
 ## 后续
 
-- 用户验收 3 个新 machine run；验收后 `manual_acceptance_rate` 会更新。
+- 用户验收 BV1ix 公众号 1 个 pending case；验收后 `manual_acceptance_rate` 会更新。
 - 人工 adjudicate grounding flags（可选，只判事实真/假，不打 writing 分）；有标注才报 precision/flag rate。
 - pass@k / 多 trial：需要固定 case 多次运行和 judged trials；没有就不报。
 - regression gate 已接 `--gate`；后续可接 CI。

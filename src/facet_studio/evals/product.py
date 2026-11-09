@@ -35,6 +35,19 @@ def _read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
+def _run_path(run_dir: Path, value: Any, default: Path) -> Path:
+    """Resolve a run artifact path.
+
+    Real runs store absolute paths; committed fixtures store paths relative to
+    the run directory.  Resolving both against the run dir keeps the harness
+    portable without rewriting existing run metadata.
+    """
+    if value in (None, ""):
+        return default
+    path = Path(str(value))
+    return path if path.is_absolute() else (run_dir / path)
+
+
 def _result(check_id: str, passed: bool, detail: str) -> dict[str, Any]:
     return {"check_id": check_id, "passed": bool(passed), "detail": detail}
 
@@ -179,7 +192,7 @@ def _check_run(
 
     meta = _read_json(meta_path)
     form = str(meta.get("form") or "")
-    form_dir = Path(str(meta.get("form_dir") or run_dir / form))
+    form_dir = _run_path(run_dir, meta.get("form_dir"), run_dir / form)
     output_name = str(meta.get("output") or ("note.md" if form == "xiaohongshu_note" else "article.md"))
     markdown_path = form_dir / output_name
     markdown = _read_text(markdown_path) if markdown_path.is_file() else ""
@@ -195,11 +208,13 @@ def _check_run(
     status = str(meta.get("status") or "")
     healthy = status in {"typeset", "approved"}
     checks.append(_result("status_healthy", healthy, f"status={status}"))
+    reader_value = artifacts.get("reader_html")
+    reader_path = _run_path(run_dir, reader_value, run_dir / "reader.html")
     checks.append(
         _result(
             "reader_artifact",
-            bool(artifacts.get("reader_html") and Path(str(artifacts["reader_html"])).is_file()),
-            f"reader_html={artifacts.get('reader_html') or 'missing'}",
+            bool(reader_value and reader_path.is_file()),
+            f"reader_html={reader_value or 'missing'}",
         )
     )
 
@@ -311,7 +326,7 @@ def _check_run(
     )
 
     if form == "wechat_article":
-        html_path = Path(str(artifacts.get("wechat_html") or form_dir / "wechat.html"))
+        html_path = _run_path(run_dir, artifacts.get("wechat_html"), form_dir / "wechat.html")
         html = _read_text(html_path) if html_path.is_file() else ""
         main_match = re.search(
             r'<main id="wechat-article"[^>]*>(.*?)</main>', html, re.DOTALL
@@ -331,7 +346,7 @@ def _check_run(
             )
         )
     elif form == "xiaohongshu_note":
-        export_dir = Path(str(artifacts.get("xhs_export_dir") or form_dir / "xhs_export"))
+        export_dir = _run_path(run_dir, artifacts.get("xhs_export_dir"), form_dir / "xhs_export")
         existing = sorted(export_dir.glob("*.png")) if export_dir.is_dir() else []
         dims_ok = False
         if existing:
@@ -341,7 +356,7 @@ def _check_run(
                 dims_ok = all(Image.open(path).size == (1080, 1440) for path in existing)
             except Exception:
                 dims_ok = False
-        reader = Path(str(artifacts.get("reader_html") or ""))
+        reader = _run_path(run_dir, artifacts.get("reader_html"), run_dir / "reader.html")
         reader_text = _read_text(reader) if reader.is_file() else ""
         checks.append(
             _result(
@@ -356,7 +371,7 @@ def _check_run(
             )
         )
     elif form == "long_article":
-        pdf_path = Path(str(artifacts.get("pdf") or form_dir / "article.pdf"))
+        pdf_path = _run_path(run_dir, artifacts.get("pdf"), form_dir / "article.pdf")
         pages = 0
         if pdf_path.is_file():
             try:

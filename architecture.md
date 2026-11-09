@@ -3,7 +3,7 @@
 > 状态：**目标产品架构**。2026-11-06 已确认产品形态：聊天式内容工作台（LibreChat + MCP + LangGraph + 排版/导出 + 人工验收）。
 > 当前代码：substrate v1 + writing_v4 写作引擎 + **P1/P2 产品原型 + P3 workflow 原型 + P4 deterministic/grounding harness + P5 证据层**（LibreChat + MCP 13 tools + preview + review + 公众号 HTML / 小红书卡片 / PDF；LangGraph StateGraph + SQLite checkpoint + plan/review interrupt + trace；端到端默认 `auto_plan=True`，后台 run + 消息级运行卡；P5 新视频下载 + DashScope ASR（Qwen-Audio 3.1）+ VLM + content + workflow 已于 2026-11-08 跑通）。本文 §4–§5 区分“已有”与“目标”。
 > 产品定义/UX：[docs/product-v1-chat-studio.md](docs/product-v1-chat-studio.md)；UI：[docs/ui-design-2026-11.md](docs/ui-design-2026-11.md)；写作引擎：[docs/writing-v5-architecture.md](docs/writing-v5-architecture.md)；JD：[docs/jd-mapping-2026-11.md](docs/jd-mapping-2026-11.md)；复用栈：[docs/reuse-stack-2026-11.md](docs/reuse-stack-2026-11.md)。
-> 方法/纪律：[docs/writing-rebuild-brief.md](docs/writing-rebuild-brief.md) §2/§3 + [AGENTS.md](AGENTS.md)。§5 开发纪律不要改。
+> 方法/纪律：[docs/writing-rebuild-brief.md](docs/writing-rebuild-brief.md) §2/§3。§5 开发纪律不要改。
 > 旧的 v3 机会地图保留在文末附录，**不是当前实现**。
 
 ## 0. 一屏
@@ -544,7 +544,7 @@ Planner 不是固定的一次模型调用，也不是 4–7 节 section schema�
 - **full brief 两层**：短编辑 brief + knowledge ledger（`concept_ledger` / `mechanism_chain` / `number_ledger` / `source_block` / `texture_policy` / `next_step`）；知识 brief 是护栏，不要求 Writer 粘贴；
 - brief 是合同/护栏，不是笼子；Writer 发现 brief 与素材冲突时以素材为准并记录，不静默服从。
 
-详见 [docs/writing-operating-model.md](docs/writing-operating-model.md) 和 [docs/writing-planner-position.md](docs/writing-planner-position.md)（后者是历史定位笔记）。
+详见 历史 operating model 文档（不随公开仓库发布） 和 历史 planner 定位笔记（不随公开仓库发布）（后者是历史定位笔记）。
 
 ### 6.4 Skill 如何解决连续性与“来源归属”
 
@@ -575,7 +575,7 @@ Planner 不是固定的一次模型调用，也不是 4–7 节 section schema�
 
 ## 7. Writer（默认一次调用）
 
-> 2026-11-03 注：以下 §7–§10 是早期设计假设，特别是 JSON `plan_header`/span-level 输出、可选 Verifier、reader test 作为默认质量门，均已被当前实现取代。当前契约/流程/评测以 [docs/writing-operating-model.md](docs/writing-operating-model.md) + 当前代码为准；本节保留作为设计历史。
+> 2026-11-03 注：以下 §7–§10 是早期设计假设，特别是 JSON `plan_header`/span-level 输出、可选 Verifier、reader test 作为默认质量门，均已被当前实现取代。当前契约/流程/评测以 历史 operating model 文档（不随公开仓库发布） + 当前代码为准；本节保留作为设计历史。
 
 ### 7.1 输入
 
@@ -669,7 +669,7 @@ Writer 看不到：
 
 ## 8. Verifier（可选）
 
-> 2026-11-03 更新：当前 pipeline 默认跑 initial verifier（驱动至多 1 次 repair）+ final verifier（只读审计交付稿，不 repair）。本节旧的“默认不跑/revise”是历史设计；当前以 [docs/writing-operating-model.md](docs/writing-operating-model.md) 为准。
+> 2026-11-03 更新：当前 pipeline 默认跑 initial verifier（驱动至多 1 次 repair）+ final verifier（只读审计交付稿，不 repair）。本节旧的“默认不跑/revise”是历史设计；当前以 历史 operating model 文档（不随公开仓库发布） 为准。
 
 ### 8.1 触发条件
 
@@ -704,7 +704,7 @@ Writer 看不到：
 
 ## 9. 确定性校验与渲染
 
-> 2026-11-03 更新：当前实现是 Markdown Reader 文章的 binding/quote/README hygiene + `contract`（source line/title quote/title numbers/image captions/source gaps/absolutes）；source line 在 binding 前剥离；模型知识拉丁术语降为 `editorial_terms`（advisory）。旧 span-level 校验是历史设计；以 [docs/writing-operating-model.md](docs/writing-operating-model.md) + 当前代码为准。
+> 2026-11-03 更新：当前实现是 Markdown Reader 文章的 binding/quote/README hygiene + `contract`（source line/title quote/title numbers/image captions/source gaps/absolutes）；source line 在 binding 前剥离；模型知识拉丁术语降为 `editorial_terms`（advisory）。旧 span-level 校验是历史设计；以 历史 operating model 文档（不随公开仓库发布） + 当前代码为准。
 
 ### 9.1 校验
 
@@ -899,7 +899,7 @@ Writer 看不到：
 3. Third-party skill 要审计 prompt injection/工具权限。
 4. 与 EvidencePack/证据优先冲突的中间摘要链，不搬。
 5. 复用代码要有测试/可回退；不把框架类型带进领域对象。
-6. 2026-10-31 的本地 17 个 skill + web writing 项目扫描见 [docs/reference-writing-scan.md](docs/reference-writing-scan.md)；只作参考，不是 v3 基线。
+6. 2026-10-31 的本地 17 个 skill + web writing 项目扫描见 历史参考扫描（不随公开仓库发布）；只作参考，不是 v3 基线。
 
 ### 14.2 候选
 
@@ -1021,7 +1021,7 @@ v3 只保留必要 schema；详细字段在实现时定，不先写 18 个合同
 
 ### 15.3 WriterOutput
 
-> 2026-11-03 更新：当前 Writer 输出是 Markdown article（单 H1 + H2 + 段落 + 可选图片）+ title/self_review/usage，不是下面的 plan_header/span JSON；校验在 article 文本上做。以 [docs/writing-operating-model.md](docs/writing-operating-model.md) 为准。
+> 2026-11-03 更新：当前 Writer 输出是 Markdown article（单 H1 + H2 + 段落 + 可选图片）+ title/self_review/usage，不是下面的 plan_header/span JSON；校验在 article 文本上做。以 历史 operating model 文档（不随公开仓库发布） 为准。
 
 - plan_header：title/controlling_idea/reader_path/sections/mechanism_or_steps/demo_choice；
 - sections/spans：text/role/claim_ids/evidence_ids/quote/scope_note；
@@ -1032,7 +1032,7 @@ v3 只保留必要 schema；详细字段在实现时定，不先写 18 个合同
 
 ### 15.4 Binding / Audit / Citations
 
-> 2026-11-03 更新：当前是 article 的 paragraph/fact/quote binding + contract audit + citations，不是 span-level binding；source line/heading 在 binding 前剥离；模型知识拉丁术语进入 `editorial_terms`。以 [docs/writing-operating-model.md](docs/writing-operating-model.md) 为准。
+> 2026-11-03 更新：当前是 article 的 paragraph/fact/quote binding + contract audit + citations，不是 span-level binding；source line/heading 在 binding 前剥离；模型知识拉丁术语进入 `editorial_terms`。以 历史 operating model 文档（不随公开仓库发布） 为准。
 
 - 每个 grounded span 一条 binding：span_ref/claim/evidence/quote/timecode/frame/capture/rights。
 - audit：sections/spans/binding/gaps/conflicts/verifier/rights。
@@ -1043,7 +1043,7 @@ v3 只保留必要 schema；详细字段在实现时定，不先写 18 个合同
 
 ### 15.5 VerifierReport / PublishReview
 
-> 2026-11-03 更新：当前有 `verifier-report-v1` 的 initial + final 两份；final 只读审计，不触发第二次 repair；发布仍由人工 `publish_approved`，LLM judge 不是发布许可。以 [docs/writing-operating-model.md](docs/writing-operating-model.md) 为准。
+> 2026-11-03 更新：当前有 `verifier-report-v1` 的 initial + final 两份；final 只读审计，不触发第二次 repair；发布仍由人工 `publish_approved`，LLM judge 不是发布许可。以 历史 operating model 文档（不随公开仓库发布） 为准。
 
 - VerifierReport：findings（axis/target/severity/observation/impact/action）+ provenance。
 - PublishReview：reader/audit/citations hash、reader test/A-B/human review、checklist、known risks、status。

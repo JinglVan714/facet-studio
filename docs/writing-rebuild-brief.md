@@ -2,10 +2,10 @@
 
 > **2026-11-06 产品层重定义**：产品 v1 是**聊天式内容工作台**（用户给视频 + 写作要求，Agent 按需写一种形态，聊天内预览/修改/验收），见 [product-v1-chat-studio.md](product-v1-chat-studio.md)；目标架构见 [architecture.md](../architecture.md)；JD/评测口径见 [jd-mapping-2026-11.md](jd-mapping-2026-11.md)。**§2（什么是好 writing）和 §3（开发纪律）仍然是保留的方法/纪律，不要改。** 本文件其余章节是历史规划/旧 pipeline（§1/§4–§8），不是当前实现。bundle 是内部/调试产物，不是产品默认输出。
 
-> **2026-11-05 session 2**：**§2（什么是好 writing）和 §3（开发纪律）是保留的方法/纪律，不要改。** 本文件其余章节是历史规划/旧 pipeline（§1/§4–§8），不是当前实现。当前写作引擎见 [writing-v5-architecture.md](writing-v5-architecture.md)；当前快照见 `STATE.md` / `HANDOFF.md` / [SESSION_2_DIRECTION.md](../handoffs/2026-11-05/SESSION_2_DIRECTION.md)。旧 supervisor/demo/词表/P1 两段式已删除；`wechat-article` 旧稿被否。
+> **2026-11-05 session 2**：**§2（什么是好 writing）和 §3（开发纪律）是保留的方法/纪律，不要改。** 本文件其余章节是历史规划/旧 pipeline（§1/§4–§8），不是当前实现。当前写作引擎见 [writing-v5-architecture.md](writing-v5-architecture.md)。旧 supervisor/demo/词表/P1 两段式已删除；`wechat-article` 旧稿被否。
 
 > 读者：接手写作层的新 session。
-> 上位：`AGENTS.md` 全局护栏；两份 reader_pack 标准只在评测时读。
+> 开发纪律见 §3；两份读者标准是内部评测材料，不随公开仓库发布。
 > 旧写作层（brief/verifier/repair/polish/source line/claim status + skill v1/v2）已归档；不要按旧链做，不要读旧 memo/runs/skill/judge。
 
 ## 1. 我们在做什么
@@ -14,11 +14,11 @@
 
 当前阶段：**一个写作 skill 已经做到质量稳定、能拿出手**；3 篇可发布文章已经形成 articles-only 作品集。下一步不是预设的“继续加 stage”，也不是预设的“先 JD”或“先多 skill”；先认知，再判断。
 
-> 2026-11-05：上一轮 P1 社媒/编排实验（social-core、social-note、wechat-article、orchestrator 等）**不是基线**，可能整体重做。新 session 先按 [handoffs/2026-11-05/NEXT_SESSION_PROMPT.md](../handoffs/2026-11-05/NEXT_SESSION_PROMPT.md) 独立认知和判断。
+> 2026-11-05：上一轮 P1 社媒/编排实验（social-core、social-note、wechat-article、orchestrator 等）**不是基线**，可能整体重做。当前实现见 [writing-v5-architecture.md](writing-v5-architecture.md)。
 
 ## 2. 什么是好 writing
 
-完整标准在 `runs/_reader_test_2026-11-03/reader_pack/评价方法.md` 和 `5个persona.md`；需要评测时再读。最低共识：
+完整标准是内部评测材料，不随公开仓库发布。最低共识：
 
 - 五层：Readable → Comprehensible → Value → Engagement → Shareable。
 - 12 维；知识准确性是红线。P5 是质量红线概念（重大事实错误/严重误导/未证实关键能力写成已证实），不是要求你组织 30 份 subagent 评审。
@@ -58,7 +58,7 @@ substrate v1（冻结）
         │
         ▼
 交付层
-  deliverables/writing-skill/site/：articles-only HTML / PDF
+  历史 articles-only 作品集（不随公开仓库发布）
 ```
 
 - substrate v1 在 `src/facet_studio/writing_v3/` 的 substrate 链路；只读 substrate 相关文件，不要读同目录的旧写作实验。writing 层通过既有接口消费，不改 substrate。需要接口时只读 `docs/substrate-v1-freeze.md` 的相关部分。
@@ -89,7 +89,7 @@ substrate v1（冻结）
 ## 7. 现在做到哪 / 已知边界
 
 - 一个 skill `skills/writing/video-article/` 已做到质量稳定；3 篇可发布文章：教程 / 技术解释 / 知识 / 文化。
-- 交付包 `deliverables/writing-skill/` 是 articles-only 作品集：`site/index.html`、`site/writing-articles.pdf`；没有架构、评分、HOLD、官方 30 证据。
+- 历史 articles-only 作品集（不随公开仓库发布）没有架构、评分、HOLD、官方 30 证据。
 - 全 suite 542 passed；3 篇地板检查全过；正文“作者”0 次。
 - **还不是 demo-ready**：排版、字体、图片大小、PDF 文本层、移动端阅读等展示层还需要后续调整。
 - 帧 caption 主要是 OCR，纯文本 writer 不描述没看到的画面；没有 VLM；没有真人 reader test。

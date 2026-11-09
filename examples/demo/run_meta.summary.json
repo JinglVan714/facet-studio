@@ -1,0 +1,64 @@
+{
+  "schema": "facet-studio-demo-run-summary-v1",
+  "run_id": "20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note",
+  "video_id": "BV1brgs6mE7a",
+  "video_title": "突发！DeepSeek Harness 开源，智能体一切皆插件",
+  "form": "xiaohongshu_note",
+  "status": "approved",
+  "request": "短一点，给刷信息流的人看：开头两三行就要抓住注意力，口语、短句、多空行，信息密度高不啰嗦，结尾一句轻互动。",
+  "output_chars": 793,
+  "figures_referenced": 0,
+  "keyframes": 0,
+  "cards": 1,
+  "llm_calls": 6,
+  "tokens": 15862,
+  "wall_clock_ms": 51220,
+  "llm_calls_ms": 44578,
+  "visual_audit": {
+    "candidates": 4,
+    "approved": 0,
+    "tokens": 6940,
+    "latency_ms": 23234
+  },
+  "stages": [
+    {
+      "name": "intake",
+      "status": "succeeded",
+      "duration_ms": 0
+    },
+    {
+      "name": "plan",
+      "status": "succeeded",
+      "duration_ms": 32251
+    },
+    {
+      "name": "approval",
+      "status": "auto_approved",
+      "duration_ms": 0
+    },
+    {
+      "name": "write",
+      "status": "succeeded",
+      "duration_ms": 13181
+    },
+    {
+      "name": "typeset",
+      "status": "succeeded",
+      "duration_ms": 5723
+    },
+    {
+      "name": "review",
+      "status": "approved",
+      "duration_ms": 0
+    }
+  ],
+  "review": {
+    "decision": "approved",
+    "reviewer": "user"
+  },
+  "note": "Demo artifact from a local run; no Bilibili video frames are included.",
+  "checks": {
+    "passed": 15,
+    "total": 15
+  }
+}

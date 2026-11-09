@@ -156,6 +156,33 @@ def test_workflow_trajectory_checks(tmp_path: Path) -> None:
     assert result["passed"] is True
 
 
+def test_relative_artifacts_resolve_under_run_dir(tmp_path: Path) -> None:
+    runs_root = _xhs_run(tmp_path)
+    meta_path = runs_root / "product_v1" / "run_xhs" / "run_meta.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    meta["form_dir"] = "xiaohongshu_note"
+    meta["artifacts"] = {
+        "reader_html": "xiaohongshu_note/reader.html",
+        "xhs_export_dir": "xiaohongshu_note/xhs_export",
+    }
+    meta_path.write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
+    result = _check_run(
+        {
+            "case_id": "case_xhs",
+            "kind": "capability",
+            "form": "xiaohongshu_note",
+            "run_id": "run_xhs",
+            "require_approval": True,
+            "min_body_chars": 100,
+            "min_figures": 1,
+            "min_cards": 1,
+            "must_include": ["测试"],
+        },
+        runs_root=runs_root,
+    )
+    assert result["passed"] is True
+
+
 def test_run_report_combines_workflow_and_grounding(tmp_path: Path) -> None:
     runs_root = _xhs_run(tmp_path)
     run_dir = runs_root / "product_v1" / "run_xhs"
@@ -215,6 +242,25 @@ def test_eval_marks_missing_case_without_faking_scores(tmp_path: Path) -> None:
     assert report["summary"]["deterministic_pass_rate"] is None
     assert report["summary"]["pass_at_1"] is None
     assert report["cases"][0]["status"] == "not_run"
+
+
+def test_committed_fixture_gate_passes() -> None:
+    from facet_studio.core.config import project_root
+
+    root = project_root()
+    cases = json.loads(
+        (root / "evals" / "product_v1" / "cases.fixture.json").read_text(
+            encoding="utf-8"
+        )
+    )["cases"]
+    report = evaluate(
+        cases,
+        runs_root=root / "evals" / "product_v1" / "fixtures" / "runs_root",
+    )
+    assert report["summary"]["cases_missing"] == 0
+    assert report["summary"]["contract_pass_rate"] == 1.0
+    assert report["summary"]["manual_acceptance_rate"] == 1.0
+    assert report["summary"]["error_rate"] == 0.0
 
 
 def test_eval_fails_wechat_h1_in_copy_body(tmp_path: Path) -> None:

@@ -27,6 +27,6 @@ Portions of the method are informed by MIT-licensed works listed above. Their co
 
 ## Related docs
 
-- [docs/writing-skill-study.md](../../../docs/writing-skill-study.md)
-- [docs/writing-reuse-map.md](../../../docs/writing-reuse-map.md)
-- [docs/writing-operating-model.md](../../../docs/writing-operating-model.md)
+- 历史文档 `writing-skill-study.md`（不随公开仓库发布）
+- 历史文档 `writing-reuse-map.md`（不随公开仓库发布）
+- 历史文档 `writing-operating-model.md`（不随公开仓库发布）

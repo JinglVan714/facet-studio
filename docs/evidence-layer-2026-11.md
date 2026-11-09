@@ -1,6 +1,6 @@
 # P5 证据层迁移（2026-11-07）
 
-> 来源：`D:\秋招\个人作品\知识底稿核心-clean`（只读探索，再由人工确认后复制）。
+> 来源：内部只读副本（不在本仓库；迁移记录见 git 历史）。
 > 目标：新 BV / 本地视频 → 下载/抽帧/ASR/VLM/substrate → `content.md + figures` → 现有写作 workflow。
 > 不是 writing 层；写作层仍只读 content manuscript。
 
@@ -48,7 +48,7 @@ ingest_source(target)
 - `lmind.audio` / `acquire_local`：本地视频登记可用；`source.json` 写入成功，`media_has_av_streams=True`。
 - `run_ingest` 在缓存 metadata 上复用已有 frames/ASR/VLM/contract/assertions，无模型调用；manifest checks 正常。
 - `content_manuscript` 从证据层数据重建 BV17：**4,213 字 / 10 图**（与缓存 `content_final_v3` 一致）。
-- 集成测试：`tests/writing_v4/test_ingest.py`（mock acquisition/ingest/content）通过；2026-11-09 clean clone **315 passed** / 本地全量 619（含未发布 legacy v2）。
+- 集成测试：`tests/writing_v4/test_ingest.py`（mock acquisition/ingest/content）通过；2026-11-09 clean clone **315 passed**（新增 fixture/相对路径 2 个测试后 317）/ 本地全量 621（含未发布 legacy v2）。
 
 ## 5. 已验证 / 注意
 

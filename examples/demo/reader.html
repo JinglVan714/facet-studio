@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DeepSeek Harness：不是新模型，是一套 Agent 组装平台</title>
+<style>
+:root{--bg:#f4f3ee;--ink:#191817;--muted:#5a554e;--line:#d8d3c8;--accent:#c96442}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);
+font-family:system-ui,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;line-height:1.8}
+main{max-width:680px;margin:0 auto;padding:22px 22px 80px}
+.cards{margin:0 0 30px}
+.cards-head{font-size:13px;color:var(--muted);margin:0 0 12px}
+.reader-actions{display:flex;justify-content:flex-end;gap:8px;margin:0 0 12px}
+.reader-actions button,.reader-actions .trace-link,.card-actions button,.card-actions a{font:inherit;font-size:12px;color:var(--muted);
+background:#eeede6;border:1px solid var(--line);border-radius:999px;padding:4px 10px;cursor:pointer;
+text-decoration:none}
+.card-list{display:flex;flex-direction:column;gap:16px;align-items:center}
+.card{margin:0;width:min(100%,420px)}
+.card-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
+.card img{width:100%;height:auto;display:block;border-radius:18px;border:1px solid var(--line);background:#fff}
+.card.fallback .card-box{width:100%;aspect-ratio:3/4;background:#fff;border:1px solid var(--line);
+border-radius:18px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.card.fallback .card-box img{width:auto;height:auto;max-width:100%;max-height:100%;
+object-fit:contain;border:0;border-radius:0}
+.card.fallback figcaption{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.45}
+.card.fallback.text-only .card-box{background:linear-gradient(155deg,#221e1a 0%,#3b332a 55%,#2a241f 100%);
+color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:34px 28px}
+.cover-kicker{font-size:10px;letter-spacing:.2em;color:#d8b9a8;margin:0 0 18px}
+.cover-text{font-family:"Noto Serif SC","Source Han Serif SC","Songti SC",SimSun,Georgia,serif;
+font-size:25px;line-height:1.4;font-weight:600;text-wrap:balance}
+.cover-rule{width:44px;height:3px;background:#c96442;border-radius:2px;margin:22px auto 0}
+h1{font-family:"Noto Serif SC","Source Han Serif SC","Songti SC",SimSun,Georgia,serif;
+font-size:30px;line-height:1.25;letter-spacing:-.01em;margin:0 0 18px;text-wrap:balance}
+p{font-size:17px;margin:0 0 14px}strong{font-weight:700}
+.tags{margin-top:18px;display:flex;gap:8px;flex-wrap:wrap}
+.tag{background:#eeede6;color:var(--muted);border-radius:999px;padding:4px 10px;font-size:12px}
+hr{border:0;border-top:1px solid var(--line);margin:28px 0}
+a{color:var(--accent)}
+</style>
+</head>
+<body>
+<main class="content">
+<div class="reader-actions"><a class="trace-link" href="../../20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note">运行数据</a><button id="copy-note-btn" type="button">复制标题+正文+标签</button></div>
+<section class="cards"><div class="cards-head">配图 · 1 张（按顺序保存或上传）</div><div class="card-list"><figure class="card"><img src="xhs_export/01_cover.png" alt=""><div class="card-actions"><button type="button" class="copy-image-btn" data-src="xhs_export/01_cover.png">复制图片</button><a class="download-link" href="xhs_export/01_cover.png" download>下载</a></div></figure></div></section>
+<div id="note-text">
+<h1>DeepSeek Harness：不是新模型，是一套 Agent 组装平台</h1>
+<p>先说结论：DeepSeek Harness 不是新模型。</p>
+<p>也不是 DeepSeek 版的 Codex。</p>
+<p>它是一套用来构建、运行、扩展 Agent 的开源平台。模型是大脑，负责理解、推理、做决策；它负责把大脑接到文件、终端、网页上，管住任务怎么跑、上下文留多少、权限开到哪。</p>
+<p>一句话，它不生产智能，它组装智能。</p>
+<p>实测是这么玩的：让接入 DeepSeek V4 Flash 的 Harness 从零做一个射击游戏，全程不插手。</p>
+<p>30 多分钟后，一个简单能玩的游戏出来了。</p>
+<p>顺手让它把“华强买瓜”做成 3D 动画，剧情和人物关系基本都还原了。同样的提示词，效果比 GPT-5.6 SOUL 驱动的 Codex 好。</p>
+<p>但边界得说清楚：距离完美还很远，不是能直接上线的成品。</p>
+<p>它凭什么做到？两件事。</p>
+<p>一是<strong>一切皆插件</strong>。模型、文件系统、终端、网页、子 Agent、工作流、安全策略，连 Agent 循环本身，都能插上去、拔下来。</p>
+<p>二是<strong>日志可复盘</strong>。模型看见的每一条内容、每次工具调用的结果，理论上都能从日志里重建。任务跑歪了，能回头查到是哪一步出的问题，而不是只拿到一个失败结果。</p>
+<p>想试的话：去官方开源仓库按说明配置部署，普通用户推荐用 Web UI。它给了四种模式——标准、PTC、极简、创造，各自加载不同的插件和运行能力。</p>
+<p>你会先让它做什么？</p>
+
+<div class="tags"><span class="tag">#AIAgent</span><span class="tag">#DeepSeek</span><span class="tag">#开源项目</span><span class="tag">#AI工具</span><span class="tag">#Agent开发</span></div>
+</div>
+</main>
+
+<script>
+async function copyImage(src) {
+  try {
+    if (!navigator.clipboard || !window.ClipboardItem) {
+      throw new Error('当前浏览器不支持复制图片');
+    }
+    const resp = await fetch(src, {cache: 'no-store'});
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    let blob = await resp.blob();
+    if (blob.type !== 'image/png') {
+      const bitmap = await createImageBitmap(blob);
+      const canvas = document.createElement('canvas');
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
+      canvas.getContext('2d').drawImage(bitmap, 0, 0);
+      blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+    }
+    await navigator.clipboard.write([new ClipboardItem({'image/png': blob})]);
+    alert('图片已复制，可粘贴到手机传输助手或编辑器');
+  } catch (err) {
+    alert('复制失败：' + err);
+  }
+}
+function bindCopyButtons() {
+  document.querySelectorAll('.copy-image-btn').forEach((btn) => {
+    if (btn.dataset.bound) return;
+    btn.dataset.bound = '1';
+    btn.addEventListener('click', () => copyImage(btn.dataset.src));
+  });
+}
+bindCopyButtons();
+</script>
+
+
+<script>
+document.getElementById('copy-note-btn').addEventListener('click', async () => {
+  const text = document.getElementById('note-text').innerText.trim();
+  try {
+    await navigator.clipboard.writeText(text);
+    alert('已复制标题、正文和标签');
+  } catch (err) {
+    alert('复制失败：' + err);
+  }
+});
+</script>
+
+</body></html>

@@ -1,74 +1,55 @@
-# 文档索引（2026-11-09）
+# 文档索引
 
-> **项目现名：Facet Studio（原 LunoGraph）**。当前代码/文档已统一更名；`docs/_frozen/`、`_archive/` 保留旧名/旧路径，只作历史。
-> 目的：区分 **current（当前产品/实现）** 与 **historical（旧设计/旧 JD/旧 handoff）**，避免后续 session 把历史当基线。
-> 入口：[CLAUDE.md](../CLAUDE.md)；护栏：[AGENTS.md](../AGENTS.md)。
+> 项目现名 **Facet Studio**。公开仓库只保留当前产品/实现文档；内部交接、历史稿和
+> 求职材料不随仓库发布。
+> 入口：[README.md](../README.md)；产品定义：[product-v1-chat-studio.md](product-v1-chat-studio.md)；
+> 系统架构：[architecture.md](../architecture.md) §0–§9。
 
-## Current — 产品 / 架构 / 实现
+## 产品 / 架构
 
 | 文档 | 作用 |
 |---|---|
 | [product-v1-chat-studio.md](product-v1-chat-studio.md) | 产品 v1：聊天式内容工作台；用户怎么用、UI、数据分层、路线 |
 | [ui-design-2026-11.md](ui-design-2026-11.md) | UI 设计：chat-first、预览、执行面板、视觉 token、LibreChat 定制点 |
-| [architecture.md](../architecture.md) §0–§9 | 目标产品架构、组件、当前代码 vs 目标、路线；**文末附录是 v3 机会地图（历史）** |
-| [writing-v5-architecture.md](writing-v5-architecture.md) | 当前写作引擎（writing_v4）：planner/orchestrator/writer/skills/tools/bundle；不是产品壳 |
-| [jd-mapping-2026-11.md](jd-mapping-2026-11.md) | 2026 JD 真实含义、产品 consumer、评测口径（数据集/指标/校准/回归/pass^k） |
-| [jd-keywords-2026-11-08.md](jd-keywords-2026-11-08.md) | 2026-11-08 外部关键词复核：多 Agent/记忆/规划/评测/Trace/Harness；项目证据 vs 缺口 |
-| [observability-2026-11.md](observability-2026-11.md) | 可观测设计：运行中/复盘两段、消息级运行卡、逐帧审计、Trace/Stats；本地轻量，不自建 Langfuse |
-| [runtime-evidence-2026-11-09.md](runtime-evidence-2026-11-09.md) | 2026-11-09 运行时证据：P4 10 cases、最新 E2E、/runs 聚合；含不可引用口径 |
-| [github-resume-checklist-2026-11-09.md](github-resume-checklist-2026-11-09.md) | GitHub/简历发布前检查：LICENSE、demo、P4 fixture、素材版权、CI、可写/不可写 |
-| [visual-strategy-2026-11.md](visual-strategy-2026-11.md) | 视觉策略：关键帧极紧门槛、图注默认不加、语义绘图/原生组件优先 |
-| [reuse-stack-2026-11.md](reuse-stack-2026-11.md) | LibreChat / MCP / LangGraph / Pandoc / md2wechat / 卡片库复用与 license |
-| [integrations/librechat/](../integrations/librechat/README.md) | P1/P2 LibreChat + MCP + preview server 配置/启动/验收；外部 clone 主题/工具名补丁 |
-| [integrations/xhs/](../integrations/xhs/README.md) | 小红书 3:4 卡片 + App 导入包（Playwright） |
-| [integrations/pdf/](../integrations/pdf/README.md) | 深度总结 PDF（Pandoc + Tectonic + ctex 模板） |
-| [evidence-layer-2026-11.md](evidence-layer-2026-11.md) | P5 视频证据层迁移：下载/抽帧/ASR/VLM/substrate → content.md；配置/验证/未验证 |
-| [evals/product_v1/](../evals/product_v1/README.md) | P4 deterministic + grounding audit 数据集/报告/协议 |
-| [writing-rebuild-brief.md](writing-rebuild-brief.md) §2/§3 | 好 writing / 开发纪律；§4–§9 是历史/写作引擎背景 |
+| [architecture.md](../architecture.md) §0–§9 | 目标产品架构、组件、当前代码 vs 目标、路线 |
+| [writing-v5-architecture.md](writing-v5-architecture.md) | 当前写作引擎（writing_v4）：planner/orchestrator/writer/skills/tools/bundle |
 | [substrate-v1-freeze.md](substrate-v1-freeze.md) | substrate v1 接口（冻结，只读） |
 
-## Current — 快照 / 证据
+## 可观测 / 评测 / 证据
 
 | 文档 | 作用 |
 |---|---|
-| [STATE.md](../STATE.md) | 当前分支/代码/测试/未做项事实 |
-| [HANDOFF.md](../HANDOFF.md) | 当前接手点/下一步 |
-| [handoffs/2026-11-09/NEXT_SESSION_PROMPT.md](../handoffs/2026-11-09/NEXT_SESSION_PROMPT.md) | **最新快照**：架构 → JD 校准 → 代码阅读 → 收尾判断；当前事实、证据、GitHub/简历清单 |
-| [handoffs/2026-11-07/NEXT_SESSION_PROMPT_P5.md](../handoffs/2026-11-07/NEXT_SESSION_PROMPT_P5.md) | 方法入口：产品/方法/纪律/自检/风险/整体推进分析 |
-| [handoffs/2026-11-07/NEXT_SESSION_PROMPT.md](../handoffs/2026-11-07/NEXT_SESSION_PROMPT.md) | 旧 P2 快照（历史，保留不改） |
-| [handoffs/2026-11-07/ROUND_REVIEW.md](../handoffs/2026-11-07/ROUND_REVIEW.md) | 旧 P2 自检（历史） |
-| [evidence-2026-11.md](evidence-2026-11.md) | 可提交的 run 证据摘要（P1–P5）：run id、形态、字数/图数、tokens、时延、验收；原始 run 在本地 `runs/`，不入库 |
-| `runs/writing_v5/`（本地，gitignored） | bundle 与 trace 原始证据；公开仓库不含 |
-| `runs/product_v1/`（本地，gitignored） | P1/P2/P3 产品原型 run：内容稿、article/note、reader.html、wechat.html、xhs_export、PDF、run_meta、publish_review；公开仓库不含 |
+| [observability-2026-11.md](observability-2026-11.md) | 运行中/复盘两段、消息级运行卡、逐帧审计、Trace/Stats |
+| [runtime-evidence-2026-11-09.md](runtime-evidence-2026-11-09.md) | 2026-11-09 运行时证据：P4 cases、最新 E2E、/runs 聚合；含不可引用口径 |
+| [visual-strategy-2026-11.md](visual-strategy-2026-11.md) | 视觉策略：关键帧极紧门槛、图注默认不加、语义绘图/原生组件优先 |
+| [evidence-layer-2026-11.md](evidence-layer-2026-11.md) | P5 视频证据层：下载/抽帧/ASR/VLM/substrate → content.md |
+| [evidence-2026-11.md](evidence-2026-11.md) | 可提交的 run 证据摘要（P1–P5） |
+| [evals/product_v1/](../evals/product_v1/README.md) | P4 deterministic + grounding audit：数据集/报告/协议 |
 
-## Historical — 不要当 current
+## 复用 / 集成
 
-| 文档 | 说明 |
+| 文档 | 作用 |
 |---|---|
-| [multiform-roadmap.md](multiform-roadmap.md) | 2026-11-05 多文体路线；JD 表是 pre-2026，已被 [jd-mapping-2026-11.md](jd-mapping-2026-11.md) 取代 |
-| [social-writing-reuse-map.md](social-writing-reuse-map.md) | 2026-11-05 社媒调研；当前复用栈见 [reuse-stack-2026-11.md](reuse-stack-2026-11.md) |
-| [writing-reuse-map.md](writing-reuse-map.md) | 旧复用决策；当前复用栈见 [reuse-stack-2026-11.md](reuse-stack-2026-11.md) |
-| [reference-writing-scan.md](reference-writing-scan.md) | 2026-10-31 参考扫描；历史 |
-| [evals/writing/](../evals/writing/) | 旧 request 模板；不是当前 eval；当前见 [evals/product_v1/](../evals/product_v1/README.md) |
-| [writing-layer-map.md](writing-layer-map.md) | v1 写作层设计；历史 |
-| [writing-layer-contracts.md](writing-layer-contracts.md) | v1 契约设计；历史 |
-| [writing-operating-model.md](writing-operating-model.md) | v1 operating model；历史 |
-| [writing-planner-position.md](writing-planner-position.md) | 旧 planner 定位；历史 |
-| [writing-skill-study.md](writing-skill-study.md) | 旧 skill 学习笔记；历史 |
-| [architecture.md](../architecture.md) 文末附录 | v3 机会地图/早期实现假设；不是当前实现 |
-| `runs/_reader_test_2026-11-03/reader_pack/`（本地，gitignored） | 12 维/5 层写作标准与 persona；评测设计参考，不是当前 eval 流程 |
-| [handoffs/](../handoffs/) | 历史交接，只追加 |
-| [_archive/](../_archive/) | 归档；不恢复 |
-| [portfolio/](../portfolio/) | 旧 P1 作品案例；历史，不是 current eval |
-| [deliverables/writing-skill/](../deliverables/writing-skill/) | 旧 articles-only 作品集；历史，不是当前产品 |
-| [skills/writing/video-article/README.md](../skills/writing/video-article/README.md) | 旧 article pipeline 说明；SKILL.md 仍是 active，README 的一致性 pass 不是当前默认 |
+| [reuse-stack-2026-11.md](reuse-stack-2026-11.md) | LibreChat / MCP / LangGraph / Pandoc / md2wechat / 卡片库复用与 license |
+| [integrations/librechat/](../integrations/librechat/README.md) | LibreChat + MCP + preview server 配置/启动/验收 |
+| [integrations/xhs/](../integrations/xhs/README.md) | 小红书 3:4 卡片 + App 导入包（Playwright） |
+| [integrations/pdf/](../integrations/pdf/README.md) | 深度总结 PDF（Pandoc + Tectonic + ctex 模板） |
+| [examples/demo/](../examples/demo/README.md) | 一份可公开的真实产物样本（无视频帧） |
+| [demo-script.md](demo-script.md) | 3 分钟 demo 分镜（截图版） |
+
+## 方法与边界
+
+| 文档 | 作用 |
+|---|---|
+| [writing-rebuild-brief.md](writing-rebuild-brief.md) §2/§3 | 好 writing 的判断标准 + 开发纪律 |
+| [jd-mapping-2026-11.md](jd-mapping-2026-11.md) | 2026 JD 能力映射与评测口径（产品视角） |
+| [jd-keywords-2026-11-08.md](jd-keywords-2026-11-08.md) | 2026-11-08 外部关键词复核 |
 
 ## 冲突处理
 
-- 产品/UX 冲突：以 [product-v1-chat-studio.md](product-v1-chat-studio.md) 为准。
-- UI/视觉冲突：以 [ui-design-2026-11.md](ui-design-2026-11.md) 为准。
-- 系统架构冲突：以 [architecture.md](../architecture.md) §0–§9 为准。
-- 写作引擎冲突：以 [writing-v5-architecture.md](writing-v5-architecture.md) 为准。
-- JD/评测冲突：以 [jd-mapping-2026-11.md](jd-mapping-2026-11.md) 为准；旧 roadmap 的 JD 表不要用。
-- 复用/license 冲突：以 [reuse-stack-2026-11.md](reuse-stack-2026-11.md) 为准。
-- 当前状态冲突：以 [STATE.md](../STATE.md) 为准。
+- 产品/UX：以 [product-v1-chat-studio.md](product-v1-chat-studio.md) 为准。
+- UI/视觉：以 [ui-design-2026-11.md](ui-design-2026-11.md) 为准。
+- 系统架构：以 [architecture.md](../architecture.md) §0–§9 为准。
+- 写作引擎：以 [writing-v5-architecture.md](writing-v5-architecture.md) 为准。
+- JD/评测：以 [jd-mapping-2026-11.md](jd-mapping-2026-11.md) 为准。
+- 复用/license：以 [reuse-stack-2026-11.md](reuse-stack-2026-11.md) 为准。

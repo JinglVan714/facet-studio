@@ -1,19 +1,44 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "facet-studio"
 version = "0.1.0"
 description = "Chat-first video-to-article studio: one form per request, evidence-backed, human review"
+license = {text = "MIT"}
 requires-python = ">=3.11"
 dependencies = [
-  "pydantic>=2.12",
-  "openai>=1.109",
-  "fastapi>=0.124",
-  "uvicorn>=0.38",
+  "pydantic>=2.12,<3",
+  "openai>=1.109,<4",
+  "fastapi>=0.124,<1",
+  "uvicorn>=0.38,<1",
   "mcp>=1.27,<2",
-  "langgraph>=1.2",
-  "langgraph-checkpoint-sqlite>=3.1",
-  "markdown-it-py>=4.0",
-  "pypdf>=6.21",
+  "langgraph>=1.2,<2",
+  "langgraph-checkpoint-sqlite>=3.1,<4",
+  "markdown-it-py>=4.0,<5",
+  "pypdf>=6.21,<8",
+  "pillow>=11.0,<13",
+  "tiktoken>=0.12,<1",
+  "numpy>=2.0,<3",
 ]
+
+[project.optional-dependencies]
+test = ["pytest>=9.0,<10"]
+evidence = [
+  "av>=17.0,<18",
+  "dashscope>=1.25,<2",
+  "yt-dlp>=2026.7",
+  "imageio-ffmpeg>=0.6,<1",
+  "scenedetect>=0.6,<1",
+  "imagehash>=4.3,<5",
+  "numpy>=2.0,<3",
+  "requests>=2.32,<3",
+  "certifi>=2025.11",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

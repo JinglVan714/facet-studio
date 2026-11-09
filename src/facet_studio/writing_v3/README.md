@@ -19,25 +19,25 @@ Commands (from project root; Python 3.11):
 
 ```bash
 # 1) units -> sentences/passages
-PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m facet_studio.writing_v3.transcript \
+PYTHONPATH=src python -m facet_studio.writing_v3.transcript \
   --units data/<video>/substrate/units.jsonl \
   --contract data/<video>/substrate/contract.json \
   --out-dir runs/v3_poc/<video>_transcript
 
 # 2) passages -> claims (one model call)
-PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m facet_studio.writing_v3.claim_extract \
+PYTHONPATH=src python -m facet_studio.writing_v3.claim_extract \
   --passages runs/v3_poc/<video>_transcript/passages.json \
   --out-dir runs/v3_poc/<video>_claims
 
 # 3) claims -> EvidencePack
-PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m facet_studio.writing_v3.pack_from_claims \
+PYTHONPATH=src python -m facet_studio.writing_v3.pack_from_claims \
   --claims runs/v3_poc/<video>_claims/claims.json \
   --passages runs/v3_poc/<video>_transcript/passages.json \
   --sentences runs/v3_poc/<video>_transcript/sentences.json \
   --snapshot runs/<substrate_run>/evidence_snapshot.json \
   --outline runs/<substrate_run>/temporal_outline.json \
   --knowledge runs/<substrate_run>/knowledge_snapshot.json \
-  --request handoffs/2026-10-31/examples/<video>_request.json \
+  --request path/to/<video>_request.json \
   --contract data/<video>/substrate/contract.json \
   --video-id <video> \
   --out runs/v3_poc/<video>_pack.json \
@@ -46,7 +46,7 @@ PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m facet_studio.writing_v3.
 # optional: --writer-part-max-chars 2000 for C part grouping
 
 # 4) edited transcript (writer-facing text + audit source_map; no model)
-PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m facet_studio.writing_v3.edited_transcript \
+PYTHONPATH=src python -m facet_studio.writing_v3.edited_transcript \
   --pack runs/v3_poc/<video>_pack.json \
   --passages runs/v3_poc/<video>_transcript/passages.json \
   --sentences runs/v3_poc/<video>_transcript/sentences.json \
@@ -56,14 +56,14 @@ PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m facet_studio.writing_v3.
   --out-manifest runs/v3_poc/<video>_edited_manifest.json
 
 # 5) one Writer (structured contract, kept for comparison; prose-only is P1)
-PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m facet_studio.writing_v3.one_call_writer \
+PYTHONPATH=src python -m facet_studio.writing_v3.one_call_writer \
   --pack runs/v3_poc/<video>_pack.json \
   --skill-dir skills/writing/reader_first_explainer \
-  --request handoffs/2026-10-31/examples/<video>_request.json \
+  --request path/to/<video>_request.json \
   --out-dir runs/v3_poc/<video>_one_call
 
 # 6) post-hoc article binding (no model)
-PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m facet_studio.writing_v3.bind_article \
+PYTHONPATH=src python -m facet_studio.writing_v3.bind_article \
   --article runs/v3_poc/<video>_one_call/reader.md \
   --pack runs/v3_poc/<video>_pack.json \
   --sentences runs/v3_poc/<video>_transcript/sentences.json \
@@ -72,7 +72,7 @@ PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m facet_studio.writing_v3.
   --out runs/v3_poc/<video>_article_binding.json
 
 # 7) S2 probe (dry-run by default; --run calls the model)
-PYTHONPATH=src "D:/anaconda/envs/myagent/python.exe" -m facet_studio.writing_v3.probe \
+PYTHONPATH=src python -m facet_studio.writing_v3.probe \
   --case-id <video> \
   --units data/<video>/substrate/units.jsonl \
   --passages runs/v3_poc/<video>_transcript/passages.json \
@@ -88,4 +88,4 @@ M1 light path (no claim extraction):
 - `quote_hygiene.py` — remove quote marks around non-exact paraphrases.
 - `generate.py` — edited text/article → prose Writer (optional `--run`) → quote hygiene → `bind_article` → article/reader/binding. Dry-run by default.
 
-P0/P1/P1b/P3/M1 evidence: `runs/p0_edit/analysis.md`、`runs/p1_prose/analysis.md`、`runs/p1b_prose/analysis.md`、`runs/p3_light/analysis.md`、`runs/m1_light/analysis.md`、`runs/m1_real/analysis.md`；旧 P0 `handoffs/2026-10-31/p0-one-call.md`、samples `handoffs/2026-10-31/examples/`。
+P0/P1/P1b/P3/M1 的历史运行证据只保留在本地，不随公开仓库发布。

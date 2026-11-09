@@ -1,0 +1,156 @@
+{
+  "schema": "facet-studio-demo-trace-summary-v1",
+  "run_id": "20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note",
+  "stages": [
+    {
+      "name": "intake",
+      "status": "succeeded",
+      "duration_ms": 0
+    },
+    {
+      "name": "plan",
+      "status": "succeeded",
+      "duration_ms": 32251
+    },
+    {
+      "name": "approval",
+      "status": "auto_approved",
+      "duration_ms": 0
+    },
+    {
+      "name": "write",
+      "status": "succeeded",
+      "duration_ms": 13181
+    },
+    {
+      "name": "typeset",
+      "status": "succeeded",
+      "duration_ms": 5723
+    },
+    {
+      "name": "review",
+      "status": "approved",
+      "duration_ms": 0
+    }
+  ],
+  "llm_calls": [
+    {
+      "stage": "visual_audit",
+      "key": "visual_audit:figures/fig-01.jpg",
+      "model": "deepseek-flash",
+      "status": "succeeded",
+      "tokens": 1517,
+      "latency_ms": 3829
+    },
+    {
+      "stage": "visual_audit",
+      "key": "visual_audit:figures/fig-02.jpg",
+      "model": "deepseek-flash",
+      "status": "succeeded",
+      "tokens": 1876,
+      "latency_ms": 7667
+    },
+    {
+      "stage": "visual_audit",
+      "key": "visual_audit:figures/fig-03.jpg",
+      "model": "deepseek-flash",
+      "status": "succeeded",
+      "tokens": 1615,
+      "latency_ms": 4723
+    },
+    {
+      "stage": "visual_audit",
+      "key": "visual_audit:figures/fig-04.jpg",
+      "model": "deepseek-flash",
+      "status": "succeeded",
+      "tokens": 1932,
+      "latency_ms": 7015
+    },
+    {
+      "stage": "bundle_plan",
+      "key": "BV1brgs6mE7a:planner",
+      "model": "deepseek-flash",
+      "status": "succeeded",
+      "tokens": 2719,
+      "latency_ms": 8208
+    },
+    {
+      "stage": "write_xiaohongshu_note",
+      "key": "BV1brgs6mE7a:xiaohongshu_note",
+      "model": "deepseek-flash",
+      "status": "succeeded",
+      "tokens": 6203,
+      "latency_ms": 13136
+    }
+  ],
+  "tool_spans": [
+    {
+      "tool_name": "intake",
+      "actor": "workflow",
+      "status": "succeeded",
+      "latency_ms": 0
+    },
+    {
+      "tool_name": "plan",
+      "actor": "workflow",
+      "status": "succeeded",
+      "latency_ms": 32251
+    },
+    {
+      "tool_name": "approval",
+      "actor": "workflow",
+      "status": "auto_approved",
+      "latency_ms": 0
+    },
+    {
+      "tool_name": "write",
+      "actor": "workflow",
+      "status": "succeeded",
+      "latency_ms": 13181
+    },
+    {
+      "tool_name": "typeset",
+      "actor": "workflow",
+      "status": "succeeded",
+      "latency_ms": 5723
+    }
+  ],
+  "decisions": [
+    {
+      "stage": "plan",
+      "question": "这次写哪种形态？",
+      "selected": "xiaohongshu_note",
+      "decided_by": "lead_planner"
+    },
+    {
+      "stage": "approval",
+      "question": "确认计划卡后继续写作？",
+      "selected": "auto_approved",
+      "decided_by": "auto_approve"
+    }
+  ],
+  "usage": {
+    "total_tokens": 15862
+  },
+  "checks": {
+    "passed": 15,
+    "total": 15
+  },
+  "grounding": {
+    "flags": [
+      {
+        "kind": "entity_not_in_content",
+        "value": "AIAgent",
+        "context": ""
+      },
+      {
+        "kind": "entity_not_in_content",
+        "value": "Web",
+        "context": ""
+      }
+    ],
+    "by_kind": {
+      "entity_not_in_content": 2
+    }
+  }
+}

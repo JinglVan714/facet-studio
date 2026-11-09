@@ -1,7 +1,7 @@
 # 产品 v1：Facet Studio 聊天式内容工作台
 
-> 状态：2026-11-06 产品定义已确认；P1/P2 原型已跑通；**P3 workflow 原型、P4 deterministic/grounding harness、P5 证据层已接**；2026-11-09 聊天侧改为后台 run + 消息级运行卡 + 右侧预览抽屉，默认 `auto_plan=True` 直写，计划卡仅在用户明确要求时出现。当前代码/事实见 [architecture.md](../architecture.md) §4、[STATE.md](../STATE.md)；启动见 [integrations/librechat/README.md](../integrations/librechat/README.md)。
-> 上位：[AGENTS.md](../AGENTS.md)；系统架构见 [architecture.md](../architecture.md)；写作引擎见 [writing-v5-architecture.md](writing-v5-architecture.md)；JD 见 [jd-mapping-2026-11.md](jd-mapping-2026-11.md)；复用栈见 [reuse-stack-2026-11.md](reuse-stack-2026-11.md)。
+> 状态：2026-11-06 产品定义已确认；P1/P2 原型已跑通；**P3 workflow 原型、P4 deterministic/grounding harness、P5 证据层已接**；2026-11-09 聊天侧改为后台 run + 消息级运行卡 + 右侧预览抽屉，默认 `auto_plan=True` 直写，计划卡仅在用户明确要求时出现。当前代码/事实见 [architecture.md](../architecture.md) §4；启动见 [integrations/librechat/README.md](../integrations/librechat/README.md)。
+> 系统架构见 [architecture.md](../architecture.md)；写作引擎见 [writing-v5-architecture.md](writing-v5-architecture.md)；JD 见 [jd-mapping-2026-11.md](jd-mapping-2026-11.md)；复用栈见 [reuse-stack-2026-11.md](reuse-stack-2026-11.md)。
 > 本文只定义产品/UX/数据边界，不复制写作方法。方法/纪律看 [writing-rebuild-brief.md](writing-rebuild-brief.md) §2/§3。
 
 ## 0. 一句话

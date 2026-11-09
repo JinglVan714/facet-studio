@@ -76,7 +76,7 @@
 - 真实 run 验证：`20261108T154015Z_BV1B5411A7ax_wechat_article`（2 calls / 36,619 tokens / 105.4s / 6 tool spans / 3 decisions / checks 15/15 / grounding 0 / 2,288 字 / 内容稿 10 图 / 正文引用 0，待验收）。
 - 视觉审计修复后 run `20261109T072111Z_BV1B5411A7ax_wechat_article`：8 calls / 43,841 tokens / 128.3s / 6 候选 0 通过（水印/人物/UI）/ 0 关键帧 / 2,194 字 / checks 15/15 / grounding 4；Stats 运行配置里显示“视觉审计 6 候选 / 0 通过”和未通过原因。
 - 聊天侧（`client/src/components/Facet/*`）：每个 assistant 消息只渲染一张运行卡，不再有 `FacetRunLinks` 或“执行过程”分组；卡轮询 `/api/card`，显示消息级阶段轨、当前步骤/已用时间、计划、视觉审计结论、字数和交付物；原始 JSON 只留在 Run Detail/Trace。`wait_workflow` 只返回压缩摘要，避免 MCP 输出被截断后模型读错图数。
-- 端到端 run `20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note`：后台启动 → 卡片“正在启动 → 正在进行 → 规划完成 → 等待验收”；793 字 / 1 张卡片 / 0 关键帧 / 6 calls / 15,862 tokens / 51.2s 墙钟（LLM 调用合计 44.6s）；聊天一张卡，无重复按钮、无“执行过程”分组、无裸 URL。
+- 端到端 run `20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note`：后台启动 → 卡片“正在启动 → 正在进行 → 规划完成 → 等待验收 → 已验收”；793 字 / 1 张卡片 / 0 关键帧 / 6 calls / 15,862 tokens / 51.2s 墙钟（LLM 调用合计 44.6s）/ review=approved；聊天一张卡，无重复按钮、无“执行过程”分组、无裸 URL。
 
 ## 5. JD 映射
 

@@ -1,0 +1,22 @@
+{
+  "schema_version": "product-eval-cases-v1",
+  "dataset": "product_v1_fixture",
+  "notes": "Synthetic fixture, not a real user run. Proves the harness runs on a clean clone without local runs/.",
+  "cases": [
+    {
+      "case_id": "fixture_xhs_contract",
+      "kind": "capability",
+      "video_id": "FIXTURE",
+      "form": "xiaohongshu_note",
+      "run_id": "fixture_xhs_20261109",
+      "require_approval": true,
+      "min_body_chars": 100,
+      "max_body_chars": 1000,
+      "min_figures": 0,
+      "min_cards": 1,
+      "must_include": [
+        "fixture"
+      ]
+    }
+  ]
+}

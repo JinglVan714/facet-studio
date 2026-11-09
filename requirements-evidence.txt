@@ -1,0 +1,13 @@
+# P5 视频证据层依赖（下载 / 抽帧 / ASR / VLM）。
+# 只跑写作/产品壳/测试时不需要装这些。
+# 需要 Python 3.11/3.12；不要用 3.13（av / dashscope 装不上）。
+
+av>=17.0,<18
+dashscope>=1.25,<2
+yt-dlp>=2026.7
+imageio-ffmpeg>=0.6,<1
+scenedetect>=0.6,<1
+imagehash>=4.3,<5
+numpy>=2.0,<3
+requests>=2.32,<3
+certifi>=2025.11

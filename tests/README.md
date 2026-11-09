@@ -1,11 +1,14 @@
 # tests
 
-v3 的测试还没有正式建立。当前 P0 的验证是运行记录 + trace，不是测试套件：
+公开仓库的测试覆盖：MCP server / workflow / typesetting / PDF / XHS cards /
+product eval / grounding / ingest / visual audit 等。运行：
 
-- [P0 one-call 报告](../handoffs/2026-10-31/p0-one-call.md)
-- [substrate 审计](../handoffs/2026-10-31/substrate-audit.md)
-- 样例 reader/claims/pack：[handoffs/2026-10-31/examples/](../handoffs/2026-10-31/examples/)
+```bash
+PYTHONPATH=src PYTHONUTF8=1 python -m pytest tests -q
+```
 
-v2 测试（`tests/writing_v2/`）是冻结素材，不在 v3 分支；不要从它恢复 R1–A5/P1 链路。
+测试不依赖 `data/`、`runs/` 或 API key；P4 的合成 fixture 在
+`evals/product_v1/fixtures/`。
 
-下一步：为 `transcript` / `claim_extract` / `pack_from_claims` / `one_call_writer` 建离线 fixture + fake provider 测试；先覆盖 determinism、quote/ID 校验、coverage-aware selection、trace receipt。
+本地全量测试可能包含 gitignored 的 `tests/writing_v2/` 旧测试；它不属于公开
+仓库的测试面，也不代表当前实现。

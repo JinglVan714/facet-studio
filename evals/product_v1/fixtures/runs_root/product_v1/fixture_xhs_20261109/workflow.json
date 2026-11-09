@@ -1,0 +1,42 @@
+{
+  "status": "approved",
+  "next": [],
+  "stages": [
+    {
+      "name": "intake",
+      "status": "succeeded",
+      "usage": {}
+    },
+    {
+      "name": "plan",
+      "status": "succeeded",
+      "usage": {
+        "total_tokens": 120
+      }
+    },
+    {
+      "name": "approval",
+      "status": "approved",
+      "usage": {}
+    },
+    {
+      "name": "write",
+      "status": "succeeded",
+      "usage": {
+        "total_tokens": 240
+      }
+    },
+    {
+      "name": "typeset",
+      "status": "succeeded",
+      "usage": {}
+    },
+    {
+      "name": "review",
+      "status": "approved",
+      "usage": {}
+    }
+  ],
+  "events": [],
+  "errors": []
+}

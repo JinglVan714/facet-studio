@@ -59,7 +59,7 @@
 - run 证据：`lead_plan.json`、`task_plan.json`、`llm_calls.jsonl`、`tool_calls.jsonl`、`decision_records.jsonl`、`working_memory.json`、`artifact_board.json`、`semantic_memory.json`、`bundle_manifest.json`。
 - 成本样例：BV17 3 calls / 35,905 tokens；BV1ix 3 calls / 35,453 tokens；墙钟约 1 分钟；无 repair loop。
 - P1 产品原型（2026-11-06）：LibreChat + MCP + preview server；BV17 公众号 2767 字/5 图/approved；BV1ix 小红书 999 字/3 图；证据在 `runs/product_v1/`；配置见 [integrations/librechat/README.md](../integrations/librechat/README.md)。
-- 测试：**clean clone 315 passed / 本地全量 619**（2026-11-09；含 MCP server / 排版 / PDF / workflow / grounding / ingest / visual svg；本地 619 含 gitignored legacy v2）。
+- 测试：**clean clone 315 passed（新增 fixture/相对路径 2 个测试后 317）/ 本地全量 621**（2026-11-09；含 MCP server / 排版 / PDF / workflow / grounding / ingest / visual svg；本地 621 含 gitignored legacy v2）。
 - P5 证据层（2026-11-07 迁移，2026-11-08 真 E2E）：`src/facet_studio/evidence_layer/` + `src/facet_studio/ingest.py`；新视频下载 + DashScope ASR 3.1 + VLM + content + workflow 已跑通；剩用户验收。见 [evidence-layer-2026-11.md](evidence-layer-2026-11.md)。
 
 ## 4. 评测（先预留，产品原型稳定后做）

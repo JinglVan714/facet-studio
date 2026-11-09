@@ -3,10 +3,10 @@
 .env.*
 !.env.example
 
-# 有效只读输入：视频数据（约 283MB，含 cookies/原始媒体）。全量本地只读，不入库；索引见 REFERENCES.md
+# 有效只读输入：视频数据（约 283MB，含 cookies/原始媒体）。全量本地只读，不入库。
 data/
 
-# 有效只读输入：第三方 skills 参考（约 73MB，许可证各异）。全量本地只读，不入库；索引见 REFERENCES.md
+# 有效只读输入：第三方 skills 参考（约 73MB，许可证各异）。全量本地只读，不入库。
 参考素材/
 
 # 用户生成的原始写作模板：仅作规划输入；归一后的 runtime 模板放 skills/templates/
@@ -60,3 +60,29 @@ vendor/
 # 证据层运行时生成的 ffmpeg 副本 / 探针结果（不入库）
 tools/
 results/
+
+# 公开仓库边界：内部交接/开发文档、历史作品素材、个人快照只留本地，不进入公开仓库
+handoffs/
+deliverables/
+STATE.md
+HANDOFF.md
+CLAUDE.md
+AGENTS.md
+REFERENCES.md
+docs/github-resume-checklist-2026-11-09.md
+docs/resume-bullets-2026-11-09.md
+docs/closeout-judgment-2026-11-09.md
+docs/reference-writing-scan.md
+docs/social-writing-reuse-map.md
+docs/backlog-2026-11.md
+docs/multiform-roadmap.md
+docs/writing-reuse-map.md
+docs/writing-layer-contracts.md
+docs/writing-layer-map.md
+docs/writing-operating-model.md
+docs/writing-planner-position.md
+docs/writing-skill-study.md
+docs/substrate-s0.md
+docs/substrate-s1-*.md
+docs/substrate-view-contract.md
+docs/substrate-view-split.md

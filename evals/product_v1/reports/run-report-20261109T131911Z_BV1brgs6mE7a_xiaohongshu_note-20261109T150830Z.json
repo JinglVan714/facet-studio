@@ -1,0 +1,365 @@
+{
+  "schema_version": "facet-run-report-v1",
+  "created_at": "2026-11-09T15:08:30.280620+00:00",
+  "run_id": "20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note",
+  "video_id": "BV1brgs6mE7a",
+  "form": "xiaohongshu_note",
+  "status": "approved",
+  "review": "approved",
+  "workflow": {
+    "status": "approved",
+    "next": [],
+    "stages": [
+      {
+        "name": "intake",
+        "status": "succeeded",
+        "duration_ms": 0,
+        "usage": {},
+        "error": null,
+        "at": "2026-11-09T13:19:11.206732+00:00"
+      },
+      {
+        "name": "plan",
+        "status": "succeeded",
+        "duration_ms": 32251,
+        "usage": {
+          "prompt_tokens": 1624,
+          "completion_tokens": 1095,
+          "total_tokens": 2719,
+          "reasoning_tokens": 656,
+          "cached_tokens": 768
+        },
+        "error": null,
+        "at": "2026-11-09T13:19:43.487322+00:00"
+      },
+      {
+        "name": "approval",
+        "status": "auto_approved",
+        "duration_ms": 0,
+        "usage": {},
+        "error": null,
+        "at": "2026-11-09T13:19:43.493216+00:00"
+      },
+      {
+        "name": "write",
+        "status": "succeeded",
+        "duration_ms": 13181,
+        "usage": {
+          "prompt_tokens": 4419,
+          "completion_tokens": 1784,
+          "total_tokens": 6203,
+          "reasoning_tokens": 1113,
+          "cached_tokens": 3712
+        },
+        "error": null,
+        "at": "2026-11-09T13:19:56.696511+00:00"
+      },
+      {
+        "name": "typeset",
+        "status": "succeeded",
+        "duration_ms": 5723,
+        "usage": {},
+        "error": null,
+        "at": "2026-11-09T13:20:02.427336+00:00"
+      },
+      {
+        "name": "review",
+        "status": "approved",
+        "duration_ms": 0,
+        "usage": {},
+        "error": null,
+        "at": "2026-11-09T14:58:31.135467+00:00"
+      }
+    ],
+    "events": [
+      {
+        "type": "update",
+        "node": "intake",
+        "keys": [
+          "form",
+          "stages",
+          "status"
+        ],
+        "at": "2026-11-09T13:19:11.207730+00:00"
+      },
+      {
+        "type": "update",
+        "node": "plan",
+        "keys": [
+          "plan",
+          "stages",
+          "status",
+          "usage"
+        ],
+        "at": "2026-11-09T13:19:43.487322+00:00"
+      },
+      {
+        "type": "update",
+        "node": "approval",
+        "keys": [
+          "decision",
+          "stages",
+          "status"
+        ],
+        "at": "2026-11-09T13:19:43.494214+00:00"
+      },
+      {
+        "type": "update",
+        "node": "write",
+        "keys": [
+          "stages",
+          "status",
+          "usage",
+          "write"
+        ],
+        "at": "2026-11-09T13:19:56.697508+00:00"
+      },
+      {
+        "type": "update",
+        "node": "typeset",
+        "keys": [
+          "errors",
+          "stages",
+          "status",
+          "typeset"
+        ],
+        "at": "2026-11-09T13:20:02.428334+00:00"
+      },
+      {
+        "type": "interrupt",
+        "value": [
+          {
+            "run_id": "20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note",
+            "plan": {
+              "central_idea": "DeepSeek Harness 不是新模型，而是一套开源 Agent 组装平台：一切皆插件，日志可复盘，实测能自己做出游戏和 3D 动画。",
+              "reader_goal": "刷到的人三秒内明白 Harness 是什么、能干什么，并知道去哪里试。",
+              "angle": "只讲一个反常识（它不是模型，是组装 Agent 的平台）+ 一个实测证据（30 多分钟自己做出游戏），其余全部删掉。",
+              "brief": "开头两三行直接抛出反常识结论和实测结果，别铺垫背景。正文用口语短句、多空行，一条主线走到底：它是什么、试出了什么、凭什么能做到（一切皆插件 + 日志可复盘）、怎么体验。结尾一句轻互动，不要总结段。",
+              "must_use_figures": [],
+              "shared_constraints": [
+                "Harness 不是新模型，是构建、运行、扩展 Agent 的 SDK 和应用框架",
+                "数字写法统一：30 多分钟、四种模式（标准、PTC、极简、创造模式）",
+                "模型名统一写 DeepSeek V4 Pro、DeepSeek V4 Flash、GPT-5.6 SOUL",
+                "实测结果要带上“距离完美还很远”的边界，不写成完美成品",
+                "只使用内容里已有的事实，不补充未提到的能力或数据"
+              ],
+              "content_chars": 1052,
+              "figure_count": 4,
+              "form_label": "小红书"
+            },
+            "typeset": {
+              "run_id": "20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note",
+              "form": "xiaohongshu_note",
+              "html_path": "<project>\\runs\\product_v1\\20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note\\xiaohongshu_note\\reader.html",
+              "preview_url": "http://127.0.0.1:8765/runs/20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note/xiaohongshu_note/reader.html",
+              "html_chars": 5660,
+              "hint": "把 preview_url 给用户打开（需要 preview server 在跑）；同时可以展示 Markdown 正文。",
+              "xhs_export": {
+                "export_dir": "<project>\\runs\\product_v1\\20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note\\xiaohongshu_note\\xhs_export",
+                "images": [
+                  "xhs_export/01_cover.png"
+                ],
+                "manifest": "<project>\\runs\\product_v1\\20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note\\xiaohongshu_note\\xhs_export\\manifest.json",
+                "error": "",
+                "card_urls": [
+                  "http://127.0.0.1:8765/runs/20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note/xiaohongshu_note/xhs_export/01_cover.png"
+                ]
+              },
+              "status": "typeset",
+              "typeset_errors": [],
+              "trace_url": "http://127.0.0.1:8765/runs/20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note"
+            },
+            "question": "产物是否验收通过？",
+            "decisions": [
+              "approved",
+              "changes_requested",
+              "rejected"
+            ]
+          }
+        ],
+        "at": "2026-11-09T13:20:02.446284+00:00"
+      },
+      {
+        "type": "update",
+        "node": "review",
+        "keys": [
+          "stages",
+          "status",
+          "review"
+        ],
+        "at": "2026-11-09T14:58:31.135467+00:00"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 6043,
+      "completion_tokens": 2879,
+      "total_tokens": 8922,
+      "reasoning_tokens": 1769,
+      "cached_tokens": 4480
+    },
+    "cost_estimate": null,
+    "errors": []
+  },
+  "contract": {
+    "passed": true,
+    "checks": [
+      {
+        "check_id": "status_healthy",
+        "passed": true,
+        "detail": "status=approved"
+      },
+      {
+        "check_id": "reader_artifact",
+        "passed": true,
+        "detail": "reader_html=<project>\\runs\\product_v1\\20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note\\xiaohongshu_note\\reader.html"
+      },
+      {
+        "check_id": "manual_acceptance",
+        "passed": true,
+        "detail": "review=approved"
+      },
+      {
+        "check_id": "figures",
+        "passed": true,
+        "detail": "figures=0, missing=[], missing_on_disk=[]"
+      },
+      {
+        "check_id": "body_chars",
+        "passed": true,
+        "detail": "output_chars=793, bounds=0-∞"
+      },
+      {
+        "check_id": "fact_keywords",
+        "passed": true,
+        "detail": "missing=[]"
+      },
+      {
+        "check_id": "forbidden_keywords",
+        "passed": true,
+        "detail": "present=[]"
+      },
+      {
+        "check_id": "trajectory_stages",
+        "passed": true,
+        "detail": "stages=['intake', 'plan', 'approval', 'write', 'typeset', 'review']"
+      },
+      {
+        "check_id": "trajectory_order",
+        "passed": true,
+        "detail": "ordered=['intake', 'plan', 'approval', 'write', 'typeset', 'review']"
+      },
+      {
+        "check_id": "trajectory_no_editor",
+        "passed": true,
+        "detail": "forbidden=[]"
+      },
+      {
+        "check_id": "trajectory_failures",
+        "passed": true,
+        "detail": "failed_stages=[], errors=[]"
+      },
+      {
+        "check_id": "trajectory_hitl",
+        "passed": true,
+        "detail": "review_status=approved"
+      },
+      {
+        "check_id": "trajectory_usage",
+        "passed": true,
+        "detail": "plan_tokens=2719, write_tokens=6203"
+      },
+      {
+        "check_id": "usage_present",
+        "passed": true,
+        "detail": "tokens=15862 (plan+write+visual_audit), latency_ms=21344 (plan+write)"
+      },
+      {
+        "check_id": "xhs_artifact",
+        "passed": true,
+        "detail": "cards=1, dims_1080x1440=True, copy_ui=True"
+      }
+    ],
+    "metrics": {
+      "body_chars": 793,
+      "figures": 0,
+      "planner_tokens": 2719,
+      "writer_tokens": 6203,
+      "total_tokens": 15862,
+      "latency_ms": 21344,
+      "review": "approved",
+      "workflow": true,
+      "planner_trace": true
+    }
+  },
+  "llm_calls": {
+    "count": 6,
+    "total_tokens": 15862,
+    "by_stage": {
+      "bundle_plan": 1,
+      "visual_audit": 4,
+      "write_xiaohongshu_note": 1
+    }
+  },
+  "grounding": {
+    "case_id": "20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note",
+    "run_id": "20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note",
+    "form": "xiaohongshu_note",
+    "status": "approved",
+    "review": "approved",
+    "runtime": {
+      "total_tokens": 8922,
+      "latency_ms": 21344
+    },
+    "numbers": {
+      "checked": 3,
+      "grounded": 3,
+      "all": [
+        "3",
+        "30",
+        "5.6"
+      ],
+      "candidates": []
+    },
+    "quotes": {
+      "checked": 0,
+      "grounded": 0,
+      "candidates": []
+    },
+    "entities": {
+      "checked": 10,
+      "grounded": 1,
+      "candidates": [
+        "AIAgent",
+        "Agent",
+        "Codex",
+        "DeepSeek",
+        "Flash",
+        "GPT-5.6",
+        "Harness",
+        "SOUL",
+        "Web"
+      ]
+    },
+    "scope": {
+      "in_content": [
+        "官方"
+      ],
+      "candidates": []
+    },
+    "flags": [
+      {
+        "kind": "entity_not_in_content",
+        "value": "AIAgent",
+        "context": "",
+        "note": "candidate; may be general knowledge/explanation"
+      },
+      {
+        "kind": "entity_not_in_content",
+        "value": "Web",
+        "context": "",
+        "note": "candidate; may be general knowledge/explanation"
+      }
+    ]
+  },
+  "notes": "Developer run report. Contract/trajectory checks are process checks; grounding flags are candidates, not a hallucination rate. No writing quality score; human acceptance remains the only publish gate."
+}

@@ -7,8 +7,8 @@
 
 最新报告：
 
-- `evals/product_v1/reports/report-20261109T135534Z.json` / `.md`
-- `evals/product_v1/reports/grounding-20261109T135557Z.json` / `.md`
+- `evals/product_v1/reports/report-20261109T145839Z.json` / `.md`
+- `evals/product_v1/reports/grounding-20261109T145839Z.json` / `.md`
 
 ```bash
 PYTHONPATH=src PYTHONUTF8=1 python -m facet_studio.evals.product \
@@ -23,8 +23,8 @@ PYTHONPATH=src PYTHONUTF8=1 python -m facet_studio.evals.grounding \
 | contract_pass_rate | 1.0（10/10） | reader/格式/图/正文/产物合同 + trajectory，**不含 manual acceptance** |
 | trajectory_pass_rate | 1.0（30/30） | 30 = 4 个 workflow case ×6 项 + 6 个 legacy case ×1 项（writer_calls==1）；legacy 没有完整阶段/顺序检查 |
 | error_rate | 0.0 | 固定 cases 的 status failed/partial；不是所有本地 run |
-| manual_acceptance_rate | 0.7（7/10 cases，6/9 unique） | 3 个新 machine run 仍待用户验收；不自动写 approved |
-| deterministic_pass_rate | 0.7 | 包含人工验收，不是 writing quality |
+| manual_acceptance_rate | 0.9（9/10 cases，8/9 unique） | 仅 BV1ix 公众号 1 个 case 待验收；不自动写 approved |
+| deterministic_pass_rate | 0.9 | 包含人工验收，不是 writing quality |
 | planner_trace_rate | 0.6（6/10） | 旧 P1/P2 run 没有 planner trace，单独记录 |
 | p50 / p95 latency | 52,421 / 92,738 ms | 这 10 个 case 的 plan+write 延迟，不含视觉审计/排版/排队 |
 | tokens total | 222,498 | 这 10 个 case 的模型调用总量；9 个 unique run 为 201,350，重复引用多算一次 long run |
@@ -40,7 +40,7 @@ Run：`20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note`（小红书，793 字）
 
 单 run report：
 
-- `evals/product_v1/reports/run-report-20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note-20261109T135616Z.json` / `.md`
+- `evals/product_v1/reports/run-report-20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note-20261109T150830Z.json` / `.md`
 
 | 阶段 | 状态 | 耗时（stage duration） |
 |---|---|---:|
@@ -55,10 +55,10 @@ Run：`20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note`（小红书，793 字）
 - 延迟口径：**6 次 LLM 调用合计 44,578 ms**；**intake→typeset 墙钟 51,220 ms**（不含人工 review 等待、LibreChat 传输和用户输入）。不要写成“用户 44 秒拿到文章”。
 - 交付物：reader.html + 1 张 3:4 卡片（1080×1440）+ 0 关键帧
 - 视觉审计成本：4 个候选 / 0 通过，6,940 tokens / 23,234 ms，约占 51.2s 墙钟的 45.4%；严格“宁可不放图”的策略有显著延迟成本，不能当免费。
-- review：missing（等待人工验收，不自动 approved）
+- review：approved（用户验收，不自动发布）
 - 口径：聊天卡/`trace.latency_ms` 是 LLM 调用之和，可能少算 intake 到首调用前的排队；不要把它当用户感知 SLA。`get_run` 的 21,344 ms 只含 plan+write，也不含视觉审计。
 
-注意：单 run report 的 `contract.passed=false` 是因为该 run 还没有 review 阶段/人工验收，不是 reader/格式/图检查失败；15 项里 11 项通过，`manual_acceptance`、`trajectory_stages`、`trajectory_order`、`trajectory_hitl` 四项未过。这个 run 不在 P4 的 10 个固定 cases 内。
+注意：该 run 不在 P4 的 10 个固定 cases 内；单 run report 的 `contract.passed=true`（15/15 checks），`review=approved`。早期快照曾显示 11/15，是因为还没有 review 阶段；验收后已补 review stage 并重生成 trace。
 
 ## 3. 可观测 / 运行时看板快照
 
@@ -71,11 +71,11 @@ Run：`20261109T131911Z_BV1brgs6mE7a_xiaohongshu_note`（小红书，793 字）
 | tokens_total | 1,014,519 |
 | latency p50 / p95 | 54,262 / 165,590 ms |
 | error_rate | 2.7% |
-| checks | 393/460 |
+| checks | 397/460 |
 | grounding flags | 83 |
 | cost_total | null（未配置费率） |
 
-**口径警告**：这是 `runs/product_v1` 下所有 run 的聚合，包含重复 UI E2E、失败实验和旧原型；不能当成生产 SLA，也不能拿 37 个 run 说“有 37 个用户”。2026-11-09 修正后，未验收 run 的 `manual_acceptance` 不再计为通过，所以 checks 从 423/460 变为 393/460。可引用的说法是“本地 37 个 run 的 trace 聚合，含失败样本；单 run 页面可下钻到 LLM/tool/decision spans”。
+**口径警告**：这是 `runs/product_v1` 下所有 run 的聚合，包含重复 UI E2E、失败实验和旧原型；不能当成生产 SLA，也不能拿 37 个 run 说“有 37 个用户”。2026-11-09 修正后，未验收 run 的 `manual_acceptance` 不再计为通过；本轮验收 A/B/D 后 checks 为 397/460。可引用的说法是“本地 37 个 run 的 trace 聚合，含失败样本；单 run 页面可下钻到 LLM/tool/decision spans”。
 
 单 run 页面：`/runs/<run_id>`（概览 / Live SSE / Trace / Stats）。
 Trace 现在把视觉审计逐帧标成 `视觉审计 · fig-01.jpg` + 未通过原因；决策和阶段是中文标签，原始 ID 收在“开发者详情”。
@@ -85,7 +85,7 @@ Trace 现在把视觉审计逐帧标成 `视觉审计 · fig-01.jpg` + 未通过
 - 用 LangGraph 实现 `intake → plan → approval → write → typeset → review` 工作流，SQLite checkpoint + interrupt，支持端到端直写和人工验收两种模式。
 - 通过 MCP 把写作/排版/验收能力暴露给 LibreChat；消息级运行卡轮询 card API，聊天里只保留一张卡和右侧预览，不把工具 JSON 暴露给用户。
 - 建立 run-level trace：stage / LLM call / tool span / decision record / token / latency；看板支持 p50/p95、error、checks、grounding candidates。
-- 建立 P4 离线 eval harness：10 cases / 9 unique runs，contract 10/10、trajectory 30/30、error 0；人工验收单独统计，不伪造 pass@k。
+- 建立 P4 离线 eval harness：10 cases / 9 unique runs，contract 10/10、trajectory 30/30、error 0、manual 9/10（8/9 unique）；人工验收单独统计，不伪造 pass@k。
 - 视觉审计：4 个候选关键帧逐帧判定，0 通过时明确降级为文字封面/无截图，而不是硬塞图。
 
 **不要写**：真实用户数、生产 QPS、线上 A/B、幻觉率、writing quality 分数、pass@k、Langfuse/OTel 生产部署、multi-tenant 鉴权；也不要把本项目说成 2026 “Harness engineering（ETCLOVG）”全层实现——这里只有 deterministic eval + trace，没有 Execution/Governance 等完整七层。

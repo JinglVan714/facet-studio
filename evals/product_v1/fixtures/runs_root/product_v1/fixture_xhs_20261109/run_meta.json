@@ -1,0 +1,49 @@
+{
+  "schema_version": "product-v1-run-fixture",
+  "run_id": "fixture_xhs_20261109",
+  "video_id": "FIXTURE",
+  "form": "xiaohongshu_note",
+  "form_label": "小红书",
+  "request": "fixture: short note",
+  "status": "approved",
+  "source": {
+    "video_id": "FIXTURE",
+    "title": "Synthetic fixture source (not a real video)",
+    "content_chars": 120,
+    "figure_count": 0
+  },
+  "plan": {
+    "central_idea": "fixture",
+    "forms": [
+      {
+        "form": "xiaohongshu_note"
+      }
+    ]
+  },
+  "visual_audit": {
+    "candidate_count": 0,
+    "approved_count": 0
+  },
+  "planner_usage": {
+    "total_tokens": 120
+  },
+  "planner_latency_ms": 900,
+  "write": {
+    "form": "xiaohongshu_note",
+    "skill_id": "xiaohongshu-note",
+    "skill_version": "0.1.0",
+    "status": "complete",
+    "output": "note.md",
+    "output_chars": 173,
+    "figures_referenced": [],
+    "missing_figures": [],
+    "usage": {
+      "total_tokens": 240
+    },
+    "latency_ms": 1100
+  },
+  "artifacts": {
+    "reader_html": "xiaohongshu_note/reader.html",
+    "xhs_export_dir": "xiaohongshu_note/xhs_export"
+  }
+}

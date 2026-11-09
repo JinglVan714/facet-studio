@@ -7,8 +7,8 @@
 
 | 工具 | 用途 | 默认路径 / 环境变量 |
 | --- | --- | --- |
-| Pandoc | Markdown → LaTeX body | `C:/Users/30279/AppData/Local/Pandoc/pandoc.exe`，可用 `FACET_STUDIO_PANDOC` 覆盖 |
-| Tectonic | LaTeX → PDF（自动拉取宏包） | `D:/luno_external/tectonic/tectonic.exe`，可用 `FACET_STUDIO_TECTONIC` 覆盖 |
+| Pandoc | Markdown → LaTeX body | `pandoc`（PATH），可用 `FACET_STUDIO_PANDOC` 覆盖 |
+| Tectonic | LaTeX → PDF（自动拉取宏包） | `tectonic`（PATH），可用 `FACET_STUDIO_TECTONIC` 覆盖 |
 | pypdf (Python, BSD-3-Clause) | 读取 PDF 页数做结构校验 | `requirements.txt` |
 
 首次编译需要网络下载 ctex/tcolorbox 等宏包；之后走 Tectonic 缓存。

@@ -1,7 +1,7 @@
 # Writing v5 架构：写作引擎（不是产品壳）
 
 > 状态：2026-11-07。**这是写作引擎（writing_v4）的架构，不是产品壳。** 产品 v1 是聊天式内容工作台（LibreChat + MCP + LangGraph），见 [architecture.md](../architecture.md) 和 [product-v1-chat-studio.md](product-v1-chat-studio.md)。
-> 上位：`AGENTS.md`；方法/纪律见 [writing-rebuild-brief.md](writing-rebuild-brief.md) §2/§3。
+> 方法/纪律见 [writing-rebuild-brief.md](writing-rebuild-brief.md) §2/§3。
 > 旧实现不是基线：`architecture.md` 附录是 v3 机会地图；`docs/writing-operating-model.md`、`docs/writing-layer-*.md`、`docs/writing-skill-study.md`、`docs/writing-planner-position.md` 是历史，不读、不恢复。
 > **当前形态：深度总结（long_article）/ 公众号（wechat_article）/ 小红书（xiaohongshu_note）。短视频脚本暂不做。**
 > 当前阶段：三种形态已“大致验收”；Lead Planner + orchestrator + bundle 已跑通。产品层 **P1/P2 原型已跑通**（LibreChat + MCP + preview + review + 公众号 HTML / 小红书图集 / PDF）；LangGraph/评测尚未接入；**bundle 是内部/调试产物，不是产品默认输出。**
